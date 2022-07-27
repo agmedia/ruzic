@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 24.0.2, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 42 27" style="enable-background:new 0 0 42 27;" xml:space="preserve">
+<style type="text/css">
+	.Drop_x0020_Shadow{fill:none;}
+	.Outer_x0020_Glow_x0020_5_x0020_pt{fill:none;}
+	.Blue_x0020_Neon{fill:none;stroke:#8AACDA;stroke-width:7;stroke-linecap:round;stroke-linejoin:round;}
+	.Chrome_x0020_Highlight{fill:url(#SVGID_1_);stroke:#FFFFFF;stroke-width:0.3629;stroke-miterlimit:1;}
+	.Jive_GS{fill:#FFDD00;}
+	.Alyssa_GS{fill:#A6D0E4;}
+	.st0{fill-rule:evenodd;clip-rule:evenodd;}
+</style>
+<linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="0" y1="0.5" x2="6.123234e-17" y2="-0.5">
+	<stop  offset="0" style="stop-color:#656565"/>
+	<stop  offset="0.618" style="stop-color:#1B1B1B"/>
+	<stop  offset="0.6292" style="stop-color:#545454"/>
+	<stop  offset="0.9831" style="stop-color:#3E3E3E"/>
+</linearGradient>
+<path class="st0" d="M2.51,0.5C1.29,0.5,0.3,1.49,0.3,2.71v21.58c0,1.22,0.99,2.21,2.21,2.21h36.99c1.22,0,2.21-0.99,2.21-2.21V2.71
+	c0-1.22-0.99-2.21-2.21-2.21H2.51z M26.61,7.92c1.14,0,2.05,0.23,2.64,0.45l-0.4,2.34l-0.26-0.13c-0.54-0.22-1.24-0.43-2.2-0.41
+	c-1.15,0-1.69,0.48-1.69,0.93c-0.01,0.51,0.62,0.84,1.66,1.34c1.7,0.77,2.48,1.71,2.47,2.94c-0.02,2.25-2.03,3.69-5.13,3.69
+	c-1.32-0.01-2.59-0.27-3.28-0.57l0.41-2.42l0.38,0.17c0.97,0.4,1.59,0.57,2.77,0.57c0.84,0,1.76-0.33,1.76-1.05
+	c0.01-0.47-0.38-0.81-1.53-1.34c-1.12-0.52-2.6-1.39-2.58-2.94C21.65,9.39,23.7,7.92,26.61,7.92z M36.8,8.12h-2.27
+	c-0.71,0-1.23,0.19-1.54,0.89l-4.37,9.9h3.09c0,0,0.51-1.33,0.62-1.62c0.16,0,0.91,0,1.7,0h0.01c0.89,0,1.84,0,2.07,0
+	c0.09,0.38,0.36,1.62,0.36,1.62h2.73L36.8,8.12z M34.35,12.06l-1.18,3.02h2.45c-0.12-0.54-0.68-3.12-0.68-3.12l-0.2-0.93
+	c-0.08,0.23-0.2,0.53-0.28,0.75C34.39,11.95,34.34,12.08,34.35,12.06z M15.63,18.92h2.94l1.84-10.81h-2.95L15.63,18.92z M8.93,9.02
+	l1.03,4.97l0.31,1.5l2.88-7.37h3.12L11.64,18.9l-3.12,0.01L5.9,9.53C5,9.02,3.96,8.62,2.81,8.34l0.04-0.23H7.6
+	C8.24,8.13,8.76,8.34,8.93,9.02z"/>
+</svg>

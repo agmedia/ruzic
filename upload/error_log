@@ -1,0 +1,44 @@
+[05-Jul-2022 08:02:18 UTC] PHP Warning:  fopen(/home/amds/ruzic.agmedia.rocks/storage/logs/error.log): failed to open stream: No such file or directory in /home/amds/ruzic.agmedia.rocks/system/library/log.php on line 22
+[05-Jul-2022 08:02:18 UTC] PHP Fatal error:  Uncaught Exception: Error: Table 'amds_ruzic.oc_translation' doesn't exist<br />Error No: 1146<br />SELECT * FROM oc_translation WHERE store_id = '0' AND language_id = '0' AND (route = 'engb' OR route = '') in /home/amds/ruzic.agmedia.rocks/system/library/db/mysqli.php:48
+Stack trace:
+#0 /home/amds/ruzic.agmedia.rocks/system/library/db.php(45): DB\MySQLi->query('SELECT * FROM o...')
+#1 /home/amds/ruzic.agmedia.rocks/catalog/model/design/translation.php(6): DB->query('SELECT * FROM o...')
+#2 /home/amds/ruzic.agmedia.rocks/system/engine/loader.php(248): ModelDesignTranslation->getTranslations('engb')
+#3 /home/amds/ruzic.agmedia.rocks/system/engine/proxy.php(47): Loader->{closure}(Array, Array)
+#4 /home/amds/ruzic.agmedia.rocks/catalog/controller/event/translation.php(6): Proxy->__call('getTranslations', Array)
+#5 /home/amds/ruzic.agmedia.rocks/system/engine/action.php(79): ControllerEventTranslation->index('engb', '', Array)
+#6 /home/amds/ruzic.agmedia.rocks/system/engine/event.php(62): Action->execute(Object(R in /home/amds/ruzic.agmedia.rocks/system/library/db/mysqli.php on line 48
+[05-Jul-2022 08:02:18 UTC] PHP Warning:  fopen(/home/amds/ruzic.agmedia.rocks/storage/logs/error.log): failed to open stream: No such file or directory in /home/amds/ruzic.agmedia.rocks/system/library/log.php on line 22
+[05-Jul-2022 08:02:18 UTC] PHP Fatal error:  Uncaught Exception: Error: Table 'amds_ruzic.oc_translation' doesn't exist<br />Error No: 1146<br />SELECT * FROM oc_translation WHERE store_id = '0' AND language_id = '0' AND (route = 'engb' OR route = '') in /home/amds/ruzic.agmedia.rocks/system/library/db/mysqli.php:48
+Stack trace:
+#0 /home/amds/ruzic.agmedia.rocks/system/library/db.php(45): DB\MySQLi->query('SELECT * FROM o...')
+#1 /home/amds/ruzic.agmedia.rocks/catalog/model/design/translation.php(6): DB->query('SELECT * FROM o...')
+#2 /home/amds/ruzic.agmedia.rocks/system/engine/loader.php(248): ModelDesignTranslation->getTranslations('engb')
+#3 /home/amds/ruzic.agmedia.rocks/system/engine/proxy.php(47): Loader->{closure}(Array, Array)
+#4 /home/amds/ruzic.agmedia.rocks/catalog/controller/event/translation.php(6): Proxy->__call('getTranslations', Array)
+#5 /home/amds/ruzic.agmedia.rocks/system/engine/action.php(79): ControllerEventTranslation->index('engb', '', Array)
+#6 /home/amds/ruzic.agmedia.rocks/system/engine/event.php(62): Action->execute(Object(R in /home/amds/ruzic.agmedia.rocks/system/library/db/mysqli.php on line 48
+[05-Jul-2022 08:04:25 UTC] PHP Warning:  fopen(/home/amds/ruzic.agmedia.rocks/storage/logs/error.log): failed to open stream: No such file or directory in /home/amds/ruzic.agmedia.rocks/system/library/log.php on line 22
+[05-Jul-2022 10:04:25 Europe/Zagreb] PHP Warning:  fwrite() expects parameter 1 to be resource, bool given in /home/amds/ruzic.agmedia.rocks/system/library/log.php on line 31
+[05-Jul-2022 10:04:25 Europe/Zagreb] PHP Warning:  fwrite() expects parameter 1 to be resource, bool given in /home/amds/ruzic.agmedia.rocks/system/library/log.php on line 31
+[05-Jul-2022 10:04:25 Europe/Zagreb] PHP Warning:  fwrite() expects parameter 1 to be resource, bool given in /home/amds/ruzic.agmedia.rocks/system/library/log.php on line 31
+[05-Jul-2022 10:04:25 Europe/Zagreb] PHP Warning:  fwrite() expects parameter 1 to be resource, bool given in /home/amds/ruzic.agmedia.rocks/system/library/log.php on line 31
+[05-Jul-2022 10:04:25 Europe/Zagreb] PHP Warning:  fwrite() expects parameter 1 to be resource, bool given in /home/amds/ruzic.agmedia.rocks/system/library/log.php on line 31
+[05-Jul-2022 10:04:25 Europe/Zagreb] PHP Warning:  fwrite() expects parameter 1 to be resource, bool given in /home/amds/ruzic.agmedia.rocks/system/library/log.php on line 31
+[05-Jul-2022 10:04:25 Europe/Zagreb] PHP Warning:  fwrite() expects parameter 1 to be resource, bool given in /home/amds/ruzic.agmedia.rocks/system/library/log.php on line 31
+[05-Jul-2022 10:04:25 Europe/Zagreb] PHP Warning:  fwrite() expects parameter 1 to be resource, bool given in /home/amds/ruzic.agmedia.rocks/system/library/log.php on line 31
+[05-Jul-2022 10:04:25 Europe/Zagreb] PHP Warning:  fwrite() expects parameter 1 to be resource, bool given in /home/amds/ruzic.agmedia.rocks/system/library/log.php on line 31
+[05-Jul-2022 10:04:25 Europe/Zagreb] PHP Warning:  fwrite() expects parameter 1 to be resource, bool given in /home/amds/ruzic.agmedia.rocks/system/library/log.php on line 31
+[05-Jul-2022 10:04:25 Europe/Zagreb] PHP Warning:  fwrite() expects parameter 1 to be resource, bool given in /home/amds/ruzic.agmedia.rocks/system/library/log.php on line 31
+[05-Jul-2022 10:04:25 Europe/Zagreb] PHP Warning:  fwrite() expects parameter 1 to be resource, bool given in /home/amds/ruzic.agmedia.rocks/system/library/log.php on line 31
+[05-Jul-2022 10:04:25 Europe/Zagreb] PHP Warning:  fwrite() expects parameter 1 to be resource, bool given in /home/amds/ruzic.agmedia.rocks/system/library/log.php on line 31
+[05-Jul-2022 10:04:25 Europe/Zagreb] PHP Fatal error:  Uncaught Error: Class 'Twig\Loader\ArrayLoader' not found in /home/amds/ruzic.agmedia.rocks/system/library/template/twig.php:31
+Stack trace:
+#0 /home/amds/ruzic.agmedia.rocks/system/library/template.php(51): Template\Twig->render('basel/template/...', '{% if modules %...')
+#1 /home/amds/ruzic.agmedia.rocks/system/engine/loader.php(125): Template->render('basel/template/...', '')
+#2 /home/amds/ruzic.agmedia.rocks/catalog/controller/common/column_left.php(72): Loader->view('common/column_l...', Array)
+#3 /home/amds/ruzic.agmedia.rocks/system/engine/action.php(79): ControllerCommonColumnLeft->index(Array)
+#4 /home/amds/ruzic.agmedia.rocks/system/engine/loader.php(48): Action->execute(Object(Registry), Array)
+#5 /home/amds/ruzic.agmedia.rocks/catalog/controller/common/home.php(12): Loader->controller('common/column_l...')
+#6 /home/amds/ruzic.agmedia.rocks/system/engine/action.php(79): ControllerCommonHome->index()
+#7 /home/amds/ruzic.agmedia.rocks/catalog/controller/startup/router.php(25): Action->execute(Object( in /home/amds/ruzic.agmedia.rocks/system/library/template/twig.php on line 31
