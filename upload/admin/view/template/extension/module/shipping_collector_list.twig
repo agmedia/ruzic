@@ -1,0 +1,176 @@
+{{ header }}{{ column_left }}
+<div id="content">
+    <div class="page-header">
+        <div class="container-fluid">
+            <div class="pull-right">
+                <a href="{{ advance }}" data-toggle="tooltip" title="{{ help_advance }}" class="btn btn-default">{{ text_advance }}</a>
+                <a href="{{ add }}" data-toggle="tooltip" title="{{ button_add }}" class="btn btn-primary"><i class="fa fa-plus"></i></a>
+                <button type="button" data-toggle="tooltip" title="{{ button_delete }}" class="btn btn-danger" onclick="confirm('{{ text_confirm }}') ? $('#form-attribute').submit() : false;"><i class="fa fa-trash-o"></i></button>
+            </div>
+            <h1>{{ heading_title }}</h1>
+            <ul class="breadcrumb">
+                {% for breadcrumb in breadcrumbs %}
+                    <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="container-fluid">
+        {% if error_warning %}
+            <div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+        {% endif %}
+        {% if success %}
+            <div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> {{ success }}
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+        {% endif %}
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-list"></i> {{ text_list }}</h3>
+            </div>
+            <div class="panel-body">
+                <form action="{{ delete }}" method="post" enctype="multipart/form-data" id="form-attribute">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                            <tr>
+                                <td style="width: 1px;" class="text-center"><input type="checkbox" onclick="$('input[name*=\'selected\']').prop('checked', this.checked);" /></td>
+                                <td class="text-left">{% if sort == 'sc.column_date' %}
+                                        <a href="{{ sort_date }}" class="{{ order|lower }}">{{ column_date }}</a>
+                                    {% else %}
+                                        <a href="{{ sort_date }}">{{ column_date }}</a>
+                                    {% endif %}</td>
+                                <td class="text-center" width="30%" colspan="2">{{ column_collected }}</td>
+                                <td class="text-center" width="15%">{{ column_time }}</td>
+                                <td class="text-center" width="8%">{{ column_max }}</td>
+                                <td class="text-center" width="8%">{{ column_status }}</td>
+                                <td class="text-right" width="8%">{{ column_action }}</td>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% if shipping_collectors %}
+                                {% for shipping_collector in shipping_collectors %}
+                                    <tr>
+                                        <td class="text-center">{% if shipping_collector.shipping_collector_id in selected %}
+                                                <input type="checkbox" name="selected[]" value="{{ shipping_collector.shipping_collector_id }}" checked="checked" />
+                                            {% else %}
+                                                <input type="checkbox" name="selected[]" value="{{ shipping_collector.shipping_collector_id }}" />
+                                            {% endif %}</td>
+                                        <td class="text-left">{{ shipping_collector.collect_date }}</td>
+                                        <td class="text-center" width="24%">
+                                            <div style="margin-bottom: 0;" id="collected-bar{{ loop.index }}" rel="collected_bar" data-percent="{{ (shipping_collector.collected / shipping_collector.collect_max) * 100 }}"></div>
+                                        </td>
+                                        <td class="text-center">{{ shipping_collector.collected }}</td>
+                                        <td class="text-center">{{ shipping_collector.collect_time }}</td>
+                                        <td class="text-center">{{ shipping_collector.collect_max }}</td>
+                                        <td class="text-center">{{ shipping_collector.status }}</td>
+                                        <td class="text-right"><a href="{{ shipping_collector.edit }}" data-toggle="tooltip" title="{{ button_edit }}" class="btn btn-primary"><i class="fa fa-pencil"></i></a></td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td class="text-center" colspan="8">{{ text_no_results }}</td>
+                                </tr>
+                            {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+                <div class="row">
+                    <div class="col-sm-6 text-left">{{ pagination }}</div>
+                    <div class="col-sm-6 text-right">{{ results }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <style>
+        /* (A) PROGRESS BAR WRAPPER */
+        .progress {
+            z-index: 3;
+            position: relative;
+            border: 1px solid #87b5d9;
+            width: 100%;
+            max-width: 400px; /* OPTIONAL */
+        }
+
+        /* (B) SHARED */
+        .progress, .indicator, .bar {
+            box-sizing: border-box;
+            min-height: 20px;
+        }
+        .indicator, .bar {
+            position: absolute;
+            top: 0; left: 0;
+        }
+
+        /* (C) PERCENTAGE INDICATOR */
+        .indicator {
+            z-index: 2;
+            width: 100%;
+            text-align: center;
+            color: #565656;
+        }
+
+        /* (D) BAR */
+        .bar {
+            z-index: 1;
+            width: 0;
+            background: #c8e3f8;
+            transition: width 0.5s;
+        }
+    </style>
+
+    <script type="text/javascript">
+      $(document).ready(() => {
+        let defaultBars = document.querySelectorAll('div[rel^="collected_bar"]');
+
+        for (var i = 0; i < defaultBars.length; i++) {
+          let pbar;
+
+          pbar = bar(defaultBars[i].getAttribute('id'), true);
+          pbar.set(Number(defaultBars[i].getAttribute('data-percent')).toFixed(1));
+        }
+
+      });
+
+      /**
+       *
+       * @param wrap
+       * @param indicate
+       * @returns object
+       */
+      function bar (wrap, indicate) {
+        // (A) CONTAINER ITSELF
+        wrap = document.getElementById(wrap);
+        wrap.classList.add("progress");
+
+        // (B) CREATE PROGRESS BAR
+        let bar = document.createElement("div");
+        bar.classList.add("bar");
+        wrap.appendChild(bar);
+
+        // (C) PERCENTAGE INDICATOR
+        let indicator = null;
+        if (indicate) {
+          indicator = document.createElement("div");
+          indicator.classList.add("indicator");
+          indicator.innerHTML = "0%";
+          wrap.appendChild(indicator);
+        }
+
+        // (D) RETURN FULLY FORMED PROGRESS BAR
+        return {
+          wrap: wrap,
+          bar: bar,
+          indicator: indicator,
+          set : function (percent) {
+            this.bar.style.width = percent + "%";
+            if (this.indicator) { this.indicator.innerHTML = percent + "%"; }
+          }
+        }
+      }
+    </script>
+</div>
+{{ footer }}

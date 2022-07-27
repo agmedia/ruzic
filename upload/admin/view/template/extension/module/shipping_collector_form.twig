@@ -1,0 +1,115 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="pull-right">
+        <button type="submit" form="form-module" data-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa fa-save"></i></button>
+        <a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a></div>
+      <h1>{{ heading_title }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="container-fluid">
+    {% if error_warning %}
+    <div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_form }}</h3>
+      </div>
+      <div class="panel-body">
+        <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-module" class="form-horizontal">
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-date"><span data-toggle="tooltip" title="{{ help_collect_date }}">{{ entry_date }}</span></label>
+                <div class="col-sm-3">
+                    <div class="input-group date">
+                        <input type="text" name="collect_date" value="{{ collect_date }}" placeholder="{{ entry_date }}" data-date-format="YYYY-MM-DD" id="input-date" class="form-control" required />
+                        <span class="input-group-btn">
+                    <button type="button" class="btn btn-default"><i class="fa fa-calendar"></i></button>
+                    </span></div>
+                    {% if error_collect_date %}
+                        <p class="text-danger" style="font-size: 10px;">{{ error_collect_date }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-time"><span data-toggle="tooltip" title="{{ help_collect_time }}">{{ entry_time }}</span><p style="font-size: 11px; font-weight: normal;">{{ help_time_default }}</p></label>
+                <div class="col-sm-10">
+                    <input type="text" name="collect_time" value="{{ collect_time }}" placeholder="" id="input-time" class="form-control" />
+                    <div class="row" style="margin-top: 15px;">
+                        {% for default_button in default_buttons %}
+                            <div class="col-sm-6 col-md-3 col-lg-2">
+                                <button type="button" data-toggle="tooltip" title="{{ button_save }}" data-max="{{ default_button.max }}" class="btn btn-default btn-block">{{ default_button.label }}</button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-max"><span data-toggle="tooltip" title="{{ help_collect_max }}">{{ entry_max }}</span></label>
+                <div class="col-sm-10">
+                    <input type="text" name="collect_max" value="{{ collect_max }}" placeholder="" id="input-max" class="form-control" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-collected"><span data-toggle="tooltip" title="{{ help_collected }}">{{ entry_collected }}</span></label>
+                <div class="col-sm-10">
+                    <input type="text" name="collected" value="{{ collected }}" placeholder="" id="input-collected" class="form-control" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-price"><span data-toggle="tooltip" title="{{ help_price }}">{{ entry_price }}</span></label>
+                <div class="col-sm-10">
+                    <input type="text" name="price" value="{{ price }}" placeholder="" id="input-price" class="form-control" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-status">{{ entry_status }}</label>
+                <div class="col-sm-10">
+                    <select name="status" id="input-status" class="form-control">
+                        {% if status %}
+                            <option value="1" selected="selected">{{ text_enabled }}</option>
+                            <option value="0">{{ text_disabled }}</option>
+                        {% else %}
+                            <option value="1">{{ text_enabled }}</option>
+                            <option value="0" selected="selected">{{ text_disabled }}</option>
+                        {% endif %}
+                    </select>
+                </div>
+            </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript"><!--
+  $(document).ready(() => {
+    let defaultButtons = document.querySelectorAll('button[class^="btn btn-default btn-block"]');
+
+    for (var i = 0; i < defaultButtons.length; i++) {
+      defaultButtons[i].addEventListener('click', (e) => {
+        $('#input-time').val(e.target.innerHTML);
+        $('#input-max').val(e.currentTarget.dataset.max);
+      });
+    }
+  });
+
+  $('.date').datetimepicker({
+    language: '{{ datepicker }}',
+    pickTime: false
+  });
+  //--></script></div>
+{{ footer }}
