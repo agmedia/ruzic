@@ -232,22 +232,42 @@ class ControllerExtensionPaymentKeksPay extends Controller {
 
         \Agmedia\Helpers\Log::write($data, 'refund');
 
-        $curl = curl_init();
-
-        $curl_handle=curl_init();
-
-        curl_setopt($curl_handle,CURLOPT_URL,'https://kekspayuat.erstebank.hr/eretailer/keksrefund');
-        curl_setopt($curl_handle, CURLOPT_POST, true);
-        curl_setopt($curl_handle, CURLOPT_POSTFIELDS, http_build_query($data));
-        $res = curl_exec($curl_handle);
-        curl_close($curl_handle);
-
-       $back =  json_decode($res, true);
 
 
 
+        $url = 'https://kekspayuat.erstebank.hr/eretailer/keksrefund';
 
-        \Agmedia\Helpers\Log::write($back, 'refund');
+                // Create a new cURL resource
+                        $ch = curl_init($url);
+
+
+                        $payload = json_encode($data);
+
+                // Attach encoded JSON string to the POST fields
+                        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+
+                // Set the content type to application/json
+                        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+
+                // Return response instead of outputting
+                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+                // Execute the POST request
+                        $result = curl_exec($ch);
+
+                // Close cURL resource
+                      curl_close($ch);
+
+
+
+
+
+
+
+
+
+
+        \Agmedia\Helpers\Log::write($result, 'refund');
 
 
        // $this->response->addHeader('Content-Type: application/json');
