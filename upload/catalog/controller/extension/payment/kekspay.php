@@ -80,16 +80,17 @@ class ControllerExtensionPaymentKeksPay extends Controller
         $json_response = json_decode(file_get_contents('php://input'), true);
 
         $headers = apache_request_headers();
-        
-        \Agmedia\Helpers\Log::write('KeksPay Advice on callback() :::::::::', 'callback');
-        \Agmedia\Helpers\Log::write($json_response, 'callback');
-        \Agmedia\Helpers\Log::write($headers['Authorization'], 'callback');
+        $headers = $headers['Authorization'];
+
+        #\Agmedia\Helpers\Log::write('KeksPay Advice on callback() :::::::::', 'callback');
+        #\Agmedia\Helpers\Log::write($json_response, 'callback');
+       # \Agmedia\Helpers\Log::write($headers['Authorization'], 'callback');
 
 
         
         $order_id = substr($json_response['bill_id'], 16);
         
-        if ( ! $json_response['status']) {
+        if ( ! $json_response['status'] && $this->verify_kekspay_token($headers)) {
             $this->model_checkout_order->addOrderHistory($order_id, $this->config->get('payment_kekspay_order_status_id'), '', true);
             
             $this->response->addHeader('Content-Type: application/json');
@@ -150,21 +151,21 @@ class ControllerExtensionPaymentKeksPay extends Controller
         \Agmedia\Helpers\Log::write($json_response, 'fail');
     }
 
-    public function verify_kekspay_token() {
-        $token_src = 'REQUEST';
-        $token     = isset( $_REQUEST['token'] ) ? filter_var(stripslashes( $_REQUEST['token'] ), FILTER_SANITIZE_STRING ) : false;
-        if ( ! $token ) { // Legacy check.
-            $token_src = 'REQUEST';
-            $token     = isset( $_SERVER['HTTP_AUTHORIZATION'] ) ? filter_var( $_SERVER['HTTP_AUTHORIZATION'], FILTER_SANITIZE_STRING ) : false;
-        }
-        if ( ! $token ) {
-            Kekspay_Logger::log( 'Failed to recieve authentication token.', 'error' );
-            $this->respond_error( 'Authentication token missing, failed to verify.' );
-        } else {
-            Kekspay_Logger::log( 'Token src: ' . $token_src, 'info' );
-        }
+    public function verify_kekspay_token($headers) {
 
-        return hash_equals( Kekspay_Data::get_settings( 'auth-token' ), str_replace( 'Token ', '', $token ) );
+        $token    = isset( $headers ) ? filter_var(stripslashes( $headers ), FILTER_SANITIZE_STRING ) : false;
+
+        \Agmedia\Helpers\Log::write($token, 'callback');
+
+        \Agmedia\Helpers\Log::write($headers, 'callback');
+
+        $bla = hash_equals( $this->config->get('payment_kekspay_token'), str_replace( 'Token ', '', $token ) );
+        \Agmedia\Helpers\Log::write($bla, 'callback');
+
+        return hash_equals( $this->config->get('payment_kekspay_token'), str_replace( 'Token ', '', $token ) );
+
+
+
     }
 }
 
