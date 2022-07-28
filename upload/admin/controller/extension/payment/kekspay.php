@@ -206,5 +206,60 @@ class ControllerExtensionPaymentKeksPay extends Controller {
 
         return $token;
     }
+
+    //refund functions
+
+
+    public function refund() {
+
+        $json = array();
+
+        if (isset($this->request->get['order_id'])) {
+            $order_id = $this->request->get['order_id'];
+        } else {
+            $order_id = 0;
+        }
+
+        $data['refundtime'] = time();
+        $data['cid']         = $this->config->get('payment_kekspay_cid');
+        $data['tid']         = $this->config->get('payment_kekspay_tid');
+        $data['bill_id']     = 'C00455165900877370';
+        $data['amount']      = '';
+        $data['hash']  = $this->calculateKeksHash();
+
+
+        $Endpoint = 'https://kekspayuat.erstebank.hr/eretailer/keksrefund';
+        $Guzzle = new \GuzzleHttp\Client();
+        $Response = $Guzzle->request('POST', $Endpoint, [
+            'body' => json_encode($data)
+        ]);
+        $json = json_decode($Response->getBody());
+
+
+
+
+
+        $this->response->addHeader('Content-Type: application/json');
+        $this->response->setOutput(json_encode($json));
+
+    }
+
+
+    private function calculateKeksHash(){
+        $HashString = $data['refundtime'] . $data['tid'] . $data['amount'] . $data['bill_id'];
+        $HashString = strtoupper(md5($HashString));
+        $Key = $this->getHashKey();
+        $Hash = @openssl_encrypt(hex2bin($HashString), 'des-ede3-cbc', $Key, OPENSSL_RAW_DATA);
+        return strtoupper(bin2hex($Hash));
+
+    }
+
+    public function getHashKey(){
+        return $this->hashKey;
+    }
+
+
+
+
 }
 ?>

@@ -115,6 +115,20 @@
                     <button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-plus-circle"></i></button>
                   {% endif %}</td>
               </tr>
+
+              <tr>
+                <td>KEKS Pay Refund </td>
+                <td id="refund_id" class="text-right">{{ keks_refund_id }}</td>
+                <td style="width: 1%;" class="text-center">
+                  {% if not keks_refund_id %}
+                    <button id="button-refund-send" data-loading-text="{{ text_loading }}" data-toggle="tooltip" title="{{ button_generate }}" class="btn btn-success btn-xs"><i class="fa fa-cog"></i></button>
+                  {% else %}
+                    <button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-refresh"></i></button>
+                  {% endif %}
+                </td>
+              </tr>
+
+
             </tbody>
           </table>
         </div>
@@ -364,6 +378,38 @@
     </div>
   </div>
   <script type="text/javascript"><!--
+
+    $(document).delegate('#button-refund-send', 'click', function() {
+      $.ajax({
+        url: 'index.php?route=extension/payment/kekspay/refund&user_token={{ user_token }}&order_id={{ order_id }}',
+        dataType: 'json',
+        beforeSend: function() {
+          $('#button-refund-send').button('loading');
+        },
+        complete: function() {
+          $('#button-refund-send').button('reset');
+        },
+        success: function(json) {
+          $('.alert-dismissible').remove();
+
+          if (json['error']) {
+            $('#content > .container-fluid').prepend('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + json['error'] + '</div>');
+          }
+
+          if (json['keks_refund_id']) {
+            $('#refund_uid').html(json['keks_refund_id']);
+
+            $('#button-refund-send').replaceWith('<button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-cog"></i></button>');
+          }
+        },
+        error: function(xhr, ajaxOptions, thrownError) {
+          alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+        }
+      });
+    });
+
+
+
   $(document).delegate('#button-invoice', 'click', function() {
 	  $.ajax({
 		  url: 'index.php?route=sale/order/createinvoiceno&user_token={{ user_token }}&order_id={{ order_id }}',
