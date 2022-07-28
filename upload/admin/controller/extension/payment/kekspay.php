@@ -207,8 +207,6 @@ class ControllerExtensionPaymentKeksPay extends Controller {
         return $token;
     }
 
-    //refund functions
-
 
     public function refund() {
 
@@ -232,72 +230,34 @@ class ControllerExtensionPaymentKeksPay extends Controller {
 
         \Agmedia\Helpers\Log::write($data, 'refund');
 
-
-
-
         $url = 'https://kekspayuat.erstebank.hr/eretailer/keksrefund';
+        $ch = curl_init($url);
+        $payload = json_encode($data);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-                // Create a new cURL resource
-                        $ch = curl_init($url);
-
-
-                        $payload = json_encode($data);
-
-                // Attach encoded JSON string to the POST fields
-                        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-
-                // Set the content type to application/json
-                        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
-
-                // Return response instead of outputting
-                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-                // Execute the POST request
-                        $result = curl_exec($ch);
-
-                // Close cURL resource
-                      curl_close($ch);
-
-
-
-
-
-
-
-
-
+        $result = curl_exec($ch);
+        curl_close($ch);
 
         \Agmedia\Helpers\Log::write($result, 'refund');
-
 
         $this->response->addHeader('Content-Type: application/json');
         $this->response->setOutput($result);
 
     }
 
-
     private function calculateKeksHash($timestamp){
-
         $data['cid']         = $this->config->get('payment_kekspay_cid');
         $data['tid']         = $this->config->get('payment_kekspay_tid');
         $data['bill_id']     = 'C00455165900877370';
-
-
         $data['amount']      = '';
-
         $HashString = $timestamp . $data['tid'] . $data['amount'] . $data['bill_id'];
         $HashString = strtoupper(md5($HashString));
         $Key = $this->config->get('payment_kekspay_password');
         $Hash = @openssl_encrypt(hex2bin($HashString), 'des-ede3-cbc', $Key, OPENSSL_RAW_DATA);
         return strtoupper(bin2hex($Hash));
-
     }
-
-    public function getHashKey(){
-        return $this->hashKey;
-    }
-
-
 
 
 }
