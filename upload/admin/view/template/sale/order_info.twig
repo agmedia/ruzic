@@ -381,7 +381,7 @@
 
     $(document).delegate('#button-refund-send', 'click', function() {
       $.ajax({
-        url: 'index.php?route=extension/payment/kekspay/refund&user_token={{ user_token }}&bill_id={{ bill_id }}',
+        url: 'index.php?route=extension/payment/kekspay/refund&user_token={{ user_token }}&bill_id={{ bill_id }}&order_id={{ order_id }}',
         dataType: 'json',
         beforeSend: function() {
           $('#button-refund-send').button('loading');
