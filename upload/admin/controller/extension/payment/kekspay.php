@@ -245,11 +245,11 @@ class ControllerExtensionPaymentKeksPay extends Controller {
         $result = curl_exec($ch);
         curl_close($ch);
 
-        \Agmedia\Helpers\Log::write($result['message'], 'refund');
+        $json = json_decode($result, true);
 
-        $this->db->query("UPDATE `" . DB_PREFIX . "order` SET refunded = '" . $result['message'] .$result['amount'] . "' WHERE order_id = '" . $order_id . "'");
+        $this->db->query("UPDATE `" . DB_PREFIX . "order` SET refunded = '" . $json['message']. ' - iznos: ' .$json['amount'] . "' WHERE order_id = '" . $order_id . "'");
 
-        \Agmedia\Helpers\Log::write($result, 'refund');
+
 
         $this->response->addHeader('Content-Type: application/json');
         $this->response->setOutput($result);
