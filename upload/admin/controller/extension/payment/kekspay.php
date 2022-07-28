@@ -271,7 +271,7 @@ class ControllerExtensionPaymentKeksPay extends Controller {
 
 
         $this->response->addHeader('Content-Type: application/json');
-        $this->response->setOutput(json_encode($result));
+        $this->response->setOutput($result);
 
     }
 
