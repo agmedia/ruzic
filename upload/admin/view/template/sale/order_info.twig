@@ -396,8 +396,8 @@
             $('#content > .container-fluid').prepend('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + json['error'] + '</div>');
           }
 
-          if (json['keks_refund_id']) {
-            $('#refund_id').html(json['keks_refund_id']);
+          if (json['message']) {
+            $('#refund_id').html(json['message']);
 
             $('#button-refund-send').replaceWith('<button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-cog"></i></button>');
           }

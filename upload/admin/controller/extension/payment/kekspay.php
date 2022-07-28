@@ -218,14 +218,32 @@ class ControllerExtensionPaymentKeksPay extends Controller {
             $order_id = 0;
         }
 
+
+        $this->load->model('sale/order');
+
+        $results = $this->model_sale_order->getOrderHistories($order_id);
+        $first = true;
+        foreach ($results as $result) {
+
+            if ( $first )
+            {
+                $bill_id = nl2br($result['comment']);
+                $first = false;
+            }
+
+        }
+
+
+
+
         $timestamp = time();
 
         $data['epochtime'] = $timestamp;
         $data['cid']         = $this->config->get('payment_kekspay_cid');
         $data['tid']         = $this->config->get('payment_kekspay_tid');
-        $data['bill_id']     = 'C00455165900877370';
+        $data['bill_id']     = $bill_id;
         $data['amount']      = '';
-        $data['hash']  = $this->calculateKeksHash($timestamp);
+        $data['hash']  = $this->calculateKeksHash($timestamp, $data['tid'], $data['amount'], $data['bill_id']);
         $data['currency']  = 'HRK';
 
         \Agmedia\Helpers\Log::write($data, 'refund');
@@ -247,11 +265,8 @@ class ControllerExtensionPaymentKeksPay extends Controller {
 
     }
 
-    private function calculateKeksHash($timestamp){
-        $data['cid']         = $this->config->get('payment_kekspay_cid');
-        $data['tid']         = $this->config->get('payment_kekspay_tid');
-        $data['bill_id']     = 'C00455165900877370';
-        $data['amount']      = '';
+    private function calculateKeksHash($timestamp, $tid, $amount, $bill_id){
+
         $HashString = $timestamp . $data['tid'] . $data['amount'] . $data['bill_id'];
         $HashString = strtoupper(md5($HashString));
         $Key = $this->config->get('payment_kekspay_password');
