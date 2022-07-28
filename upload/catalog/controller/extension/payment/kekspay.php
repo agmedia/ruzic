@@ -81,6 +81,8 @@ class ControllerExtensionPaymentKeksPay extends Controller
         
         \Agmedia\Helpers\Log::write('KeksPay Advice on callback() :::::::::', 'callback');
         \Agmedia\Helpers\Log::write($json_response, 'callback');
+        \Agmedia\Helpers\Log::write($_REQUEST['token'], 'callback');
+
         
         $order_id = substr($json_response['bill_id'], 16);
         
@@ -147,7 +149,7 @@ class ControllerExtensionPaymentKeksPay extends Controller
 
     public function verify_kekspay_token() {
         $token_src = 'REQUEST';
-        $token     = isset( $_REQUEST['token'] ) ? filter_var( stripslashes( $_REQUEST['token'] ), FILTER_SANITIZE_STRING ) : false;
+        $token     = isset( $_REQUEST['token'] ) ? filter_var(stripslashes( $_REQUEST['token'] ), FILTER_SANITIZE_STRING ) : false;
         if ( ! $token ) { // Legacy check.
             $token_src = 'REQUEST';
             $token     = isset( $_SERVER['HTTP_AUTHORIZATION'] ) ? filter_var( $_SERVER['HTTP_AUTHORIZATION'], FILTER_SANITIZE_STRING ) : false;
