@@ -246,6 +246,12 @@ class ControllerExtensionPaymentKeksPay extends Controller {
 
 
     private function calculateKeksHash(){
+        $data['refundtime'] = time();
+        $data['cid']         = $this->config->get('payment_kekspay_cid');
+        $data['tid']         = $this->config->get('payment_kekspay_tid');
+        $data['bill_id']     = 'C00455165900877370';
+        $data['amount']      = '';
+
         $HashString = $data['refundtime'] . $data['tid'] . $data['amount'] . $data['bill_id'];
         $HashString = strtoupper(md5($HashString));
         $Key = $this->getHashKey();
