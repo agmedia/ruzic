@@ -209,22 +209,14 @@ class ControllerExtensionPaymentKeksPay extends Controller {
 
 
     public function refund() {
-        if (isset($this->request->get['order_id'])) {
-            $order_id = $this->request->get['order_id'];
+
+        if (isset($this->request->get['bill_id'])) {
+            $bill_id = $this->request->get['bill_id'];
         } else {
-            $order_id = 0;
+            $bill_id = 0;
         }
 
         $this->load->model('sale/order');
-
-        $results = $this->model_sale_order->getOrderHistories($order_id);
-        $first = true;
-        foreach ($results as $result) {
-            if ($first) {
-                $bill_id = nl2br($result['comment']);
-                $first = false;
-            }
-        }
 
         $timestamp = time();
 
