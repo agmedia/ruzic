@@ -228,15 +228,24 @@ class ControllerExtensionPaymentKeksPay extends Controller {
         $data['hash']  = $this->calculateKeksHash();
         \Agmedia\Helpers\Log::write($data['hash'], 'refund');
 
-        $Endpoint = 'https://kekspayuat.erstebank.hr/eretailer/keksrefund';
-        $Guzzle = new \GuzzleHttp\Client();
-        $Response = $Guzzle->request('POST', $Endpoint, [
-            'body' => json_encode($data)
-        ]);
-       // $json = json_decode($Response->getBody());
 
 
-        \Agmedia\Helpers\Log::write($Response, 'refund');
+        $curl = curl_init();
+
+        $curl_handle=curl_init();
+
+        curl_setopt($curl_handle,CURLOPT_URL,'https://kekspayuat.erstebank.hr/eretailer/keksrefund');
+        curl_setopt($curl_handle, CURLOPT_POST, true);
+        curl_setopt($curl_handle, CURLOPT_POSTFIELDS, http_build_query($data));
+        $res = curl_exec($curl_handle);
+        curl_close($curl_handle);
+
+        json_decode($res, true);
+
+
+
+
+        \Agmedia\Helpers\Log::write($res, 'refund');
 
 
        // $this->response->addHeader('Content-Type: application/json');
