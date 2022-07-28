@@ -14,9 +14,14 @@ class ControllerExtensionPaymentKeksPay extends Controller
         
         $order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
         
+        if ( ! $this->config->get('payment_kekspay_test')) {
+            $data['action'] = 'https://kekspayuat.erstebank.hr/eretailer';
+            $data['deep_link'] = 'https://kekspay.hr/bpay';
+        } else {
 
-        $data['action'] = 'https://kekspayuat.erstebank.hr/eretailer';
-        $data['deep_link'] = 'https://kekspay.hr/galebpay';
+            $data['action'] = 'https://kekspayuat.erstebank.hr/eretailer';
+            $data['deep_link'] = 'https://kekspay.hr/galebpay';
+        }
         
         if ($this->request->server['HTTPS']) {
             $data['logo'] = HTTPS_SERVER . 'image/keks-logo.svg';
