@@ -15,10 +15,10 @@ class ControllerExtensionPaymentKeksPay extends Controller
         $order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
         
         if ( ! $this->config->get('payment_kekspay_test')) {
-            $data['action'] = 'https://kekspayuat.erstebank.hr/eretailer/';
+            $data['action'] = 'https://kekspayuat.erstebank.hr/eretailer';
         } else {
             //$data['action'] = 'https://dttlinuxdev.erste.hr/tps';
-            $data['action'] = 'https://kekspayuat.erstebank.hr/eretailer/';
+            $data['action'] = 'https://kekspayuat.erstebank.hr/eretailer';
         }
         
         if ($this->request->server['HTTPS']) {
@@ -82,11 +82,6 @@ class ControllerExtensionPaymentKeksPay extends Controller
         $headers = apache_request_headers();
         $headers = $headers['Authorization'];
 
-        #\Agmedia\Helpers\Log::write('KeksPay Advice on callback() :::::::::', 'callback');
-        #\Agmedia\Helpers\Log::write($json_response, 'callback');
-       # \Agmedia\Helpers\Log::write($headers['Authorization'], 'callback');
-
-
         
         $order_id = substr($json_response['bill_id'], 16);
         
@@ -138,8 +133,7 @@ class ControllerExtensionPaymentKeksPay extends Controller
     {
         $json_response = json_decode(file_get_contents('php://input'), true);
         
-        \Agmedia\Helpers\Log::write($_POST, 'success');
-        \Agmedia\Helpers\Log::write($json_response, 'success');
+
     }
     
     
@@ -147,23 +141,14 @@ class ControllerExtensionPaymentKeksPay extends Controller
     {
         $json_response = json_decode(file_get_contents('php://input'), true);
         
-        \Agmedia\Helpers\Log::write($_POST, 'fail');
-        \Agmedia\Helpers\Log::write($json_response, 'fail');
+
     }
 
     public function verify_kekspay_token($headers) {
 
         $token    = isset( $headers ) ? filter_var(stripslashes( $headers ), FILTER_SANITIZE_STRING ) : false;
 
-        \Agmedia\Helpers\Log::write($token, 'callback');
-
-        \Agmedia\Helpers\Log::write($headers, 'callback');
-
-        $bla = hash_equals( $this->config->get('payment_kekspay_token'), str_replace( 'Token ', '', $token ) );
-        \Agmedia\Helpers\Log::write($bla, 'callback');
-
         return hash_equals( $this->config->get('payment_kekspay_token'), str_replace( 'Token ', '', $token ) );
-
 
 
     }
