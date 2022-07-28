@@ -1,0 +1,95 @@
+<style>
+    ul.instructions{
+        font-size:16px;
+    }
+    ul.instructions li{
+        padding:5px 0;
+    }
+    .kekslogo{
+        height: 90px;margin-bottom:30px
+    }
+    .keksikona{
+        height: 40px;
+    }
+    img.getfrom{max-width:130px;}
+    .appblock{margin:30px 0;}
+
+    @media only screen and (max-width: 600px) {
+        .kekspay {
+            float:none;
+            width:100%;
+        }
+        .kekspay .btn {
+            float:none;
+            width:100%;
+            background-color: #3ADF9E;
+            color:#000 ;
+        }
+    }
+</style>
+<div class="row text-center hidden-xs">
+    <div class="col-sm-12">
+        <img src="{{ logo }}" class="kekslogo" alt="KEKSPAY"  />
+        <h3>Plaćanje putem KEKS Pay aplikacije</h3>
+    </div>
+    <div class="col-sm-12">
+        <ul class="instructions">
+            <li>1. Otvori KEKS Pay</li>
+            <li>2. Pritisni <img src="catalog/view/theme/default/image/plusikona.svg" class="keksikona"/> ikonicu</li>
+            <li>3. Pritisni Skeniraj QR kod</li>
+            <li>4. Skeniraj QR kod</li>
+        </ul>
+    </div>
+    <div class="col-sm-12">
+        <img src="{{ qrcode }}" alt="QR Kod">
+    </div>
+</div>
+<div class="clearfix"></div>
+<form action="{{ action }}" method="get">
+    <input type="hidden" name="qr_type" value="{{ qr_code }}">
+    <input type="hidden" name="cid" value="{{ cid }}">
+    <input type="hidden" name="tid" value="{{ tid }}">
+    <input type="hidden" name="bill_id" value="{{ bill_id }}">
+    <input type="hidden" name="amount" value="{{ amount }}">
+    <input type="hidden" name="store" value="{{ store }}">
+    <input type="hidden" name="success_url" value="{{ success_url }}">
+    <input type="hidden" name="fail_url" value="{{ fail_url }}">
+    <div class=" pull-right kekspay">
+        <input type="submit" value="{{ button_confirm }}" class="btn btn-primary visible-xs " />
+    </div>
+</form>
+<div class="clearfix"></div>
+
+<div class="row text-center appblock">
+    <div class="col-sm-12">
+        <h3 style="color:#999">Još nemaš KEKS Pay?</h3>
+        <a href="https://itunes.apple.com/hr/app/keks-pay/id1434843784?l=hr&mt=8">  <img src="catalog/view/theme/default/image/appstore.svg" class="getfrom"/> </a>
+        <a href="https://play.google.com/store/apps/details?id=agency.sevenofnine.erstewallet.production">     <img src="catalog/view/theme/default/image/googleplay.svg" class="getfrom"/>  </a>
+    </div>
+</div>
+
+<script type="text/javascript">
+  let i = 3000;
+
+  function checkResponse() {
+    $.ajax({
+      method: 'post',
+      url: 'index.php?route=extension/payment/kekspay/check',
+      data: {order_id: '{{ order_id }}'},
+      dataType: 'json',
+      success: function(json) {
+        if (json.status) {
+          document.location = json.redirect;
+        }
+      },
+      error: function(xhr, ajaxOptions, thrownError) {
+        console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+      },
+      complete: function (data) {
+        setTimeout(checkResponse, i);
+      }
+    });
+  }
+
+  setTimeout(checkResponse, i);
+</script>

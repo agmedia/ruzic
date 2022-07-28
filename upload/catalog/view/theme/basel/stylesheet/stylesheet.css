@@ -34,6 +34,13 @@ body {
 	font-weight: 400!important;
 }
 
+.payment-logo {
+	margin-top: 10px;
+	max-height: 40px;
+	display: inline-block;
+	max-width: 90px;
+}
+
 
 .full-search-wrapper .search-main input, .full-search-wrapper .search-category select {
 	height: 63px!important;
