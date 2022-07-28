@@ -817,6 +817,7 @@ class ControllerSaleOrder extends Controller {
 			$data['order_id'] = (int)$this->request->get['order_id'];
 
 			$data['store_id'] = $order_info['store_id'];
+            $data['bill_id'] = $order_info['bill_id'];
 			$data['store_name'] = $order_info['store_name'];
 			
 			if ($order_info['store_id'] == 0) {

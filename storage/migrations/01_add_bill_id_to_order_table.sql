@@ -1,0 +1,1 @@
+ALTER TABLE `oc_order` ADD `bill_id` VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL AFTER `payment_code`;

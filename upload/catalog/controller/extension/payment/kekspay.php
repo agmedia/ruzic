@@ -88,8 +88,10 @@ class ControllerExtensionPaymentKeksPay extends Controller
         $order_id = substr($json_response['bill_id'], 16);
         
         if ( ! $json_response['status'] && $this->verify_kekspay_token($headers)) {
-            $this->model_checkout_order->addOrderHistory($order_id, $this->config->get('payment_kekspay_order_status_id'), $json_response['bill_id'], true);
 
+            $this->db->query("UPDATE `" . DB_PREFIX . "order` SET bill_id = '" . $json_response['bill_id'] . "' WHERE order_id = '" . $order_id . "'");
+
+            $this->model_checkout_order->addOrderHistory($order_id, $this->config->get('payment_kekspay_order_status_id'), $json_response['bill_id'], true);
             
             $this->response->addHeader('Content-Type: application/json');
             return $this->response->setOutput(json_encode([
