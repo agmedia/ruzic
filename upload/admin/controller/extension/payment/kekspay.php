@@ -245,7 +245,9 @@ class ControllerExtensionPaymentKeksPay extends Controller {
         $result = curl_exec($ch);
         curl_close($ch);
 
-        $this->db->query("UPDATE `" . DB_PREFIX . "order` SET refunded = '" . $result->message .'- iznos: '.$result->amount . "' WHERE order_id = '" . $order_id . "'");
+        \Agmedia\Helpers\Log::write($result['message'], 'refund');
+
+        $this->db->query("UPDATE `" . DB_PREFIX . "order` SET refunded = '" . $result['message'] .$result['amount'] . "' WHERE order_id = '" . $order_id . "'");
 
         \Agmedia\Helpers\Log::write($result, 'refund');
 
