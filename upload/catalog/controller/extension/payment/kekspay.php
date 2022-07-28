@@ -81,7 +81,7 @@ class ControllerExtensionPaymentKeksPay extends Controller
         
         \Agmedia\Helpers\Log::write('KeksPay Advice on callback() :::::::::', 'callback');
         \Agmedia\Helpers\Log::write($json_response, 'callback');
-        \Agmedia\Helpers\Log::write($_POST, 'callback');
+        \Agmedia\Helpers\Log::write($_REQUEST['token'], 'callback');
         \Agmedia\Helpers\Log::write($_GET, 'callback');
 
         
