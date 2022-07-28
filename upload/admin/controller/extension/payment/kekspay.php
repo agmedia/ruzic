@@ -233,14 +233,14 @@ class ControllerExtensionPaymentKeksPay extends Controller {
         $Response = $Guzzle->request('POST', $Endpoint, [
             'body' => json_encode($data)
         ]);
-        $json = json_decode($Response->getBody());
+       // $json = json_decode($Response->getBody());
 
 
-        \Agmedia\Helpers\Log::write($json, 'refund');
+        \Agmedia\Helpers\Log::write($Response, 'refund');
 
 
-        $this->response->addHeader('Content-Type: application/json');
-        $this->response->setOutput(json_encode($json));
+       // $this->response->addHeader('Content-Type: application/json');
+       // $this->response->setOutput(json_encode($json));
 
     }
 
