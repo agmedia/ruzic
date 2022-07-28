@@ -256,7 +256,7 @@ class ControllerExtensionPaymentKeksPay extends Controller {
 
         $HashString = $data['refundtime'] . $data['tid'] . $data['amount'] . $data['bill_id'];
         $HashString = strtoupper(md5($HashString));
-        $Key = this->config->get('payment_kekspay_password');
+        $Key = $this->config->get('payment_kekspay_password');
         $Hash = @openssl_encrypt(hex2bin($HashString), 'des-ede3-cbc', $Key, OPENSSL_RAW_DATA);
         return strtoupper(bin2hex($Hash));
 
