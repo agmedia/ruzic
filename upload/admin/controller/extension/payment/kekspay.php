@@ -236,7 +236,7 @@ class ControllerExtensionPaymentKeksPay extends Controller {
 
         curl_setopt($curl_handle,CURLOPT_URL,'https://kekspayuat.erstebank.hr/eretailer/keksrefund');
         curl_setopt($curl_handle, CURLOPT_POST, true);
-        curl_setopt($curl_handle, CURLOPT_POSTFIELDS, http_build_query(json_encode($data)));
+        curl_setopt($curl_handle, CURLOPT_POSTFIELDS, http_build_query(json_decode($data)));
         $res = curl_exec($curl_handle);
         curl_close($curl_handle);
 
