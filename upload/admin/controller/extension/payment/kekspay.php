@@ -267,7 +267,7 @@ class ControllerExtensionPaymentKeksPay extends Controller {
 
     private function calculateKeksHash($timestamp, $tid, $amount, $bill_id){
 
-        $HashString = $timestamp . $data['tid'] . $data['amount'] . $data['bill_id'];
+        $HashString = $timestamp . $tid . $amount . $bill_id;
         $HashString = strtoupper(md5($HashString));
         $Key = $this->config->get('payment_kekspay_password');
         $Hash = @openssl_encrypt(hex2bin($HashString), 'des-ede3-cbc', $Key, OPENSSL_RAW_DATA);
