@@ -226,7 +226,7 @@ class ControllerExtensionPaymentKeksPay extends Controller {
         $data['bill_id']     = 'C00455165900877370';
         $data['amount']      = '';
         $data['hash']  = $this->calculateKeksHash();
-
+        \Agmedia\Helpers\Log::write($data['hash'], 'refund');
 
         $Endpoint = 'https://kekspayuat.erstebank.hr/eretailer/keksrefund';
         $Guzzle = new \GuzzleHttp\Client();
@@ -236,7 +236,7 @@ class ControllerExtensionPaymentKeksPay extends Controller {
         $json = json_decode($Response->getBody());
 
 
-
+        \Agmedia\Helpers\Log::write($json, 'refund');
 
 
         $this->response->addHeader('Content-Type: application/json');
@@ -250,11 +250,13 @@ class ControllerExtensionPaymentKeksPay extends Controller {
         $data['cid']         = $this->config->get('payment_kekspay_cid');
         $data['tid']         = $this->config->get('payment_kekspay_tid');
         $data['bill_id']     = 'C00455165900877370';
+
+
         $data['amount']      = '';
 
         $HashString = $data['refundtime'] . $data['tid'] . $data['amount'] . $data['bill_id'];
         $HashString = strtoupper(md5($HashString));
-        $Key = $this->getHashKey();
+        $Key = this->config->get('payment_kekspay_password');
         $Hash = @openssl_encrypt(hex2bin($HashString), 'des-ede3-cbc', $Key, OPENSSL_RAW_DATA);
         return strtoupper(bin2hex($Hash));
 
