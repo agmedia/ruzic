@@ -118,9 +118,9 @@
 
               <tr>
                 <td>KEKS Pay Refund </td>
-                <td id="refund_id" class="text-right">{{ keks_message }}</td>
+                <td id="refund_id" class="text-right">{{ refunded }}</td>
                 <td style="width: 1%;" class="text-center">
-                  {% if not keks_message %}
+                  {% if not refunded %}
                     <button id="button-refund-send" data-loading-text="{{ text_loading }}" data-toggle="tooltip" title="{{ button_generate }}" class="btn btn-success btn-xs"><i class="fa fa-cog"></i></button>
                   {% else %}
                     <button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-refresh"></i></button>
