@@ -226,9 +226,9 @@ class ControllerExtensionPaymentKeksPay extends Controller {
         $data['bill_id']     = 'C00455165900877370';
         $data['amount']      = '';
         $data['hash']  = $this->calculateKeksHash();
-        \Agmedia\Helpers\Log::write($data['hash'], 'refund');
 
 
+        \Agmedia\Helpers\Log::write($data, 'refund');
 
         $curl = curl_init();
 
@@ -240,12 +240,12 @@ class ControllerExtensionPaymentKeksPay extends Controller {
         $res = curl_exec($curl_handle);
         curl_close($curl_handle);
 
-        json_decode($res, true);
+       $back =  json_decode($res, true);
 
 
 
 
-        \Agmedia\Helpers\Log::write($res, 'refund');
+        \Agmedia\Helpers\Log::write($back, 'refund');
 
 
        // $this->response->addHeader('Content-Type: application/json');
