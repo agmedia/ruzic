@@ -78,11 +78,13 @@ class ControllerExtensionPaymentKeksPay extends Controller
         $this->load->model('checkout/order');
         
         $json_response = json_decode(file_get_contents('php://input'), true);
+
+        $headers = apache_request_headers();
         
         \Agmedia\Helpers\Log::write('KeksPay Advice on callback() :::::::::', 'callback');
         \Agmedia\Helpers\Log::write($json_response, 'callback');
-        \Agmedia\Helpers\Log::write($_REQUEST['token'], 'callback');
-        \Agmedia\Helpers\Log::write($_GET, 'callback');
+        \Agmedia\Helpers\Log::write($headers['Authorization'], 'callback');
+
 
         
         $order_id = substr($json_response['bill_id'], 16);
