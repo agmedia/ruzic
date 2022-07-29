@@ -398,8 +398,8 @@
             $('#content > .container-fluid').prepend('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + json['error'] + '</div>');
           }
 
-          if (json['message']) {
-            $('#refund_id').html(json['message']);
+          if (json['message'] == 'OK') {
+            $('#refund_id').html(json['message'] + 'USpješno vračeno: ' + json['amount');
 
             $('#button-refund-send').replaceWith('<button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-cog"></i></button>');
           }

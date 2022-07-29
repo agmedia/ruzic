@@ -6,5 +6,7 @@ ALTER TABLE `oc_order` ADD `amount` decimal(15,4) NOT NULL DEFAULT '0.0000' AFTE
 
 ALTER TABLE `oc_order` ADD `refund_qty` int NOT NULL DEFAULT '0' AFTER `payment_code`;
 
+ALTER TABLE `oc_order` CHANGE `payment_method` `payment_method` VARCHAR(255) NOT NULL;
+
 
 
