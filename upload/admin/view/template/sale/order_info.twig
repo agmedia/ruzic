@@ -117,7 +117,8 @@
               </tr>
               <tr>
                 {% if  refunded_qty >= 2 or amount == total %}
-                  <td id="refund_id">KEKSPay Refunded: {{ amount }} </td>
+                  <td id="refund_id">KEKSPay Refunded:  </td>
+                  <td  class="text-right"> {{ amount }} </td>
                   <td style="width: 1%;" class="text-center">
                   <button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-refresh"></i></button>
                   </td>
