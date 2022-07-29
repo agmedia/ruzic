@@ -254,7 +254,7 @@ class ControllerExtensionPaymentKeksPay extends Controller {
         $json = json_decode($result, true);
 
         if($json['message'] =='OK'){
-            $this->db->query("UPDATE `" . DB_PREFIX . "order` SET refunded = '" . $json['message'] . "', amount = '" . $json['amount'] . "'  WHERE order_id = '" . $order_id . "'");
+            $this->db->query("UPDATE `" . DB_PREFIX . "order` SET refunded = '" . $json['message'] . "', amount = amount + '" . $json['amount'] . "'  WHERE order_id = '" . $order_id . "'");
         }
 
 

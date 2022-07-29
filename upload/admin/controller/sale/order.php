@@ -819,6 +819,9 @@ class ControllerSaleOrder extends Controller {
 			$data['store_id'] = $order_info['store_id'];
             $data['bill_id'] = $order_info['bill_id'];
             $data['refunded'] = $order_info['refunded'];
+            $data['amount'] = $order_info['amount'];
+            $data['total'] = $order_info['total'];
+            $data['more_for_refund'] = $order_info['total'] - $order_info['amount'];
 			$data['store_name'] = $order_info['store_name'];
 			
 			if ($order_info['store_id'] == 0) {
