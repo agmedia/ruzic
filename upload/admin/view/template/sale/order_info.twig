@@ -399,7 +399,7 @@
           }
 
           if (json['message'] == 'OK') {
-            $('#refund_id').html(json['message'] + 'USpješno vračeno: ' + json['amount');
+            $('#refund_id').html(json['message'] + 'Uspješno vračeno: ' + json['amount']);
 
             $('#button-refund-send').replaceWith('<button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-cog"></i></button>');
           }
