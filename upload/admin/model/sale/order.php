@@ -78,6 +78,7 @@ class ModelSaleOrder extends Model {
                 'bill_id'                => $order_query->row['bill_id'],
                 'amount'                => $order_query->row['amount'],
                 'refunded'                => $order_query->row['refunded'],
+                'refund_qty'                => $order_query->row['refund_qty'],
 				'store_name'              => $order_query->row['store_name'],
 				'store_url'               => $order_query->row['store_url'],
 				'customer_id'             => $order_query->row['customer_id'],

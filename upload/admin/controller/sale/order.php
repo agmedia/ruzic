@@ -821,6 +821,7 @@ class ControllerSaleOrder extends Controller {
             $data['refunded'] = $order_info['refunded'];
             $data['amount'] = $order_info['amount'];
             $data['total'] = $order_info['total'];
+            $data['refund_qty'] = $order_info['refund_qty'];
             $data['more_for_refund'] = $order_info['total'] - $order_info['amount'];
 			$data['store_name'] = $order_info['store_name'];
 			

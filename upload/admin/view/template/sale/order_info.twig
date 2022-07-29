@@ -115,21 +115,20 @@
                     <button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-plus-circle"></i></button>
                   {% endif %}</td>
               </tr>
-
               <tr>
-                <td>KEKSPay Refund </td>
-                <td id="refund_id" class="text-right"> <input type="text" id="amount" name="amount" value="{{ more_for_refund }}" class="form-control input-sm " ></td>
-                <td style="width: 1%;" class="text-center">
-
-
-                    <button id="button-refund-send" data-loading-text="{{ text_loading }}" data-toggle="tooltip" title="{{ button_generate }}" class="btn btn-success btn-xs"><i class="fa fa-cog"></i></button>
-                 <!--
-                    <button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-refresh"></i></button>
-                 -->
-                </td>
+                {% if  refunded_qty >= 2 or amount == total %}
+                  <td id="refund_id">KEKSPay Refunded: {{ amount }} </td>
+                  <td style="width: 1%;" class="text-center">
+                  <button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-refresh"></i></button>
+                  </td>
+                {% else %}
+                  <td id="refund_id">KEKSPay Refund </td>
+                  <td  class="text-right"> <input type="text" id="amount" name="amount" value="{{ more_for_refund }}" class="form-control input-sm " ></td>
+                  <td style="width: 1%;" class="text-center">
+                  <button id="button-refund-send" data-loading-text="{{ text_loading }}" data-toggle="tooltip" title="{{ button_generate }}" class="btn btn-success btn-xs"><i class="fa fa-cog"></i></button>
+                  </td>
+                {% endif %}
               </tr>
-
-
             </tbody>
           </table>
         </div>
