@@ -30,7 +30,7 @@
               </tr>
               <tr>
                 <td><button data-toggle="tooltip" title="{{ text_payment_method }}" class="btn btn-info btn-xs"><i class="fa fa-credit-card fa-fw"></i></button></td>
-                <td>{{ payment_method }}</td>
+                <td>{{ payment_method|striptags }}</td>
               </tr>
               {% if shipping_method %}
                 <tr>
