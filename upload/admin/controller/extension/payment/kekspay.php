@@ -221,6 +221,12 @@ class ControllerExtensionPaymentKeksPay extends Controller {
             $bill_id = 0;
         }
 
+        if (isset($this->request->get['amount'])) {
+            $amount = $this->request->get['amount'];
+        } else {
+            $amount = '';
+        }
+
         $this->load->model('sale/order');
 
         $timestamp = time();
@@ -229,7 +235,7 @@ class ControllerExtensionPaymentKeksPay extends Controller {
         $data['cid']         = $this->config->get('payment_kekspay_cid');
         $data['tid']         = $this->config->get('payment_kekspay_tid');
         $data['bill_id']     = $bill_id;
-        $data['amount']      = '';
+        $data['amount']      = $amount;
         $data['hash']  = $this->calculateKeksHash($timestamp, $data['tid'], $data['amount'], $data['bill_id']);
         $data['currency']  = 'HRK';
 
@@ -247,7 +253,11 @@ class ControllerExtensionPaymentKeksPay extends Controller {
 
         $json = json_decode($result, true);
 
-        $this->db->query("UPDATE `" . DB_PREFIX . "order` SET refunded = '" . $json['message']. ' - iznos: ' .$json['amount'] . "' WHERE order_id = '" . $order_id . "'");
+        if($json['message'] =='OK'){
+            $this->db->query("UPDATE `" . DB_PREFIX . "order` SET refunded = '" . $json['message'] . "', amount = '" . $json['amount'] . "'  WHERE order_id = '" . $order_id . "'");
+        }
+
+
 
 
 

@@ -118,13 +118,14 @@
 
               <tr>
                 <td>KEKS Pay Refund </td>
-                <td id="refund_id" class="text-right">{{ refunded }}</td>
+                <td id="refund_id" class="text-right"> <input type="text" id="amount" name="amount" value="" class="form-control input-sm " ></td>
                 <td style="width: 1%;" class="text-center">
-                  {% if not refunded %}
+
+
                     <button id="button-refund-send" data-loading-text="{{ text_loading }}" data-toggle="tooltip" title="{{ button_generate }}" class="btn btn-success btn-xs"><i class="fa fa-cog"></i></button>
-                  {% else %}
+                 <!--
                     <button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-refresh"></i></button>
-                  {% endif %}
+                 -->
                 </td>
               </tr>
 
@@ -381,7 +382,7 @@
 
     $(document).delegate('#button-refund-send', 'click', function() {
       $.ajax({
-        url: 'index.php?route=extension/payment/kekspay/refund&user_token={{ user_token }}&bill_id={{ bill_id }}&order_id={{ order_id }}',
+        url: 'index.php?route=extension/payment/kekspay/refund&user_token={{ user_token }}&bill_id={{ bill_id }}&order_id={{ order_id }}&amount='+ $('#amount').val(),
         dataType: 'json',
         beforeSend: function() {
           $('#button-refund-send').button('loading');
