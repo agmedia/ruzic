@@ -115,22 +115,25 @@
                     <button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-plus-circle"></i></button>
                   {% endif %}</td>
               </tr>
-              <tr>
-                {% if  refund_qty >= 2 or amount == total %}
-                  <td id="refund_id">KEKSPay storno: {{ refund_qty }} od 2 </td>
-                  <td  class="text-right"> Ukupno vraćeno: {{ amount }} </td>
-                  <td style="width: 1%;" class="text-center">
-                  <button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-refresh"></i></button>
-                  </td>
-                {% else %}
-                  <td id="refund_id"><i class="fa fa-question" aria-hidden="true" data-toggle="tooltip" title="" data-original-title="Napravite djelomični ili potpuni povrat sredstava. Moguće max 2 djelomična storna."></i>
-                    KEKSPay storno </td>
-                  <td  class="text-right"> <input type="text" id="amount" name="amount" value="{{ more_for_refund }}" autocomplete="off" class="form-control input-sm " ></td>
-                  <td style="width: 1%;" class="text-center">
-                  <button id="button-refund-send" data-loading-text="{{ text_loading }}" data-toggle="tooltip" title="{{ button_generate }}" class="btn btn-success btn-xs"><i class="fa fa-cog"></i></button>
-                  </td>
-                {% endif %}
-              </tr>
+
+              {% if payment_code =='kekspay' %}
+                <tr>
+                  {% if  refund_qty >= 2 or amount == total %}
+                    <td id="refund_id">KEKSPay storno: {{ refund_qty }} od 2 </td>
+                    <td  class="text-right"> Ukupno vraćeno: {{ amount }} </td>
+                    <td style="width: 1%;" class="text-center">
+                    <button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-refresh"></i></button>
+                    </td>
+                  {% else %}
+                    <td id="refund_id"><i class="fa fa-question" aria-hidden="true" data-toggle="tooltip" title="" data-original-title="Napravite djelomični ili potpuni povrat sredstava. Moguće max 2 djelomična storna."></i>
+                      KEKSPay storno </td>
+                    <td  class="text-right"> <input type="text" id="amount" name="amount" value="{{ more_for_refund }}" autocomplete="off" class="form-control input-sm " ></td>
+                    <td style="width: 1%;" class="text-center">
+                    <button id="button-refund-send" data-loading-text="{{ text_loading }}" data-toggle="tooltip" title="{{ button_generate }}" class="btn btn-success btn-xs"><i class="fa fa-cog"></i></button>
+                    </td>
+                  {% endif %}
+                </tr>
+              {% endif %}
             </tbody>
           </table>
         </div>
