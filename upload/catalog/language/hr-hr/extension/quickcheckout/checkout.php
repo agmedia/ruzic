@@ -57,7 +57,7 @@ $_['error_delivery']				 = 'Warning: Delivery date is required!';
 $_['error_maximum']      		     = 'Warning: The maximum number of points that can be applied is %s!';
 $_['error_reward']        		     = 'Warning: Please enter the amount of reward points to use!';	
 $_['error_points']           		 = 'Warning: You don\'t have %s reward points!';
-$_['error_minimum_order']			 = 'Upozorenje: MInimalna narudžba je %s.';
+$_['error_minimum_order']			 = 'Upozorenje: Minimalna narudžba je u iznosu od %s.';
 $_['error_comment']					 = 'Warning: Order comment is required.';
 
 // Text
