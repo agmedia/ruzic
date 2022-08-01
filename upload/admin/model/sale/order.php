@@ -73,6 +73,8 @@ class ModelSaleOrder extends Model {
 			return array(
 				'order_id'                => $order_query->row['order_id'],
 				'invoice_no'              => $order_query->row['invoice_no'],
+                'webracun'              => $order_query->row['webracun'],
+                'webracun_link'              => $order_query->row['webracun_link'],
 				'invoice_prefix'          => $order_query->row['invoice_prefix'],
 				'store_id'                => $order_query->row['store_id'],
                 'bill_id'                => $order_query->row['bill_id'],
@@ -429,6 +431,184 @@ class ModelSaleOrder extends Model {
 			return $order_info['invoice_prefix'] . $invoice_no;
 		}
 	}
+
+
+    public function createWebracun($order_id) {
+
+        $order          = $this->getOrder($order_id);
+        $order_products = $this->getOrderProducts($order_id);
+        $order_totals   = $this->getOrderTotals($order_id);
+
+        if ($order && !$order['webracun']) {
+
+            // nacin_placanja
+
+                $pay_code = 0;
+                if ($order['payment_code'] == 'corvuspay') {
+                    $pay_code = 'Card';
+
+                } else if ($order['payment_code'] == 'kekspay') {
+                    $pay_code = 'Card';
+
+                }
+                else if ($order['payment_code'] == 'cod') {
+                    $pay_code = 'Cash on Delivery (COD)';
+
+                } else {
+                    $pay_code = 'Bank Deposit';
+
+                }
+
+            // jezik_ponude
+
+                $lang = 0;
+                if ($order['currency_code'] == 'HRK') {
+                    $lang = 1;
+                } else {
+                    $lang = 2;
+                }
+
+            // valuta_ponude
+
+                $curr = 0;
+                if ($order['currency_code'] == 'HRK') {
+                    $curr = 1;
+                } else if ($order['currency_code'] == 'EUR') {
+                    $curr = 14;
+                } else if ($order['currency_code'] == 'AUD') {
+                    $curr = 2;
+                } else if ($order['currency_code'] == 'GBP') {
+                    $curr = 11;
+                } else if ($order['currency_code'] == 'USD') {
+                    $curr = 12;
+                }
+
+
+
+            // porez_stopa
+            //$tax = 0;
+            //if (in_array($order['payment_country'], $countries)) {
+            $tax = 25;
+            // }
+
+            // Tečaj
+                $curval = 1;
+                if ($order['currency_code'] != 'HRK') {
+                    $curval = number_format($order['currency_value'], 2, ',', '.');
+                }
+
+
+
+                $order_items = array();
+
+                foreach ($order_products as $item) {
+
+                    $item_data = [
+                        "title" => $item['name'],
+                        "quantity" =>  $item['quantity'],
+                        "price" => $item['price'] * 1.25,
+                        "sku" => $item['model'],
+
+
+                    ];
+                    array_push($order_items, $item_data);
+                }
+
+
+                foreach ($order_totals as $total) {
+                    if ($total['code'] == 'coupon' && $total['value'] != 0) {
+                        $item_data2 = [
+                            "title" => $total['title'],
+                            "quantity" =>  '1',
+                            "price" => $total['value'] * 1.25,
+                            "sku" => 'kupon',
+
+                        ];
+
+                        array_push($order_items, $item_data2);
+                    }
+                }
+
+
+                $shippingcost = '';
+
+                foreach ($order_totals as $total) {
+                    if ($total['code'] == 'shipping' && $total['value'] != 0) {
+                        $shippingcost = $total['value'];
+
+                    }
+                }
+
+
+
+            #order data - prepare JSON structure
+                $order_data = array(
+                    'id'            => strval($order_id),
+                    'email'         => $order['email'],
+                    'name'          => '#'.$order_id,
+                    'gateway'       => $pay_code,
+
+                    'line_items'    => $order_items, //sending coupons as order items with negative value
+                    'customer'      =>
+                        array(
+                            'email'          => $order['email'],
+                            'first_name'     => $order['firstname'],
+                            'last_name'      => $order['lastname'],
+                            'default_address' => [
+                                'address1'    => $order['payment_address_1'].' '.$order['payment_address_2'],
+                                'city'        => $order['payment_city'].' '.$order['payment_postcode'],
+                                'country'     => $order['payment_country'],
+                                'company'     => $order['payment_company']
+                              //  'address2'     => $order['custom_field'][1] //OIB FIELD!
+                            ]
+                        ),
+                    'total_shipping_price_set' =>
+                        array(
+                            'shop_money'         => [
+                                'amount'          => $shippingcost * 1.25,
+                                'currency_code'   => $order['currency_code']
+                            ]
+                        )
+                );
+
+
+                $order_data = json_encode($order_data);
+
+
+
+
+            #connect to WebRacun API
+                $url = 'https://www.app.webracun.com/rest/shopify/api/v1/order-invoice/agm_woo/rThj7hcXsjiKjh6/true';
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $order_data);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_VERBOSE, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                        'Content-Type: application/json',
+                        'Content-Length: ' . strlen($order_data)
+                    )
+                );
+
+            #send JSON data
+
+                $result = curl_exec($ch);
+                $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+
+                if ($httpcode == '200') {
+
+                    $this->db->query("UPDATE " . DB_PREFIX . "order SET webracun = '" . $result['invoiceId'] . "', webracun_link = '" . $result['invoiceLink'] . "' WHERE order_id = '" . (int)$order['order_id'] . "'");
+                } else {
+
+                    $this->db->query("UPDATE " . DB_PREFIX . "order SET webracun = '" . $result['message'] . "' WHERE order_id = '" . (int)$order['order_id'] . "'");
+                }
+
+
+
+            return $result['invoiceId'];
+        }
+    }
 
 	public function getOrderHistories($order_id, $start = 0, $limit = 10) {
 		if ($start < 0) {

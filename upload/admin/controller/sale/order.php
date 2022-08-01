@@ -1322,6 +1322,36 @@ class ControllerSaleOrder extends Controller {
 		$this->response->setOutput(json_encode($json));
 	}
 
+
+    public function createWebracun() {
+        $this->load->language('sale/order');
+
+        $json = array();
+
+        if (!$this->user->hasPermission('modify', 'sale/order')) {
+            $json['error'] = $this->language->get('error_permission');
+        } elseif (isset($this->request->get['order_id'])) {
+            if (isset($this->request->get['order_id'])) {
+                $order_id = $this->request->get['order_id'];
+            } else {
+                $order_id = 0;
+            }
+
+            $this->load->model('sale/order');
+
+            $invoice_no = $this->model_sale_order->createWebracun($order_id);
+
+            if ($invoice_no) {
+                $json['invoice_no'] = $invoice_no;
+            } else {
+                $json['error'] = $this->language->get('error_action');
+            }
+        }
+
+        $this->response->addHeader('Content-Type: application/json');
+        $this->response->setOutput(json_encode($json));
+    }
+
 	public function addReward() {
 		$this->load->language('sale/order');
 
