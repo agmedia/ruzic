@@ -45,9 +45,9 @@
                 <div class="col-xs-5">
 <div class="price">
     {% if product.special %}
-    <span class="price-old">{{ product.price }}</span><span class="price-new">{{ product.special }}</span>
+    <span class="price-old">{{ product.priceeur }} {{ product.price }}</span><span class="price-new">{{ product.specialeur }} {{ product.special }}</span>
     {% else %}
-    <span>{{ product.price }}</span>
+    <span>{{ product.priceeur }} {{ product.price }}</span>
     {% endif %}
     {% if product.tax %}
     <span class="price-tax">{{ text_tax }} {{ product.tax }}</span>
@@ -76,7 +76,7 @@
                         </span>
 
                          <span class="input-group-btn">
-                                        <button type="button" class="btn btn-neutral " onclick="cart.add('{{ product.product_id }}', $(this).parent().parent().find('.input-number').val());">    <span class="global-cart"></span> <span class="hidden-xs hidden-sm hidden-md"></span></button>
+                        <button type="button" class="btn btn-neutral " onclick="cart.add('{{ product.product_id }}', $(this).parent().parent().find('.input-number').val());">    <span class="global-cart"></span> <span class="hidden-xs hidden-sm hidden-md"></span></button>
                        </span>
                     </div><!-- /input-group -->
 
