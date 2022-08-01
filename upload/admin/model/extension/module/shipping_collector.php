@@ -5,6 +5,7 @@ class ModelExtensionModuleShippingCollector extends Model {
         $this->db->query("INSERT INTO " . DB_PREFIX . "shipping_collector SET
 		                    collect_date = '" . $this->db->escape($data['collect_date']) . "',
 		                    collect_time = '" . $this->db->escape($data['collect_time']) . "',
+		                    collect_destination = '" . $this->db->escape($data['collect_destination']) . "',
 		                    collect_max = '" . (int)$data['collect_max'] . "',
 		                    collected = 0,
 		                    price = 0,
@@ -21,6 +22,7 @@ class ModelExtensionModuleShippingCollector extends Model {
 		$this->db->query("UPDATE " . DB_PREFIX . "shipping_collector SET
 		                    collect_date = '" . $this->db->escape($data['collect_date']) . "',
 		                    collect_time = '" . $this->db->escape($data['collect_time']) . "',
+		                    collect_destination = '" . $this->db->escape($data['collect_destination']) . "',
 		                    collect_max = '" . (int)$data['collect_max'] . "',
 		                    collected = '" . (int)$data['collected'] . "',
 		                    price = '" . (float)$data['price'] . "',
@@ -101,7 +103,8 @@ class ModelExtensionModuleShippingCollector extends Model {
         return $this->db->query("CREATE TABLE IF NOT EXISTS `" . DB_PREFIX . "shipping_collector` (
                   `shipping_collector_id` int(11) NOT NULL AUTO_INCREMENT,
                   `collect_date` datetime NOT NULL,
-                  `collect_time` varchar(255) DEFAULT NULL,
+                  `collect_time` varchar(191) DEFAULT NULL,
+                  `collect_destination` varchar(191) DEFAULT NULL,
                   `collect_max` int(11) DEFAULT NULL,
                   `collected` int(11) DEFAULT NULL,
                   `price` decimal(15,4) DEFAULT NULL,
@@ -117,6 +120,7 @@ class ModelExtensionModuleShippingCollector extends Model {
         return $this->db->query("INSERT INTO " . DB_PREFIX . "shipping_collector SET
 		                    collect_date = '" . $this->db->escape($data['date']) . "',
 		                    collect_time = '" . $this->db->escape($data['time']) . "',
+		                    collect_destination = '" . $this->db->escape($data['destination']) . "',
 		                    collect_max = '" . (int)$data['max'] . "',
 		                    collected = 0,
 		                    price = '" . (float)$data['price'] . "',

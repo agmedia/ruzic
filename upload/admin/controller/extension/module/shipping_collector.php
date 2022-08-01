@@ -202,6 +202,7 @@ class ControllerExtensionModuleShippingCollector extends Controller {
                 'shipping_collector_id' => $result['shipping_collector_id'],
                 'collect_date'          => \Carbon\Carbon::make($result['collect_date'])->format('d.m.Y'),
                 'collect_time'          => $result['collect_time'],
+                'collect_destination'   => $result['collect_destination'],
                 'collect_max'           => $result['collect_max'],
                 'collected'             => $result['collected'],
                 'status'                => $result['status'],
@@ -361,6 +362,14 @@ class ControllerExtensionModuleShippingCollector extends Controller {
             $data['collect_time'] = '';
         }
     
+        if (isset($this->request->post['collect_destination'])) {
+            $data['collect_destination'] = $this->request->post['collect_destination'];
+        } elseif (!empty($shipping_collector_info)) {
+            $data['collect_destination'] = $shipping_collector_info['collect_destination'];
+        } else {
+            $data['collect_destination'] = '';
+        }
+    
         if (isset($this->request->post['collect_max'])) {
             $data['collect_max'] = $this->request->post['collect_max'];
         } elseif (!empty($shipping_collector_info)) {
@@ -451,18 +460,26 @@ class ControllerExtensionModuleShippingCollector extends Controller {
     {
         $this->load->model('extension/module/shipping_collector');
         
-        $last = \Agmedia\Kaonekad\Models\ShippingCollector::orderBy('collect_date', 'desc')->pluck('collect_date')->first();
+        $last = \Agmedia\Features\Models\ShippingCollector::orderBy('collect_date', 'desc')->pluck('collect_date')->first();
     
         $date = ! $last ? \Carbon\Carbon::now() : \Carbon\Carbon::make($last)->addDay();
         
-        for ($i = 0; $i < 7; $i++) {
-            if ( ! $date->isWeekend()) {
+        $counter = 0;
+        
+        for ($i = 0; $i < 6; $i++) {
+            $destination = 'istok';
+            if (($counter+1) % 2 == 0) {
+                $destination = 'zapad';
+            }
+            //if ( ! $date->isWeekend()) {
                 foreach (agconf('shipping_collector_defaults') as $default) {
                     $default['date'] = $date;
+                    $default['destination'] = $destination;
                     $this->model_extension_module_shipping_collector->addDefaultShippingCollector($default);
                 }
-            }
-
+            //}
+            
+            $counter++;
             $date->addDay();
         }
         
