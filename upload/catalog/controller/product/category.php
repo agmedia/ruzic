@@ -178,7 +178,7 @@ class ControllerProductCategory extends Controller {
                 if ($this->customer->isLogged() || !$this->config->get('config_customer_price')) {
                     $price = $this->currency->format($this->tax->calculate($result['price'], $result['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']);
 
-                    $priceeur = $this->currency->format($this->tax->calculate(($result['price']), $result['tax_class_id'], $this->config->get('config_tax')), 'EUR');
+                    $priceeur = $this->currency->format($this->tax->calculate($result['price'], $result['tax_class_id'], $this->config->get('config_tax')), 'EUR');
                 } else {
                     $price = false;
                     $priceeur = false;
