@@ -820,6 +820,7 @@ class ControllerSaleOrder extends Controller {
             $data['bill_id'] = $order_info['bill_id'];
             $data['refunded'] = $order_info['refunded'];
             $data['amount'] = $order_info['amount'];
+            $data['webracun'] = $order_info['webracun'];
             $data['total'] = $order_info['total'];
             $data['refund_qty'] = $order_info['refund_qty'];
             $data['payment_code'] = $order_info['payment_code'];

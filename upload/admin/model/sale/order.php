@@ -506,7 +506,7 @@ class ModelSaleOrder extends Model {
                     $item_data = [
                         "title" => $item['name'],
                         "quantity" =>  $item['quantity'],
-                        "price" => $item['price'] * 1.25,
+                        "price" => $item['price'],
                         "sku" => $item['model'],
 
 
@@ -520,7 +520,7 @@ class ModelSaleOrder extends Model {
                         $item_data2 = [
                             "title" => $total['title'],
                             "quantity" =>  '1',
-                            "price" => $total['value'] * 1.25,
+                            "price" => $total['value'] ,
                             "sku" => 'kupon',
 
                         ];
@@ -565,7 +565,7 @@ class ModelSaleOrder extends Model {
                     'total_shipping_price_set' =>
                         array(
                             'shop_money'         => [
-                                'amount'          => $shippingcost * 1.25,
+                                'amount'          => $shippingcost,
                                 'currency_code'   => $order['currency_code']
                             ]
                         )
@@ -574,15 +574,12 @@ class ModelSaleOrder extends Model {
 
                 $order_data = json_encode($order_data);
 
-
-
-
             #connect to WebRacun API
                 $url = 'https://www.app.webracun.com/rest/shopify/api/v1/order-invoice/agm_woo/rThj7hcXsjiKjh6/true';
                 $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $order_data);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 curl_setopt($ch, CURLOPT_VERBOSE, true);
                 curl_setopt($ch, CURLOPT_HTTPHEADER, array(
                         'Content-Type: application/json',
@@ -590,23 +587,26 @@ class ModelSaleOrder extends Model {
                     )
                 );
 
+
             #send JSON data
 
-                $result = curl_exec($ch);
-                $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                curl_close($ch);
+            $result = curl_exec($ch);
+            // Neema razulatata u $response jer AP Ivraća samo HEADER
 
-                if ($httpcode == '200') {
+            $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-                    $this->db->query("UPDATE " . DB_PREFIX . "order SET webracun = '" . $result['invoiceId'] . "', webracun_link = '" . $result['invoiceLink'] . "' WHERE order_id = '" . (int)$order['order_id'] . "'");
+            curl_close($ch);
+
+
+            if ($httpcode == '200') {
+                $this->db->query("UPDATE " . DB_PREFIX . "order SET webracun = 'Račun napravljen i poslan kupcu' WHERE order_id = '" . (int)$order['order_id'] . "'");
+                $message ='Račun napravljen i poslan kupcu';
                 } else {
-
-                    $this->db->query("UPDATE " . DB_PREFIX . "order SET webracun = '" . $result['message'] . "' WHERE order_id = '" . (int)$order['order_id'] . "'");
+                $this->db->query("UPDATE " . DB_PREFIX . "order SET webracun = 'Greška kod izrade računa' WHERE order_id = '" . (int)$order['order_id'] . "'");
+                $message ='Greška kod izrade računa';
                 }
 
-
-
-            return $result['invoiceId'];
+            return $message;
         }
     }
 
