@@ -45,9 +45,9 @@
                 <div class="col-xs-5">
 <div class="price">
     {% if product.special %}
-    <span class="price-old">{{ product.priceeur }} {{ product.price }}</span><span class="price-new">{{ product.specialeur }} {{ product.special }}</span>
+    <span class="price-old"><small>{{ product.priceeur }}</small> {{ product.price }}</span><span class="price-new"><small>{{ product.specialeur }}</small> {{ product.special }}</span>
     {% else %}
-    <span>{{ product.priceeur }} {{ product.price }}</span>
+    <span><small>{{ product.priceeur }}</small> {{ product.price }}</span>
     {% endif %}
     {% if product.tax %}
     <span class="price-tax">{{ text_tax }} {{ product.tax }}</span>
