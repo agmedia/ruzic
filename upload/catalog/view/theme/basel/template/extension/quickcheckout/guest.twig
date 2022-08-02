@@ -25,11 +25,15 @@
 	</select>
 	{% endif %}
   {% elseif  field == 'zone' %} 
-    {% if attribute(_context, 'field_' ~ field).display %}  
-	<div class="col-sm-6{{ attribute(_context, 'field_' ~ field).required ? ' required' }}">
-	  <label class="control-label">{{ entry_zone }}</label>
-	  <select name="zone_id" class="form-control" id="input-payment-zone"></select>
-	</div>
+    {% if attribute(_context, 'field_' ~ field).display %}
+        <div class="col-sm-6{{ attribute(_context, 'field_' ~ field).required ? ' required' }}">
+            <label class="control-label">{{ entry_zone }}</label>
+            <select name="zone_id" class="form-control" id="input-payment-zone"></select>
+        </div>
+        <div class="col-sm-6 required">
+            <label class="control-label">Naselje</label>
+            <select name="zone_block_id" class="form-control" id="input-payment-zone-block"></select>
+        </div>
 	{% else %}   
 	  <select name="zone_id" class="hide"></select>
 	{% endif %} 
@@ -156,6 +160,36 @@
 
 <script type="text/javascript"><!--
 $(document).ready(function() {
+
+  $('#input-payment-zone').on('change', () => {
+    console.log('guest - ' + $('#input-payment-zone').val())
+
+    $.ajax({
+      url: 'index.php?route=extension/quickcheckout/shipping_method/getDeliveryTime',
+      type: 'post',
+      data: {destination: $('#input-payment-zone').val()},
+      dataType: 'html',
+      cache: false,
+      success: function (json) {
+        console.log(json)
+
+        var select = document.getElementById("input-payment-zone-block");
+        var options = JSON.parse(json);
+        select.options.length = 0;
+        for (var i = 0; i < options.blocks.length; i++) {
+          var opt = options.blocks[i];
+          var el = document.createElement("option");
+          el.textContent = opt.title;
+          el.value = opt.zone_block_id;
+          select.appendChild(el);
+        }
+      },
+      error: function (xhr, ajaxOptions, thrownError) {
+        alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+      }
+    })
+  })
+
 	// Sort the custom fields
 	$('#custom-field-payment .custom-field[data-sort]').detach().each(function() {
 		if ($(this).attr('data-sort') >= 0 && $(this).attr('data-sort') <= $('#payment-address .col-sm-6').length) {

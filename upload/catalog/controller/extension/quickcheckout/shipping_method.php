@@ -433,9 +433,12 @@ class ControllerExtensionQuickCheckoutShippingMethod extends Controller {
     {
         $destination = \Agmedia\Features\Models\ShippingCollector::setLabelByID(intval($this->request->post['destination']));
         
-        $list = \Agmedia\Features\Models\ShippingCollector::getList($destination);
+        $response = [
+            'list' => \Agmedia\Features\Models\ShippingCollector::getList($destination),
+            'blocks' => \Agmedia\Features\Models\ZoneBlock::getList(intval($this->request->post['destination']))
+        ];
     
         $this->response->addHeader('Content-Type: application/json');
-        $this->response->setOutput(json_encode($list));
+        $this->response->setOutput(json_encode($response));
     }
 }
