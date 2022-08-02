@@ -16,12 +16,8 @@ class ModelLocalisationZone extends Model {
 
 			$session = isset($this->session->data['delivery_region']) ? $this->session->data['delivery_region'] : null;
 			
-			//\Agmedia\Helpers\Log::info($zone_data);
-			
 			$zone_data = \Agmedia\Features\Helper::resolveZoneList($zone_data, $session);
 			//$this->cache->set('zone.' . (int)$country_id, $zone_data);
-            
-            \Agmedia\Helpers\Log::info($zone_data);
 		}
 
 		return $zone_data;
