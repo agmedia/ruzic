@@ -34,10 +34,11 @@ class ShippingCollector extends Model
      *
      * @return array
      */
-    public static function getList(int $days = 6): array
+    public static function getList(string $destination = 'istok', int $days = 6): array
     {
         $response = [];
         $list     = self::where('status', 1)
+                        ->where('collect_destination', $destination)
                         ->where('collect_date', '>', Carbon::now())
                         ->where('collect_date', '<', Carbon::now()->addDays($days))
                         ->orderBy('collect_date')->orderBy('shipping_collector_id', 'desc')->get();

@@ -234,6 +234,16 @@ class ControllerExtensionQuickCheckoutShippingMethod extends Controller {
 
 		$data['hours'] = implode(',', $hours);
 		
+		// fj.agmedia.hr
+        $data['collector_list'] = \Agmedia\Features\Models\ShippingCollector::getList();
+      
+        if (isset($this->request->post['shipping_collector_id'])) {
+            $data['collector_picked'] = $this->request->post['shipping_collector_id'];
+        } elseif (isset($this->session->data['shipping_collector_id'])) {
+            $data['collector_picked'] = $this->session->data['shipping_collector_id'];
+        } else {
+            $data['collector_picked'] = '';
+        }
 
 		$this->response->setOutput($this->load->view('extension/quickcheckout/shipping_method', $data));
   	}
@@ -298,6 +308,11 @@ class ControllerExtensionQuickCheckoutShippingMethod extends Controller {
 			
 			$this->session->data['shipping_address'] = $shipping_address;
 		}
+		
+		// fj.agmedia.hr
+        if (isset($this->request->post['shipping_collector_id'])) {
+            $this->session->data['shipping_collector_id'] = $this->request->post['shipping_collector_id'];
+        }
 		
 		if (isset($this->request->post['delivery_date'])) {
 			$this->session->data['delivery_date'] = strip_tags($this->request->post['delivery_date']);
@@ -408,4 +423,21 @@ class ControllerExtensionQuickCheckoutShippingMethod extends Controller {
 		$this->response->addHeader('Content-Type: application/json');
 		$this->response->setOutput(json_encode($json));	
 	}
+    
+    
+    public function getDeliveryTime()
+    {
+        $destination = 'istok';
+        
+        if ($this->request->post['destination'] == '848') {
+            $destination = 'istok';
+        } else if ($this->request->post['destination'] == '867') {
+            $destination = 'zapad';
+        }
+        
+        $list = \Agmedia\Features\Models\ShippingCollector::getList($destination);
+    
+        $this->response->addHeader('Content-Type: application/json');
+        $this->response->setOutput(json_encode($list));
+    }
 }
