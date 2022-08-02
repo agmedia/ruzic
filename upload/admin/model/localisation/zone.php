@@ -2,7 +2,17 @@
 class ModelLocalisationZone extends Model {
 	public function addZone($data) {
 		$this->db->query("INSERT INTO " . DB_PREFIX . "zone SET status = '" . (int)$data['status'] . "', name = '" . $this->db->escape($data['name']) . "', code = '" . $this->db->escape($data['code']) . "', country_id = '" . (int)$data['country_id'] . "'");
-
+        
+        $zone_id = $this->db->getLastId();
+        
+        if (isset($data['zone_block'])) {
+            $this->db->query("DELETE FROM " . DB_PREFIX . "zone_block WHERE zone_id = '" . (int)$zone_id . "'");
+            
+            foreach ($data['zone_block'] as $value) {
+                $this->db->query("INSERT INTO " . DB_PREFIX . "zone_block SET zone_id = '" . (int)$zone_id . "', title = '" . $this->db->escape($value['title']) . "', zip = '" . $this->db->escape($value['zip']) . "', status = 1");
+            }
+        }
+        
 		$this->cache->delete('zone');
 		
 		return $this->db->getLastId();
@@ -10,7 +20,15 @@ class ModelLocalisationZone extends Model {
 
 	public function editZone($zone_id, $data) {
 		$this->db->query("UPDATE " . DB_PREFIX . "zone SET status = '" . (int)$data['status'] . "', name = '" . $this->db->escape($data['name']) . "', code = '" . $this->db->escape($data['code']) . "', country_id = '" . (int)$data['country_id'] . "' WHERE zone_id = '" . (int)$zone_id . "'");
-
+        
+        if (isset($data['zone_block'])) {
+            $this->db->query("DELETE FROM " . DB_PREFIX . "zone_block WHERE zone_id = '" . (int)$zone_id . "'");
+            
+            foreach ($data['zone_block'] as $value) {
+                $this->db->query("INSERT INTO " . DB_PREFIX . "zone_block SET zone_id = '" . (int)$zone_id . "', title = '" . $this->db->escape($value['title']) . "', zip = '" . $this->db->escape($value['zip']) . "', status = 1");
+            }
+        }
+        
 		$this->cache->delete('zone');
 	}
 
@@ -89,4 +107,16 @@ class ModelLocalisationZone extends Model {
 
 		return $query->row['total'];
 	}
+	
+	
+	/*******************************************************************************
+	*                                Copyright : AGmedia                           *
+	*                              email: filip@agmedia.hr                         *
+	*******************************************************************************/
+    
+    public function getZoneBlocks($zone_id) {
+        $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "zone_block WHERE zone_id = '" . (int)$zone_id . "'");
+        
+        return $query->rows;
+    }
 }

@@ -335,6 +335,20 @@ class ControllerLocalisationZone extends Controller {
 		$this->load->model('localisation/country');
 
 		$data['countries'] = $this->model_localisation_country->getCountries();
+        
+        \Agmedia\Helpers\Log::info($this->request->post);
+        \Agmedia\Helpers\Log::info($this->request->get);
+        
+        if (isset($this->request->post['zone_block'])) {
+            $data['zone_blocks'] = $this->request->post['zone_block'];
+        } elseif (isset($this->request->get['zone_id'])) {
+            \Agmedia\Helpers\Log::info('tuu');
+            $data['zone_blocks'] = $this->model_localisation_zone->getZoneBlocks($this->request->get['zone_id']);
+        } else {
+            $data['zone_blocks'] = array();
+        }
+        
+        \Agmedia\Helpers\Log::info($data['zone_blocks']);
 
 		$data['header'] = $this->load->controller('common/header');
 		$data['column_left'] = $this->load->controller('common/column_left');
