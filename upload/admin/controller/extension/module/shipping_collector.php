@@ -460,16 +460,16 @@ class ControllerExtensionModuleShippingCollector extends Controller {
     {
         $this->load->model('extension/module/shipping_collector');
         
-        $last = \Agmedia\Features\Models\ShippingCollector::orderBy('collect_date', 'desc')->pluck('collect_date')->first();
+        $last = \Agmedia\Features\Models\ShippingCollector::orderBy('collect_date', 'desc')->first();
     
-        $date = ! $last ? \Carbon\Carbon::now() : \Carbon\Carbon::make($last)->addDay();
+        $date = ! $last ? \Carbon\Carbon::now() : \Carbon\Carbon::make($last->collect_date)->addDay();
         
         $counter = 0;
         
-        for ($i = 0; $i < 6; $i++) {
-            $destination = 'istok';
+        for ($i = 0; $i < 7; $i++) {
+            $destination = $last ? (($last->collect_destination == 'zapad') ? 'istok' : 'zapad') : 'istok';
             if (($counter+1) % 2 == 0) {
-                $destination = 'zapad';
+                $destination = ($destination == 'zapad') ? 'istok' : 'zapad';
             }
             //if ( ! $date->isWeekend()) {
                 foreach (agconf('shipping_collector_defaults') as $default) {
