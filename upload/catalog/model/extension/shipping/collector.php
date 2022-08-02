@@ -20,7 +20,7 @@ class ModelExtensionShippingCollector extends Model {
 
             $value = agconf('shipping_collector_price');
             if (isset($this->session->data['shipping_collector_id']) && ! empty($this->session->data['shipping_collector_id'])) {
-                $collector = \Agmedia\Kaonekad\Models\ShippingCollector::find($this->session->data['shipping_collector_id']);
+                $collector = \Agmedia\Features\Models\ShippingCollector::find($this->session->data['shipping_collector_id']);
 
                 if ($collector) {
                     $value = $collector->price;

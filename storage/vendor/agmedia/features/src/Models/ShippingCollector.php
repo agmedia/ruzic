@@ -100,6 +100,40 @@ class ShippingCollector extends Model
     
     
     /**
+     * @param int $id
+     *
+     * @return string
+     */
+    public static function setLabelByID(int $id): string
+    {
+        foreach (agconf('shipping_collector_regions') as $item) {
+            if ($item['id'] == $id) {
+                return $item['label'];
+            }
+        }
+        
+        return 'istok';
+    }
+    
+    
+    /**
+     * @param string $code
+     *
+     * @return string
+     */
+    public static function setLabelByCode(string $code): string
+    {
+        foreach (agconf('shipping_collector_regions') as $item) {
+            if ($item['code'] == $code) {
+                return $item['label'];
+            }
+        }
+    
+        return 'istok';
+    }
+    
+    
+    /**
      * @param Carbon $date
      * @param        $item
      *

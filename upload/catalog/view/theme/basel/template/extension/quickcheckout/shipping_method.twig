@@ -10,7 +10,7 @@
                     {% for quote in shipping_method.quote %}
 
 
-                        {% if key != 'flat' %}
+                        {% if key != 'collector' %}
                             <tr>
                                 <td>{% if quote.code == code %}
                                         <input type="radio" name="shipping_method" value="{{ quote.code }}" id="{{ quote.code }}" checked="checked" />

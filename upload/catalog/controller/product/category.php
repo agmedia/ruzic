@@ -355,6 +355,12 @@ class ControllerProductCategory extends Controller {
 			$data['limit'] = $limit;
 
 			$data['continue'] = $this->url->link('common/home');
+            
+            // fj.agmedia.hr
+            $session = isset($this->session->data['delivery_region']) ? $this->session->data['delivery_region'] : null;
+            $target = \Agmedia\Features\Helper::resolveSession($data['cat_id'], $session);
+            
+            $this->session->data['delivery_region'] = $target;
 
 			$data['column_left'] = $this->load->controller('common/column_left');
 			$data['column_right'] = $this->load->controller('common/column_right');

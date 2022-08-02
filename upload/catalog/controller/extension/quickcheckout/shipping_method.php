@@ -235,7 +235,11 @@ class ControllerExtensionQuickCheckoutShippingMethod extends Controller {
 		$data['hours'] = implode(',', $hours);
 		
 		// fj.agmedia.hr
-        $data['collector_list'] = \Agmedia\Features\Models\ShippingCollector::getList();
+        $label = \Agmedia\Features\Models\ShippingCollector::setLabelByCode(
+            isset($this->session->data['shipping_address']['zone_code']) ? $this->session->data['shipping_address']['zone_code'] : agconf('shipping_collector_regions')[0]['code']
+        );
+        
+        $data['collector_list'] = \Agmedia\Features\Models\ShippingCollector::getList($label);
       
         if (isset($this->request->post['shipping_collector_id'])) {
             $data['collector_picked'] = $this->request->post['shipping_collector_id'];
@@ -427,13 +431,7 @@ class ControllerExtensionQuickCheckoutShippingMethod extends Controller {
     
     public function getDeliveryTime()
     {
-        $destination = 'istok';
-        
-        if ($this->request->post['destination'] == '848') {
-            $destination = 'istok';
-        } else if ($this->request->post['destination'] == '867') {
-            $destination = 'zapad';
-        }
+        $destination = \Agmedia\Features\Models\ShippingCollector::setLabelByID(intval($this->request->post['destination']));
         
         $list = \Agmedia\Features\Models\ShippingCollector::getList($destination);
     

@@ -13,5 +13,29 @@ define('OC_ENV', [
             'price' => 35
         ]
     ],
+    'shipping_collector_regions' => [
+        0 => [
+            'id'  => 848,
+            'label' => 'istok',
+            'code'   => 'ZGI'
+        ],
+        1 => [
+            'id'  => 867,
+            'label' => 'zapad',
+            'code'   => 'ZGZ'
+        ]
+    ],
+    'delivery_region' => [
+        0 => [
+            'id'  => 225,
+            'label' => 'zagreb'
+        ],
+        1 => [
+            'id'  => 226,
+            'label' => 'croatia'
+        ]
+    ],
+    'delivery_zagreb' => 225,
+    'delivery_croatia' => 226,
     'service'                     => [],
 ]);
