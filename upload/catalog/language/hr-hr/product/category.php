@@ -4,6 +4,8 @@
 $_['text_refine']       = 'Poboljšana pretraga';
 $_['text_product']      = 'Artikli';
 $_['text_error']        = 'Kategorija nije pronađena!';
+$_['error_region']        = 'Mijenjate mjesto dostave. Svi proizvodi iz košarice biti će obrisani.';
+
 $_['text_empty']        = 'Nema artikala za prikaz u ovoj kategoriji.';
 $_['text_quantity']     = 'Kol:';
 $_['text_manufacturer'] = 'Proizvođač:';

@@ -87,6 +87,8 @@ class ControllerProductCategory extends Controller {
 			$category_id = 0;
 		}
 
+
+
 		$category_info = $this->model_catalog_category->getCategory($category_id);
 
 		$data['cat_id'] = $category_id;
@@ -364,6 +366,15 @@ class ControllerProductCategory extends Controller {
 			$data['limit'] = $limit;
 
 			$data['continue'] = $this->url->link('common/home');
+
+			//tomek
+
+
+           /* if ($this->cart->hasStock() ) {
+                $data['error_warning'] = $this->language->get('error_region');
+            } else {
+                $data['error_warning'] = '';
+            }*/
             
             // fj.agmedia.hr
             $session = isset($this->session->data['delivery_region']) ? $this->session->data['delivery_region'] : null;

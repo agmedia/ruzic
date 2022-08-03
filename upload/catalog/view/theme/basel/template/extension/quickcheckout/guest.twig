@@ -30,10 +30,10 @@
             <label class="control-label">{{ entry_zone }}</label>
             <select name="zone_id" class="form-control" id="input-payment-zone"></select>
         </div>
-        <div class="col-sm-6 required">
+     <!--   <div class="col-sm-6 required">
             <label class="control-label">Naselje</label>
             <select name="zone_block_id" class="form-control" id="input-payment-zone-block"></select>
-        </div>
+        </div>-->
 	{% else %}   
 	  <select name="zone_id" class="hide"></select>
 	{% endif %} 
@@ -55,11 +55,22 @@
 	  </select>
 	{% endif %}
   {% else %}   
-    {% if attribute(_context, 'field_' ~ field).display %}  
-	<div{{ field == 'postcode' ? ' id="payment-postcode-required"' }} class="col-sm-6{{attribute(_context, 'field_' ~ field).required ? ' required' }}">
+    {% if attribute(_context, 'field_' ~ field).display %}
+		{% if  field == 'city' and delivery_region =='zagreb' %}
+
+			<div class="col-sm-6 required">
+				<label class="control-label">Grad ili naselje</label>
+				<select name="city" class="form-control" id="input-payment-city"></select>
+			</div>
+
+		{% else %}
+			<div{{ field == 'postcode' ? ' id="payment-postcode-required"' }} class="col-sm-6{{attribute(_context, 'field_' ~ field).required ? ' required' }}">
 	  <label class="control-label" for="input-payment-{{ field|replace({'_' : '-'}) }}">{{ attribute(_context, 'entry_' ~ field) }}</label>
-	  <input type="text" name="{{ field }}" placeholder="{{ attribute(_context, 'field_' ~ field).placeholder }}" value="{{ attribute(_context, field) ? attribute(_context, field) : attribute(_context, 'field_' ~ field).default }}" class="form-control"  id="input-payment-{{ field|replace({'_' : '-'}) }}" />
-	</div>
+	  <input type="text" name="{{ field }}" placeholder="{{ attribute(_context, 'field_' ~ field).placeholder }}" value="{{ attribute(_context, field) ? attribute(_context, field) : attribute(_context, 'field_' ~ field).default }}" class="form-control"  id="input-payment-{{ field|replace({'_' : '-'}) }}" {{ field == 'postcode' ? ' autocomplete="off"' }} />
+	</div{{ field == 'postcode' ? ' id="payment-postcode-required"' }}>
+
+		{% endif %}
+
 	{% else %}   
 	<input type="text" name="{{ field }}" value="{{ attribute(_context, field) ? attribute(_context, field) : attribute(_context, 'field_' ~ field).default }}" class="hide" />
 	{% endif %}
@@ -173,22 +184,45 @@ $(document).ready(function() {
       success: function (json) {
         console.log(json)
 
-        var select = document.getElementById("input-payment-zone-block");
+        var select = document.getElementById("input-payment-city");
         var options = JSON.parse(json);
         select.options.length = 0;
         for (var i = 0; i < options.blocks.length; i++) {
           var opt = options.blocks[i];
           var el = document.createElement("option");
           el.textContent = opt.title;
-          el.value = opt.zone_block_id;
+          el.value = opt.title;
+          el.id = opt.zip;
           select.appendChild(el);
+
         }
+
+		  $("#input-payment-city").prepend("<option value='' selected='selected'>Molimo odaberite</option>");
+
       },
       error: function (xhr, ajaxOptions, thrownError) {
         alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
       }
     })
   })
+
+
+	function init() {
+		// Clear forms here
+		document.getElementById("input-payment-city").value = "";
+		document.getElementById("input-payment-postcode").value = "";
+	}
+	window.onload = init;
+
+
+
+	$('#input-payment-city').on('change', () => {
+		console.log('guest - ' + $('#input-payment-city').val())
+
+		var id = $('#input-payment-city').children(":selected").attr("id");
+				$("#input-payment-postcode").val(id);
+
+	})
 
 	// Sort the custom fields
 	$('#custom-field-payment .custom-field[data-sort]').detach().each(function() {

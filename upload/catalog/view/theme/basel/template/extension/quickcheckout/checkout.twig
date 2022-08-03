@@ -351,7 +351,7 @@ function validateGuestAddress() {
 					for (i in json['error']) {
 						var element = $('#input-payment-' + i.replace('_', '-'));
 
-						$(element).css('border', '1px solid #f00').css('background', '#F8ACAC');
+						$(element).css('border', '1px solid #f00');
 					}
 				{% endif %} 
 			} else {
