@@ -54,13 +54,11 @@ class Helper
         }
         
         $response = [];
-        
-        if ($session == 'zagreb') {
-            foreach ($zones as $key => $zone) {
-                foreach (agconf('shipping_collector_regions') as $item) {
-                    if ($zone['code'] == $item['code']) {
-                        $response[$key] = $zone;
-                    }
+    
+        foreach ($zones as $key => $zone) {
+            foreach (agconf('shipping_collector_regions') as $item) {
+                if ($zone['code'] == $item['code']) {
+                    $response[$key] = $zone;
                 }
             }
         }
