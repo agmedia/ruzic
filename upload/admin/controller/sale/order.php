@@ -817,6 +817,14 @@ class ControllerSaleOrder extends Controller {
 			$data['order_id'] = (int)$this->request->get['order_id'];
 
 			$data['store_id'] = $order_info['store_id'];
+            $data['bill_id'] = $order_info['bill_id'];
+            $data['refunded'] = $order_info['refunded'];
+            $data['amount'] = $order_info['amount'];
+            $data['webracun'] = $order_info['webracun'];
+            $data['total'] = $order_info['total'];
+            $data['refund_qty'] = $order_info['refund_qty'];
+            $data['payment_code'] = $order_info['payment_code'];
+            $data['more_for_refund'] = $order_info['total'] - $order_info['amount'];
 			$data['store_name'] = $order_info['store_name'];
 			
 			if ($order_info['store_id'] == 0) {
@@ -1314,6 +1322,36 @@ class ControllerSaleOrder extends Controller {
 		$this->response->addHeader('Content-Type: application/json');
 		$this->response->setOutput(json_encode($json));
 	}
+
+
+    public function createWebracun() {
+        $this->load->language('sale/order');
+
+        $json = array();
+
+        if (!$this->user->hasPermission('modify', 'sale/order')) {
+            $json['error'] = $this->language->get('error_permission');
+        } elseif (isset($this->request->get['order_id'])) {
+            if (isset($this->request->get['order_id'])) {
+                $order_id = $this->request->get['order_id'];
+            } else {
+                $order_id = 0;
+            }
+
+            $this->load->model('sale/order');
+
+            $invoice_no = $this->model_sale_order->createWebracun($order_id);
+
+            if ($invoice_no) {
+                $json['invoice_no'] = $invoice_no;
+            } else {
+                $json['error'] = $this->language->get('error_action');
+            }
+        }
+
+        $this->response->addHeader('Content-Type: application/json');
+        $this->response->setOutput(json_encode($json));
+    }
 
 	public function addReward() {
 		$this->load->language('sale/order');

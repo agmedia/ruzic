@@ -30,7 +30,7 @@
               </tr>
               <tr>
                 <td><button data-toggle="tooltip" title="{{ text_payment_method }}" class="btn btn-info btn-xs"><i class="fa fa-credit-card fa-fw"></i></button></td>
-                <td>{{ payment_method }}</td>
+                <td>{{ payment_method|striptags }}</td>
               </tr>
               {% if shipping_method %}
                 <tr>
@@ -79,14 +79,14 @@
             <tbody>
               <tr>
                 <td>{{ text_invoice }}</td>
-                <td id="invoice" class="text-right">{{ invoice_no }}</td>
-                <td style="width: 1%;" class="text-center">{% if not invoice_no %}
+                <td id="invoice" class="text-right">{{ webracun }}</td>
+                <td style="width: 1%;" class="text-center">{% if not webracun %}
                     <button id="button-invoice" data-loading-text="{{ text_loading }}" data-toggle="tooltip" title="{{ button_generate }}" class="btn btn-success btn-xs"><i class="fa fa-cog"></i></button>
                   {% else %}
                     <button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-refresh"></i></button>
                   {% endif %}</td>
               </tr>
-              <tr>
+           <!--   <tr>
                 <td>{{ text_reward }}</td>
                 <td class="text-right">{{ reward }}</td>
                 <td class="text-center">{% if customer and reward %}
@@ -114,7 +114,26 @@
                   {% else %}
                     <button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-plus-circle"></i></button>
                   {% endif %}</td>
-              </tr>
+              </tr> -->
+
+              {% if payment_code =='kekspay' %}
+                <tr>
+                  {% if  refund_qty >= 2 or amount == total %}
+                    <td id="refund_id">KEKSPay storno: {{ refund_qty }} od 2 </td>
+                    <td  class="text-right"> Ukupno vraćeno: {{ amount }} </td>
+                    <td style="width: 1%;" class="text-center">
+                    <button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-refresh"></i></button>
+                    </td>
+                  {% else %}
+                    <td id="refund_id"><i class="fa fa-question" aria-hidden="true" data-toggle="tooltip" title="" data-original-title="Napravite djelomični ili potpuni povrat sredstava. Moguće max 2 djelomična storna."></i>
+                      KEKSPay storno </td>
+                    <td  class="text-right"> <input type="text" id="amount" name="amount" value="{{ more_for_refund }}" autocomplete="off" class="form-control input-sm " ></td>
+                    <td style="width: 1%;" class="text-center">
+                    <button id="button-refund-send" data-loading-text="{{ text_loading }}" data-toggle="tooltip" title="{{ button_generate }}" class="btn btn-success btn-xs"><i class="fa fa-cog"></i></button>
+                    </td>
+                  {% endif %}
+                </tr>
+              {% endif %}
             </tbody>
           </table>
         </div>
@@ -364,9 +383,41 @@
     </div>
   </div>
   <script type="text/javascript"><!--
+
+    $(document).delegate('#button-refund-send', 'click', function() {
+      $.ajax({
+        url: 'index.php?route=extension/payment/kekspay/refund&user_token={{ user_token }}&bill_id={{ bill_id }}&order_id={{ order_id }}&amount='+ $('#amount').val(),
+        dataType: 'json',
+        beforeSend: function() {
+          $('#button-refund-send').button('loading');
+        },
+        complete: function() {
+          $('#button-refund-send').button('reset');
+        },
+        success: function(json) {
+          $('.alert-dismissible').remove();
+
+          if (json['error']) {
+            $('#content > .container-fluid').prepend('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + json['error'] + '</div>');
+          }
+
+          if (json['message'] == 'OK') {
+            $('#refund_id').html('Uspješno vraćeno: ' + json['amount']);
+            $('#amount').val('');
+            $('#button-refund-send').replaceWith('<button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-cog"></i></button>');
+          }
+        },
+        error: function(xhr, ajaxOptions, thrownError) {
+          alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+        }
+      });
+    });
+
+
+
   $(document).delegate('#button-invoice', 'click', function() {
 	  $.ajax({
-		  url: 'index.php?route=sale/order/createinvoiceno&user_token={{ user_token }}&order_id={{ order_id }}',
+		  url: 'index.php?route=sale/order/createwebracun&user_token={{ user_token }}&order_id={{ order_id }}',
 		  dataType: 'json',
 		  beforeSend: function() {
 			  $('#button-invoice').button('loading');

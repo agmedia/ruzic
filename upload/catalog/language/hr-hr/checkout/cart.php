@@ -44,9 +44,9 @@ $_['text_nastavi']					= 'NASTAVI KUPNJU';
 
 // Column
 $_['column_image']                  = 'Slika';
-$_['column_name']                   = 'Naziv artikla';
+$_['column_name']                   = 'Artikl';
 $_['column_model']                  = 'Model';
-$_['column_quantity']               = 'Količina';
+$_['column_quantity']               = 'Kol.';
 $_['column_price']                  = 'Cijena';
 $_['column_total']                  = 'Ukupno';
 
