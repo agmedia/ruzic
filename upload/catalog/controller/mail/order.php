@@ -258,9 +258,15 @@ class ControllerMailOrder extends Controller {
 		$order_totals = $this->model_checkout_order->getOrderTotals($order_info['order_id']);
 
 		foreach ($order_totals as $order_total) {
+
+            if($order_info['currency_code']!='EUR'){
+                $tekst = '<small>'.$this->currency->format($order_total['value'], 'EUR'). '</small> '.$this->currency->format($order_total['value'], $order_info['currency_code'], $order_info['currency_value']);
+            }else{
+               $tekst =  $this->currency->format($order_total['value'], $order_info['currency_code'], $order_info['currency_value']);
+            }
 			$data['totals'][] = array(
 				'title' => $order_total['title'],
-				'text'  => $this->currency->format($order_total['value'], $order_info['currency_code'], $order_info['currency_value']),
+				'text'  => $tekst,
 			);
 		}
 	
