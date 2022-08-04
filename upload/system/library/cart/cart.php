@@ -277,6 +277,14 @@ class Cart {
 		} else {
 			$this->db->query("UPDATE " . DB_PREFIX . "cart SET quantity = (quantity + " . (int)$quantity . ") WHERE api_id = '" . (isset($this->session->data['api_id']) ? (int)$this->session->data['api_id'] : 0) . "' AND customer_id = '" . (int)$this->customer->getId() . "' AND session_id = '" . $this->db->escape($this->session->getId()) . "' AND product_id = '" . (int)$product_id . "' AND recurring_id = '" . (int)$recurring_id . "' AND `option` = '" . $this->db->escape(json_encode($option)) . "'");
 		}
+        
+        // fj.agmedia.hr
+        $this->session->data['delivery_region_cart'] = $this->session->data['delivery_region'];
+        
+        \Agmedia\Helpers\Log::info('system-cart');
+        \Agmedia\Helpers\Log::info($this->session->data['delivery_region']);
+        \Agmedia\Helpers\Log::info($this->session->data['delivery_region_cart']);
+        \Agmedia\Helpers\Log::info('---------------------------------------');
 	}
 
 	public function update($cart_id, $quantity) {
