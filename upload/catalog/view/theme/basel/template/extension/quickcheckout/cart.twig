@@ -40,8 +40,8 @@
 			{% else %}
 			x&nbsp;{{ product.quantity }} 
 			{% endif %}</td>
-		  <td class="price1 hidden-xs hidden-sm">{{ product.price }}</td>
-          <td class="total text-right">{{ product.total }}</td>
+		  <td class="price1 hidden-xs hidden-sm"><small>{{ product.priceeur }}</small> {{ product.price }}</td>
+          <td class="total text-right"><small>{{ product.totaleur }}</small> {{ product.total }}</td>
         </tr>
         {% endfor %}
         {% for voucher in vouchers %} 

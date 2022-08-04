@@ -103,6 +103,8 @@ class ControllerCheckoutCart extends Controller {
 					
 					$price = $this->currency->format($unit_price, $this->session->data['currency']);
 					$total = $this->currency->format($unit_price * $product['quantity'], $this->session->data['currency']);
+                    $priceeur = $this->currency->format($unit_price, 'EUR');
+                    $totaleur = $this->currency->format($unit_price * $product['quantity'], 'EUR');
 				} else {
 					$price = false;
 					$total = false;
@@ -141,7 +143,9 @@ class ControllerCheckoutCart extends Controller {
 					'stock'     => $product['stock'] ? true : !(!$this->config->get('config_stock_checkout') || $this->config->get('config_stock_warning')),
 					'reward'    => ($product['reward'] ? sprintf($this->language->get('text_points'), $product['reward']) : ''),
 					'price'     => $price,
-					'total'     => $total,
+                    'priceeur'     => $priceeur,
+                    'total'     => $total,
+                    'totaleur'     => $totaleur,
 					'href'      => $this->url->link('product/product', 'product_id=' . $product['product_id'])
 				);
 			}
@@ -207,9 +211,17 @@ class ControllerCheckoutCart extends Controller {
 			$data['totals'] = array();
 
 			foreach ($totals as $total) {
+                if($this->session->data['currency'] != 'EUR'){
+                    $text = '<small>'.$this->currency->format($total['value'], 'EUR'). '</small> '. $this->currency->format($total['value'], $this->session->data['currency']);
+                }
+                else{
+                    $text = $this->currency->format($total['value'], $this->session->data['currency']);
+                }
+
+
 				$data['totals'][] = array(
 					'title' => $total['title'],
-					'text'  => $this->currency->format($total['value'], $this->session->data['currency'])
+					'text'  => $text
 				);
 			}
 

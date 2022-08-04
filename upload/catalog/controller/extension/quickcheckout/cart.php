@@ -50,7 +50,14 @@ class ControllerExtensionQuickCheckoutCart extends Controller {
 			array_multisort($sort_order, SORT_ASC, $total_data);
 			
 			foreach ($total_data as $total) {
-				$text = $this->currency->format($total['value'], $this->session->data['currency']);
+
+                if($this->session->data['currency'] != 'EUR'){
+                    $text = '<small>'.$this->currency->format($total['value'], 'EUR'). '</small> '. $this->currency->format($total['value'], $this->session->data['currency']);
+                }
+                else{
+                    $text = $this->currency->format($total['value'], $this->session->data['currency']);
+                }
+
 				
 				$data['totals'][] = array(
 					'title' => $total['title'],
@@ -109,15 +116,29 @@ class ControllerExtensionQuickCheckoutCart extends Controller {
 			// Display prices
 			if ($this->customer->isLogged() || !$this->config->get('config_customer_price')) {
 				$price = $this->currency->format($this->tax->calculate($product['price'], $product['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']);
+                if($this->session->data['currency'] != 'EUR') {
+                    $priceeur = $this->currency->format($this->tax->calculate(($product['price']), $product['tax_class_id'], $this->config->get('config_tax')), 'EUR');
+                }
+                else{
+                    $priceeur = false;
+                }
 			} else {
 				$price = false;
+                $priceeur = false;
 			}
 
 			// Display prices
 			if ($this->customer->isLogged() || !$this->config->get('config_customer_price')) {
 				$total = $this->currency->format($this->tax->calculate($product['price'], $product['tax_class_id'], $this->config->get('config_tax')) * $product['quantity'], $this->session->data['currency']);
+                if($this->session->data['currency'] != 'EUR') {
+                $totaleur = $this->currency->format($this->tax->calculate($product['price'], $product['tax_class_id'], $this->config->get('config_tax')) * $product['quantity'], 'EUR');
+                }
+                else{
+                    $totaleur = false;
+                }
 			} else {
 				$total = false;
+                $totaleur = false;
 			}
 
 			$recurring = '';
@@ -153,7 +174,9 @@ class ControllerExtensionQuickCheckoutCart extends Controller {
 				'stock'     => $product['stock'] ? true : !(!$this->config->get('config_stock_checkout') || $this->config->get('config_stock_warning')),
 				'reward'    => ($product['reward'] ? sprintf($this->language->get('text_points'), $product['reward']) : ''),
 				'price'     => $price,
+                'priceeur'     => $priceeur,
 				'total'     => $total,
+                'totaleur'     => $totaleur,
 				'href'      => $this->url->link('product/product', 'product_id=' . $product['product_id'])
 			);
 		}
