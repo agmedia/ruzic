@@ -2,7 +2,6 @@
     <div class="alert alert-danger">{{ error_warning }}</div>
 {% endif %}
 {% if shipping_methods %}
-    <p>{{ text_shipping_method }}</p>
     {% if shipping %}
         <table class="table">
             {% for key,shipping_method in shipping_methods %}

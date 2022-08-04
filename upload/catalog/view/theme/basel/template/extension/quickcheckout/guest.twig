@@ -66,8 +66,15 @@
 		{% else %}
 			<div{{ field == 'postcode' ? ' id="payment-postcode-required"' }} class="col-sm-6{{attribute(_context, 'field_' ~ field).required ? ' required' }}">
 	  <label class="control-label" for="input-payment-{{ field|replace({'_' : '-'}) }}">{{ attribute(_context, 'entry_' ~ field) }}</label>
-	  <input type="text" name="{{ field }}" placeholder="{{ attribute(_context, 'field_' ~ field).placeholder }}" value="{{ attribute(_context, field) ? attribute(_context, field) : attribute(_context, 'field_' ~ field).default }}" class="form-control"  id="input-payment-{{ field|replace({'_' : '-'}) }}" {{ field == 'postcode' ? ' autocomplete="off"' }} />
-	</div{{ field == 'postcode' ? ' id="payment-postcode-required"' }}>
+	  <input type="text" name="{{ field }}" placeholder="" value="{{ attribute(_context, field) ? attribute(_context, field) : attribute(_context, 'field_' ~ field).default }}" class="form-control"  id="input-payment-{{ field|replace({'_' : '-'}) }}" {{ field == 'postcode' ? ' autocomplete="off"' }} />
+			{% if  field == 'address_1' and delivery_region =='zagreb' %}
+				<span id="helpBlock" class="help-block">{{ attribute(_context, 'field_' ~ field).placeholder }}</span>
+			{% endif %}
+
+				{% if  field == 'telephone'  %}
+					<span id="helpBlock" class="help-block">{{ attribute(_context, 'field_' ~ field).placeholder }}</span>
+				{% endif %}
+	</div>
 
 		{% endif %}
 
@@ -162,8 +169,8 @@
     <input type="checkbox" name="create_account" value="1" id="create" class="hide" />
   {% endif %}
   {% if shipping_required %} 
-    <input type="checkbox" name="shipping_address" value="1" id="shipping"{{ shipping_address ? ' checked="checked"' }} />
-    <label for="shipping">{{ entry_shipping }}</label>
+    <input type="checkbox" name="shipping_address" value="1" class="hide" id="shipping"{{ shipping_address ? ' checked="checked"' }} />
+    <label for="shipping" class="hide">{{ entry_shipping }}</label>
   {% else %}   
     <input type="checkbox" name="shipping_address" value="1" id="shipping" checked="checked" class="hide" />
   {% endif %}
