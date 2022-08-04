@@ -27,13 +27,13 @@
   {% elseif  field == 'zone' %} 
     {% if attribute(_context, 'field_' ~ field).display %}
         <div class="col-sm-6{{ attribute(_context, 'field_' ~ field).required ? ' required' }}">
-            <label class="control-label">{{ entry_zone }}</label>
-            <select name="zone_id" class="form-control" id="input-payment-zone"></select>
+		{% if  delivery_region =='zagreb' %}
+            <label class="control-label">Područje dostave</label>
+		{% else %}
+			<label class="control-label">{{ entry_zone }}</label>
+		{% endif %}
+			<select name="zone_id" class="form-control" id="input-payment-zone"></select>
         </div>
-     <!--   <div class="col-sm-6 required">
-            <label class="control-label">Naselje</label>
-            <select name="zone_block_id" class="form-control" id="input-payment-zone-block"></select>
-        </div>-->
 	{% else %}   
 	  <select name="zone_id" class="hide"></select>
 	{% endif %} 
