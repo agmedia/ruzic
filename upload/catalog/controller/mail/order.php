@@ -217,12 +217,25 @@ class ControllerMailOrder extends Controller {
 				);
 			}
 
+			if($order_info['currency_code']!='EUR'){
+                $priceeur =  $this->currency->format($order_product['price'] + ($this->config->get('config_tax') ? $order_product['tax'] : 0), $order_info['currency_code'], 'EUR');
+                $totaleur = $this->currency->format($order_product['total'] + ($this->config->get('config_tax') ? ($order_product['tax'] * $order_product['quantity']) : 0), $order_info['currency_code'], 'EUR');
+            }
+			else{
+
+                $priceeur ='';
+                $totaleur ='';
+
+            }
+
 			$data['products'][] = array(
 				'name'     => $order_product['name'],
 				'model'    => $order_product['model'],
 				'option'   => $option_data,
 				'quantity' => $order_product['quantity'],
 				'price'    => $this->currency->format($order_product['price'] + ($this->config->get('config_tax') ? $order_product['tax'] : 0), $order_info['currency_code'], $order_info['currency_value']),
+				'priceeur' => $priceeur,
+                'totaleur' => $totaleur,
 				'total'    => $this->currency->format($order_product['total'] + ($this->config->get('config_tax') ? ($order_product['tax'] * $order_product['quantity']) : 0), $order_info['currency_code'], $order_info['currency_value'])
 			);
 		}
