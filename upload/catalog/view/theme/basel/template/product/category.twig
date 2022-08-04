@@ -12,6 +12,13 @@
             <button type="button" class="close" data-dismiss="alert">&times;</button>
         </div>
     {% endif %}
+
+    {% if changed_region_warning %}
+        <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>
+            Mijenjate regiju sa napunjenom košaricom... WARNING..!!
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+        </div>
+    {% endif %}
   
   <div class="row">
   

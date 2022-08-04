@@ -33,11 +33,11 @@ class Helper
             }
         }
         
-        if ($session == 'croatia') {
-            return 'zagreb';
-        } else {
-            return 'croatia';
+        if ($session) {
+            return $session;
         }
+
+        return 'croatia';
     }
     
     

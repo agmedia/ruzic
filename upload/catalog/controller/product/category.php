@@ -366,19 +366,18 @@ class ControllerProductCategory extends Controller {
 			$data['limit'] = $limit;
 
 			$data['continue'] = $this->url->link('common/home');
-
-			//tomek
-
-
-           /* if ($this->cart->hasStock() ) {
-                $data['error_warning'] = $this->language->get('error_region');
-            } else {
-                $data['error_warning'] = '';
-            }*/
+			
             
             // fj.agmedia.hr
             $session = isset($this->session->data['delivery_region']) ? $this->session->data['delivery_region'] : null;
             $target = \Agmedia\Features\Helper::resolveSession($data['cat_id'], $session);
+            
+            if ($this->cart->hasProducts() && $session != $target) {
+                $data['changed_region_warning'] = true;
+            } else {
+                $data['changed_region_warning'] = false;
+            }
+            
             
             $this->session->data['delivery_region'] = $target;
 
