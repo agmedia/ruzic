@@ -273,16 +273,6 @@ class ControllerCheckoutCart extends Controller {
 
 	public function add() {
 		$this->load->language('checkout/cart');
-        
-        // fj.agmedia.hr
-        if ( ! isset($this->session->data['delivery_region_cart']) && ! $this->session->data['delivery_region_cart']) {
-            $this->session->data['delivery_region_cart'] = $this->session->data['delivery_region'];
-        }
-        
-        \Agmedia\Helpers\Log::info('class ControllerCheckoutCart extends Controller');
-        \Agmedia\Helpers\Log::info($this->session->data['delivery_region']);
-        \Agmedia\Helpers\Log::info($this->session->data['delivery_region_cart']);
-        \Agmedia\Helpers\Log::info('---------------------------------------');
 
 		$json = array();
 
