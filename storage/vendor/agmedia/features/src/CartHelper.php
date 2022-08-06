@@ -15,21 +15,16 @@ class CartHelper
     {
         $db = new Database();
         $res = '';
-    
-        Log::info('1');
         
         $carts = $db->query("SELECT * FROM " . DB_PREFIX . "cart WHERE api_id = '" . (isset($session->data['api_id']) ? (int)$session->data['api_id'] : 0) . "' AND customer_id = '" . (int)$customer->getId() . "' AND session_id = '" . $db->escape($session->getId()) . "'");
-        Log::info('2');
+        
         if ($carts->num_rows) {
             foreach ($carts->rows as $cart) {
                 if ($cart['region']) {
-                    Log::info('3');
                     $res = $cart['region'];
                 }
             }
         }
-    
-        Log::info('4 - ' . $res);
         
         return $res;
     }

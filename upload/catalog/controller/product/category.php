@@ -386,14 +386,6 @@ class ControllerProductCategory extends Controller {
                 $data['btnCartEnable'] = true;
             }
             
-            
-            \Agmedia\Helpers\Log::info('category-----');
-            \Agmedia\Helpers\Log::info($region);
-            \Agmedia\Helpers\Log::info($this->session->data['delivery_region']);
-            \Agmedia\Helpers\Log::info($data['btnCartEnable']);
-            
-            
-            
             $this->session->data['delivery_region'] = $target;
 
 			$data['column_left'] = $this->load->controller('common/column_left');
