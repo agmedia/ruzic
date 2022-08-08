@@ -371,18 +371,20 @@ class ControllerProductCategory extends Controller {
             $session = isset($this->session->data['delivery_region']) ? $this->session->data['delivery_region'] : null;
             $target = \Agmedia\Features\Helper::resolveSession($data['cat_id'], $session);
             
-            if ($this->cart->hasProducts() && $session != $target) {
+          /*  if ($this->cart->hasProducts() && $session != $target) {
                 $data['changed_region_warning'] = true;
             } else {
                 $data['changed_region_warning'] = false;
-            }
+            }*/
             
             $region = \Agmedia\Features\CartHelper::checkRegion($this->customer, $this->session);
             
             if ($region && ($region != $target)) {
                 $data['btnCartEnable'] = false;
+                $data['changed_region_warning'] = true;
             } else {
                 $data['btnCartEnable'] = true;
+                $data['changed_region_warning'] = false;
             }
             
             $this->session->data['delivery_region'] = $target;

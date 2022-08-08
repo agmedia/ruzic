@@ -13,9 +13,9 @@
         </div>
     {% endif %}
 
-    {% if changed_region_warning %}
+    {% if changed_region_warning and cat_id!='224' %}
         <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>
-            Mijenjate regiju sa napunjenom košaricom... WARNING..!!
+            Mijenjate regiju sa napunjenom košaricom. Ukoliko želite promijeniti mjesto dostave molimo vas ispraznite košaricu.
             <button type="button" class="close" data-dismiss="alert">&times;</button>
         </div>
     {% endif %}
