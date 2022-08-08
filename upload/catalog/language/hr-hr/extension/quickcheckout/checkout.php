@@ -63,8 +63,8 @@ $_['error_comment']					 = 'Warning: Order comment is required.';
 // Text
 $_['text_checkout_option']           = 'Prijava';
 $_['text_checkout_account']          = 'Podaci o kupcu';
-$_['text_checkout_payment_address']  = 'Adresa naplate';
-$_['text_checkout_shipping_address'] = 'Adresa dostave';
+$_['text_checkout_payment_address']  = 'Adresa';
+$_['text_checkout_shipping_address'] = 'Adresa';
 $_['text_checkout_shipping_method']  = 'Dostava';
 $_['text_checkout_payment_method']   = 'Način plaćanja';
 $_['text_checkout_confirm']          = 'Potvrdi narudžbu';

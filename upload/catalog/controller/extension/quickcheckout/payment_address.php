@@ -26,6 +26,8 @@ class ControllerExtensionQuickCheckoutPaymentAddress extends Controller {
 			$data['country_id'] = $country['default'];
 		}
 
+        $data['delivery_region'] = $this->session->data['delivery_region'];
+
 		if (isset($this->session->data['payment_address']['zone_id'])) {
 			$data['zone_id'] = $this->session->data['payment_address']['zone_id'];
 		} elseif (isset($this->session->data['shipping_address']['zone_id'])) {
@@ -83,6 +85,7 @@ class ControllerExtensionQuickCheckoutPaymentAddress extends Controller {
 		array_multisort($sort_order, SORT_ASC, $fields);
 
 		$data['fields'] = $fields;
+
 
 		return $this->load->view('extension/quickcheckout/payment_address', $data);
   	}

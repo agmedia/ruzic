@@ -22,6 +22,8 @@ class ControllerExtensionQuickCheckoutGuest extends Controller {
 
         $data['delivery_region'] = $this->session->data['delivery_region'];
 
+
+
 		if (isset($this->session->data['guest']['customer_group_id'])) {
 			$data['customer_group_id'] = $this->session->data['guest']['customer_group_id'];
 		} else {

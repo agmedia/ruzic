@@ -34,7 +34,7 @@
 	  <select name="zone_id" class="hide"></select>
 	{% endif %} 
   {% else %}   
-    {% if attribute(_context, 'field_' ~ field).display %}  
+    {% if attribute(_context, 'field_' ~ field).display %}
 	<div{{ field == 'postcode' ? ' id="shipping-postcode-required"' }} class="col-sm-6{{attribute(_context, 'field_' ~ field).required ? ' required' }}">
 	  <label class="control-label" for="input-shipping-{{ field|replace({'_' : '-'}) }}">{{ attribute(_context, 'entry_' ~ field) }}</label>
 	  <input type="text" name="{{ field }}" placeholder="{{ attribute(_context, 'field_' ~ field).placeholder }}" value="{{ attribute(_context, field) ? attribute(_context, field) : attribute(_context, 'field_' ~ field).default }}" class="form-control"  id="input-shipping-{{ field|replace({'_' : '-'}) }}" />

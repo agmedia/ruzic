@@ -28,16 +28,14 @@
           <div class="single-address">
           <i class="display-block margin-b15">{{ result.address }}</i>
           <small><a href="{{ result.update }}" class="inline-link">{{ button_edit }}</a></small>
-          <small><a href="{{ result.delete }}" class="inline-link">{{ button_delete }}</a></small>
+
           </div>
           {% endfor %}
        
       {% else %}
       <p>{{ text_empty }}</p>
       {% endif %}
-      <div class="buttons clearfix text-right">
-        <a href="{{ add }}" class="btn btn-contrast">{{ button_new_address }}</a>
-      </div>
+
       {{ content_bottom }}</div>
     {{ column_right }}</div>
 </div>

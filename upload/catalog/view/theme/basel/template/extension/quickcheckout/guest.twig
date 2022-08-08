@@ -181,7 +181,7 @@ $(document).ready(function() {
 
   $('#input-payment-zone').on('change', () => {
     console.log('guest - ' + $('#input-payment-zone').val())
-
+	  document.getElementById("input-payment-postcode").value = "";
     $.ajax({
       url: 'index.php?route=extension/quickcheckout/shipping_method/getDeliveryTime',
       type: 'post',

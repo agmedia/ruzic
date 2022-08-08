@@ -11,6 +11,8 @@ class ControllerAccountAddress extends Controller {
 
 		$this->load->language('account/address');
 
+        $data['delivery_region'] = $this->session->data['delivery_region'];
+
 		$this->document->setTitle($this->language->get('heading_title'));
 
 		$this->load->model('account/address');
@@ -54,6 +56,9 @@ class ControllerAccountAddress extends Controller {
 			$this->response->redirect($this->url->link('account/login', '', true));
 		}
 
+        $data['delivery_region'] = $this->session->data['delivery_region'];
+
+
 		$this->load->language('account/address');
 
 		$this->document->setTitle($this->language->get('heading_title'));
@@ -85,6 +90,8 @@ class ControllerAccountAddress extends Controller {
 			}
 
 			$this->session->data['success'] = $this->language->get('text_edit');
+
+
 
 			$this->response->redirect($this->url->link('account/address', '', true));
 		}
@@ -247,6 +254,8 @@ class ControllerAccountAddress extends Controller {
 				'href' => $this->url->link('account/address/edit', 'address_id=' . $this->request->get['address_id'], true)
 			);
 		}
+
+        $data['delivery_region'] = $this->session->data['delivery_region'];
 
 		$data['text_address'] = !isset($this->request->get['address_id']) ? $this->language->get('text_address_add') : $this->language->get('text_address_edit');
 

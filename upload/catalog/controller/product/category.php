@@ -88,7 +88,6 @@ class ControllerProductCategory extends Controller {
 		}
 
 
-
 		$category_info = $this->model_catalog_category->getCategory($category_id);
 
 		$data['cat_id'] = $category_id;

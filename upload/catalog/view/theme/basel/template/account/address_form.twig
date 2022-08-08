@@ -34,12 +34,6 @@
               <div class="text-danger">{{ error_lastname }}</div>
               {% endif %} </div>
           </div>
-          <div class="form-group">
-            <label class="col-sm-2 control-label" for="input-company">{{ entry_company }}</label>
-            <div class="col-sm-10">
-              <input type="text" name="company" value="{{ company }}" placeholder="{{ entry_company }}" id="input-company" class="form-control" />
-            </div>
-          </div>
           <div class="form-group required">
             <label class="col-sm-2 control-label" for="input-address-1">{{ entry_address_1 }}</label>
             <div class="col-sm-10">
@@ -48,16 +42,26 @@
               <div class="text-danger">{{ error_address_1 }}</div>
               {% endif %} </div>
           </div>
-          <div class="form-group">
-            <label class="col-sm-2 control-label" for="input-address-2">{{ entry_address_2 }}</label>
-            <div class="col-sm-10">
-              <input type="text" name="address_2" value="{{ address_2 }}" placeholder="{{ entry_address_2 }}" id="input-address-2" class="form-control" />
+
+            <div class="form-group required">
+                <label class="col-sm-2 control-label" for="input-zone">{{ entry_zone }}</label>
+                <div class="col-sm-10">
+                    <select name="zone_id" id="input-zone" class="form-control">
+                    </select>
+                    {% if error_zone %}
+                        <div class="text-danger">{{ error_zone }}</div>
+                    {% endif %} </div>
             </div>
-          </div>
+
           <div class="form-group required">
-            <label class="col-sm-2 control-label" for="input-city">{{ entry_city }}</label>
+            <label class="col-sm-2 control-label" for="input-city">Grad ili naselje</label>
             <div class="col-sm-10">
-              <input type="text" name="city" value="{{ city }}" placeholder="{{ entry_city }}" id="input-city" class="form-control" />
+                {% if  delivery_region =='zagreb' %}
+                <select name="city" class="form-control" id="input-city"></select>
+                {% else %}
+                <input type="text" name="city" value="{{ city }}" placeholder="{{ entry_city }}" id="input-city" class="form-control" />
+
+                {% endif %}
               {% if error_city %}
               <div class="text-danger">{{ error_city }}</div>
               {% endif %} </div>
@@ -93,15 +97,7 @@
               <div class="text-danger">{{ error_country }}</div>
               {% endif %} </div>
           </div>
-          <div class="form-group required">
-            <label class="col-sm-2 control-label" for="input-zone">{{ entry_zone }}</label>
-            <div class="col-sm-10">
-              <select name="zone_id" id="input-zone" class="form-control">
-              </select>
-              {% if error_zone %}
-              <div class="text-danger">{{ error_zone }}</div>
-              {% endif %} </div>
-          </div>
+
           {% for custom_field in custom_fields %}
           {% if custom_field.type == 'select' %}
           <div class="form-group{% if custom_field.required %} required {% endif %} custom-field" data-sort="{{ custom_field.sort_order }}">
@@ -279,6 +275,62 @@
     {{ column_right }}</div>
 </div>
 <script><!--
+
+    $(document).ready(function() {
+        // fj.agmedia.hr
+        $('#input-zone').on('change', () => {
+            console.log('guest - ' + $('#input-zone').val())
+            document.getElementById("input-postcode").value = "";
+            $.ajax({
+                url: 'index.php?route=extension/quickcheckout/shipping_method/getDeliveryTime',
+                type: 'post',
+                data: {destination: $('#input-zone').val()},
+                dataType: 'html',
+                cache: false,
+                success: function (json) {
+                    console.log(json)
+
+                    var select = document.getElementById("input-city");
+                    var options = JSON.parse(json);
+                    select.options.length = 0;
+                    for (var i = 0; i < options.blocks.length; i++) {
+                        var opt = options.blocks[i];
+                        var el = document.createElement("option");
+                        el.textContent = opt.title;
+                        el.value = opt.title;
+                        el.id = opt.zip;
+                        select.appendChild(el);
+
+                    }
+
+                    $("#input-city").prepend("<option value='' selected='selected'>Molimo odaberite</option>");
+
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+                }
+            })
+        })
+
+        function init() {
+            // Clear forms here
+            document.getElementById("input-city").value = "";
+            document.getElementById("input-postcode").value = "";
+        }
+        window.onload = init;
+
+
+
+        $('#input-city').on('change', () => {
+            console.log('guest - ' + $('#input-city').val())
+
+            var id = $('#input-city').children(":selected").attr("id");
+            $("#input-postcode").val(id);
+
+        })
+
+    });
+
 // Sort the custom fields
 $('.form-group[data-sort]').detach().each(function() {
 	if ($(this).attr('data-sort') >= 0 && $(this).attr('data-sort') <= $('.form-group').length-2) {

@@ -125,7 +125,7 @@ class ControllerExtensionQuickCheckoutShippingAddress extends Controller {
 			}
 
 			if ($this->request->post['shipping_address'] == 'new') {
-				$firstname = $this->config->get('quickcheckout_field_firstname');
+			/*	$firstname = $this->config->get('quickcheckout_field_firstname');
 
 				if (!empty($firstname['required'])) {
 					if ((utf8_strlen($this->request->post['firstname']) < 1) || (utf8_strlen($this->request->post['firstname']) > 32)) {
@@ -206,7 +206,7 @@ class ControllerExtensionQuickCheckoutShippingAddress extends Controller {
 					if ($custom_field['location'] == 'address' && $custom_field['required'] && empty($this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']])) {
 						$json['error']['custom_field' . $custom_field['custom_field_id']] = sprintf($this->language->get('error_custom_field'), $custom_field['name']);
 					}
-				}
+				}*/
 
 				if (!$json) {
 					// Default Shipping Address

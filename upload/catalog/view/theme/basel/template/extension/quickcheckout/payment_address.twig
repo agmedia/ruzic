@@ -60,11 +60,34 @@
 	  <select name="zone_id" class="hide"></select>
 	{% endif %}
   {% else %}
+
+
     {% if attribute(_context, 'field_' ~ field).display %}
-	<div{{ field == 'postcode' ? ' id="payment-postcode-required"' }} class="col-sm-6{{ attribute(_context, 'field_' ~ field).required ? ' required' }}">
-	  <label class="control-label" for="input-payment-{{ field|replace({'_' : '-'}) }}">{{ attribute(_context, 'entry_' ~ field) }}</label>
-	  <input type="text" name="{{ field }}" placeholder="{{ attribute(_context, 'field_' ~ field).placeholder }}" value="{{ attribute(_context, 'field_' ~ field).default }}" class="form-control"  id="input-payment-{{ field|replace({'_' : '-'}) }}" />
-	</div>
+
+		{% if  field == 'city' and delivery_region =='zagreb' %}
+
+			<div class="col-sm-6 required">
+				<label class="control-label">Grad ili naselje</label>
+				<select name="city" class="form-control" id="input-payment-city"></select>
+			</div>
+
+		{% else %}
+
+
+
+			<div{{ field == 'postcode' ? ' id="payment-postcode-required"' }} class="col-sm-6{{attribute(_context, 'field_' ~ field).required ? ' required' }}">
+				<label class="control-label" for="input-payment-{{ field|replace({'_' : '-'}) }}">{{ attribute(_context, 'entry_' ~ field) }}</label>
+				<input type="text" name="{{ field }}" placeholder="" value="{{ attribute(_context, field) ? attribute(_context, field) : attribute(_context, 'field_' ~ field).default }}" class="form-control"  id="input-payment-{{ field|replace({'_' : '-'}) }}" {{ field == 'postcode' ? ' autocomplete="off"' }} />
+				{% if  field == 'address_1' and delivery_region =='zagreb' %}
+					<span id="helpBlock" class="help-block">{{ attribute(_context, 'field_' ~ field).placeholder }}</span>
+				{% endif %}
+
+				{% if  field == 'telephone' and delivery_region =='zagreb' %}
+					<span id="helpBlock" class="help-block">{{ attribute(_context, 'field_' ~ field).placeholder }}</span>
+				{% endif %}
+			</div>
+
+		{% endif %}
 	{% else %}
 	<input type="text" name="{{ field }}" value="{{ attribute(_context, 'field_' ~ field).default }}" class="hide" />
 	{% endif %}
@@ -148,34 +171,56 @@
 // Payment address form function
 $(document).ready(function() {
   // fj.agmedia.hr
-  $('#input-payment-zone').on('change', () => {
-    console.log('payment_address - ' + $('#input-payment-zone').val())
+	$('#input-payment-zone').on('change', () => {
+		console.log('guest - ' + $('#input-payment-zone').val())
+		document.getElementById("input-payment-postcode").value = "";
+		$.ajax({
+			url: 'index.php?route=extension/quickcheckout/shipping_method/getDeliveryTime',
+			type: 'post',
+			data: {destination: $('#input-payment-zone').val()},
+			dataType: 'html',
+			cache: false,
+			success: function (json) {
+				console.log(json)
 
-    /*$.ajax({
-      url: 'index.php?route=extension/quickcheckout/shipping_method/getDeliveryTime',
-      type: 'post',
-      data: {destination: $('#input-payment-zone').val()},
-      dataType: 'html',
-      cache: false,
-      success: function (html) {
-        //console.log(html)
+				var select = document.getElementById("input-payment-city");
+				var options = JSON.parse(json);
+				select.options.length = 0;
+				for (var i = 0; i < options.blocks.length; i++) {
+					var opt = options.blocks[i];
+					var el = document.createElement("option");
+					el.textContent = opt.title;
+					el.value = opt.title;
+					el.id = opt.zip;
+					select.appendChild(el);
 
-        var select = document.getElementById("input-collector-pick");
-        var options = JSON.parse(html);
-        select.options.length = 0;
-        for (var i = 0; i < options.length; i++) {
-          var opt = options[i];
-          var el = document.createElement("option");
-          el.textContent = opt.label;
-          el.value = opt.value;
-          select.appendChild(el);
-        }
-      },
-      error: function (xhr, ajaxOptions, thrownError) {
-        alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
-      }
-    })*/
-  })
+				}
+
+				$("#input-payment-city").prepend("<option value='' selected='selected'>Molimo odaberite</option>");
+
+			},
+			error: function (xhr, ajaxOptions, thrownError) {
+				alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+			}
+		})
+	})
+
+	function init() {
+		// Clear forms here
+		document.getElementById("input-payment-city").value = "";
+		document.getElementById("input-payment-postcode").value = "";
+	}
+	window.onload = init;
+
+
+
+	$('#input-payment-city').on('change', () => {
+		console.log('guest - ' + $('#input-payment-city').val())
+
+		var id = $('#input-payment-city').children(":selected").attr("id");
+		$("#input-payment-postcode").val(id);
+
+	})
 
 
 	$('#payment-address input[name=\'payment_address\']').on('change', function() {
