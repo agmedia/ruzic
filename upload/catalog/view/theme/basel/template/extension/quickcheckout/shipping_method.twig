@@ -43,7 +43,7 @@
                                 <td colspan="3">
                                     <div class="form-group">
                                         <select name="shipping_collector_id" class="block select2 form-control required"  id="input-collector-pick" style="width: 100% !important;">
-                                            <option>Odaberite vrijeme...</option>
+                                            <option>Odaberite datum dostave...</option>
                                             {% for pick in collector_list %}
                                                 {% if pick.value == collector_picked %}
                                                     <option value="{{ pick.value }}" selected="selected">{{ pick.label }}</option>
@@ -53,6 +53,8 @@
 
                                             {% endfor %}
                                         </select>
+
+                                        <span id="helpBlock" class="help-block">Dan prije dostave javljamo točan sat dostave za odabrani datum SMS porukom na upisani broj mobitela. Na dan dostave pola sata prije isporuke također šaljemo SMS da stiže dostava.</span>
                                     </div>
                                 </td>
                             </tr>
