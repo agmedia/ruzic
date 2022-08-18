@@ -46,6 +46,8 @@
 	padding:0 10px 15px 10px;
 	font-size:14px;
 }
+
+.help-block{font-size:14px!important}
 #quickcheckoutconfirm .labels-holder input[type='checkbox'] {
 	margin-left:10px;
 	margin-right:5px;
