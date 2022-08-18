@@ -137,7 +137,7 @@
 
   // fj.agmedia.hr
   $('#input-payment-zone').on('change', () => {
-    console.log('shipping_method - ' + $('#input-payment-zone').val())
+
 
     $.ajax({
       url: 'index.php?route=extension/quickcheckout/shipping_method/getDeliveryTime',
@@ -146,13 +146,15 @@
       dataType: 'html',
       cache: false,
       success: function (json) {
-        console.log(json)
+
 
         var select = document.getElementById("input-collector-pick");
         var options = JSON.parse(json);
+
         select.options.length = 0;
         for (var i = 0; i < options.list.length; i++) {
           var opt = options.list[i];
+
           var el = document.createElement("option");
           el.textContent = opt.label;
           el.value = opt.value;

@@ -180,7 +180,7 @@
 $(document).ready(function() {
 
   $('#input-payment-zone').on('change', () => {
-    console.log('guest - ' + $('#input-payment-zone').val())
+
 	  document.getElementById("input-payment-postcode").value = "";
     $.ajax({
       url: 'index.php?route=extension/quickcheckout/shipping_method/getDeliveryTime',
@@ -189,13 +189,14 @@ $(document).ready(function() {
       dataType: 'html',
       cache: false,
       success: function (json) {
-        console.log(json)
 
         var select = document.getElementById("input-payment-city");
         var options = JSON.parse(json);
+
         select.options.length = 0;
         for (var i = 0; i < options.blocks.length; i++) {
           var opt = options.blocks[i];
+
           var el = document.createElement("option");
           el.textContent = opt.title;
           el.value = opt.title;
