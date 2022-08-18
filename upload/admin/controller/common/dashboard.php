@@ -9,6 +9,9 @@ class ControllerCommonDashboard extends Controller {
 
 		$data['breadcrumbs'] = array();
 
+        $data['shipping_manager'] = $this->url->link('extension/module/shipping_collector',
+            'user_token=' . $this->session->data['user_token'], true);
+
 		$data['breadcrumbs'][] = array(
 			'text' => $this->language->get('text_home'),
 			'href' => $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true)
