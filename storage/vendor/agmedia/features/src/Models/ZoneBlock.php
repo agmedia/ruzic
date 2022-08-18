@@ -38,6 +38,7 @@ class ZoneBlock extends Model
     {
         return self::where('status', 1)
             ->where('zone_id', $zone)
+            ->orderBy ('title')
             ->get()->toArray();
         
     }
