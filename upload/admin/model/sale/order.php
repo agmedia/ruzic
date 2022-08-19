@@ -533,10 +533,11 @@ class ModelSaleOrder extends Model {
                 $shippingcost = '';
 
                 foreach ($order_totals as $total) {
-                    if ($total['code'] == 'shipping' && $total['value'] != 0) {
+                    if ($total['code'] == 'shipping') {
                         $shippingcost = $total['value'];
 
                     }
+
                 }
 
 
