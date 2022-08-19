@@ -471,13 +471,13 @@ class ControllerExtensionModuleShippingCollector extends Controller {
             if (($counter+1) % 2 == 0) {
                 $destination = ($destination == 'zapad') ? 'istok' : 'zapad';
             }
-            //if ( ! $date->isWeekend()) {
+            if ( ! $date->isWeekend()) {
                 foreach (agconf('shipping_collector_defaults') as $default) {
                     $default['date'] = $date;
                     $default['destination'] = $destination;
                     $this->model_extension_module_shipping_collector->addDefaultShippingCollector($default);
                 }
-            //}
+            }
             
             $counter++;
             $date->addDay();

@@ -4,25 +4,25 @@ define('OC_ENV', [
     'env'                         => 'local',
     //
     'free_shipping_amount'        => 300,
-    'default_shipping_price'      => 35,
-    'shipping_collector_price'    => 35,
+    'default_shipping_price'      => 0,
+    'shipping_collector_price'    => 0,
     'shipping_collector_defaults' => [
         0 => [
             'time'  => '9-16h',
-            'max'   => '36',
-            'price' => 35
+            'max'   => '45',
+            'price' => 0
         ]
     ],
     'shipping_collector_regions' => [
         0 => [
             'id'  => 848,
             'label' => 'istok',
-            'code'   => 'ZGI'
+            'code'   => 'GZI'
         ],
         1 => [
-            'id'  => 867,
+            'id'  => 4239,
             'label' => 'zapad',
-            'code'   => 'ZGZ'
+            'code'   => 'GZZ'
         ]
     ],
     'delivery_region' => [

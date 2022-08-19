@@ -42,10 +42,10 @@
                                     {% else %}
                                         <a href="{{ sort_date }}">{{ column_date }}</a>
                                     {% endif %}</td>
-                                {#<td class="text-center" width="30%" colspan="2">{{ column_collected }}</td>#}
+                                <td class="text-center" width="30%" colspan="2">{{ column_collected }}</td>
                                 <td class="text-center" width="15%">Destination</td>
                                 <td class="text-center" width="15%">{{ column_time }}</td>
-                                {#<td class="text-center" width="8%">{{ column_max }}</td>#}
+                                <td class="text-center" width="8%">{{ column_max }}</td>
                                 <td class="text-center" width="8%">{{ column_status }}</td>
                                 <td class="text-right" width="8%">{{ column_action }}</td>
                             </tr>
@@ -60,13 +60,13 @@
                                                 <input type="checkbox" name="selected[]" value="{{ shipping_collector.shipping_collector_id }}" />
                                             {% endif %}</td>
                                         <td class="text-left">{{ shipping_collector.collect_date }}</td>
-                                        {#<td class="text-center" width="24%">
+                                        <td class="text-center" width="24%">
                                             <div style="margin-bottom: 0;" id="collected-bar{{ loop.index }}" rel="collected_bar" data-percent="{{ (shipping_collector.collected / shipping_collector.collect_max) * 100 }}"></div>
                                         </td>
-                                        <td class="text-center">{{ shipping_collector.collected }}</td>#}
+                                        <td class="text-center">{{ shipping_collector.collected }}</td>
                                         <td class="text-center">{{ shipping_collector.collect_destination }}</td>
                                         <td class="text-center">{{ shipping_collector.collect_time }}</td>
-                                        {#<td class="text-center">{{ shipping_collector.collect_max }}</td>#}
+                                        <td class="text-center">{{ shipping_collector.collect_max }}</td>
                                         <td class="text-center">{{ shipping_collector.status }}</td>
                                         <td class="text-right"><a href="{{ shipping_collector.edit }}" data-toggle="tooltip" title="{{ button_edit }}" class="btn btn-primary"><i class="fa fa-pencil"></i></a></td>
                                     </tr>
