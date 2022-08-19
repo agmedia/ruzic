@@ -2,6 +2,13 @@
 class ControllerCommonColumnLeft extends Controller {
 	public function index() {
 		if (isset($this->request->get['user_token']) && isset($this->session->data['user_token']) && ($this->request->get['user_token'] == $this->session->data['user_token'])) {
+
+            //excel export - start
+            $this->load->language('extension/module/excel_export_order');
+            $text_excel_export_order = $this->language->get('heading_title');
+            //excel export - end
+
+
 			$this->load->language('common/column_left');
 
 			// Create a 3 level menu array
@@ -170,6 +177,12 @@ class ControllerCommonColumnLeft extends Controller {
 					'children' => array()
 				);
 			}
+
+            $marketplace[] = array(
+                'name'	   => $text_excel_export_order,
+                'href'     => $this->url->link('extension/module/excel_export_order', 'user_token=' . $this->session->data['user_token'], true),
+                'children' => array()
+            );
 
 			if ($marketplace) {
 				$data['menus'][] = array(
