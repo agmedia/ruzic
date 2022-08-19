@@ -3,7 +3,7 @@
 define('OC_ENV', [
     'env'                         => 'local',
     //
-    'free_shipping_amount'        => 300,
+    'free_shipping_amount'        => 100,
     'default_shipping_price'      => 0,
     'shipping_collector_price'    => 0,
     'shipping_collector_defaults' => [
