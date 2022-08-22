@@ -157,21 +157,21 @@
 </div>
 <div style="clear:both;"></div>
 <div class="labels-holder">
-  {% if field_register.display %} 
-	{% if not guest_checkout or field_register.required %} 
+  {% if field_register.display %}
+	{% if not guest_checkout or field_register.required %}
 	  <input type="checkbox" name="create_account" value="1" id="create" class="hide" checked="checked" />
 	{% else %}
 	  <input type="checkbox" name="create_account" value="1" id="create"{{ create_account ? ' checked="checked"' }} />
 	  <label for="create">{{ text_create_account }}</label><br />
-	{% endif %} 
+	{% endif %}
 	<div id="create_account">{{ register }}</div>
   {% else %}
     <input type="checkbox" name="create_account" value="1" id="create" class="hide" />
   {% endif %}
-  {% if shipping_required %} 
+  {% if shipping_required %}
     <input type="checkbox" name="shipping_address" value="1" class="hide" id="shipping"{{ shipping_address ? ' checked="checked"' }} />
     <label for="shipping" class="hide">{{ entry_shipping }}</label>
-  {% else %}   
+  {% else %}
     <input type="checkbox" name="shipping_address" value="1" id="shipping" checked="checked" class="hide" />
   {% endif %}
 </div>
@@ -445,7 +445,7 @@ $(document).ready(function() {
 		}
 	});
 
-	{% if create_account or not guest_checkout or field_register.required %} 
+	{% if create_account or not guest_checkout or field_register.required %}
 	$('#create_account').show();
 	{% else %}   
 	$('#create_account').hide();
