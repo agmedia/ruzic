@@ -221,6 +221,7 @@ class ControllerExtensionQuickCheckoutConfirm extends Controller {
 				$order_data['products'][] = array(
 					'product_id' => $product['product_id'],
 					'name'       => $product['name'],
+                    'location'       => $product['location'],
 					'model'      => $product['model'],
 					'option'     => $option_data,
 					'download'   => $product['download'],

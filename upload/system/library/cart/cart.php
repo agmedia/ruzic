@@ -242,8 +242,8 @@ class Cart {
 					'cart_id'         => $cart['cart_id'],
 					'product_id'      => $product_query->row['product_id'],
 					'name'            => $product_query->row['name'],
+                    'location'            => $product_query->row['location'],
 					'model'           => $product_query->row['model'],
-                    'location'           => $product_query->row['location'],
 					'shipping'        => $product_query->row['shipping'],
 					'image'           => $product_query->row['image'],
 					'option'          => $option_data,
@@ -269,6 +269,9 @@ class Cart {
 				$this->remove($cart['cart_id']);
 			}
 		}
+
+
+
 
 		return $product_data;
 	}
