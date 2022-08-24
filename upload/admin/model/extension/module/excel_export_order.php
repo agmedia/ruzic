@@ -463,7 +463,7 @@ class ModelExtensionModuleExcelExportOrder extends Model {
             if($col == "shipping_country"){$width = "19";}
             if($col == "shipping_zone"){$width = "19";}
             if($col == "shipping_address_format"){$width = "19";}
-            if($col == "shipping_method"){$width = "19";}
+            if($col == "shipping_method"){$width = "60";}
             if($col == "payment_firstname"){$width = "19";}
             if($col == "payment_lastname"){$width = "19";}
             if($col == "payment_company"){$width = "19";}
