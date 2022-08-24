@@ -24,6 +24,7 @@ class ModelExtensionShippingCollector extends Model {
 
                 if ($collector) {
                     $value = $collector->price;
+                    $collect_date = $collector->collect_date.' - '.$collector->collect_time;
                 }
             }
 
@@ -43,7 +44,7 @@ class ModelExtensionShippingCollector extends Model {
 
             $method_data = array(
                 'code'       => 'collector',
-                'title'      => $this->language->get('text_title'),
+                'title'      => $this->language->get('text_title'). ''.$collect_date,
                 'quote'      => $quote_data,
                 'sort_order' => $this->config->get('shipping_collector_sort_order'),
                 'error'      => false
