@@ -36,7 +36,7 @@ class ModelExtensionShippingCollector extends Model {
 
             $quote_data['collector'] = array(
                 'code'         => 'collector.collector',
-                'title'        => $this->language->get('text_description'). ''.$collect_date,
+                'title'        => $this->language->get('text_description'). ' '.$collect_date,
                 'cost'         => $value,
                 'tax_class_id' => 0,
                 'text'         => $this->currency->format($value, $this->session->data['currency'])
@@ -44,7 +44,7 @@ class ModelExtensionShippingCollector extends Model {
 
             $method_data = array(
                 'code'       => 'collector',
-                'title'      => $this->language->get('text_title'). ''.$collect_date,
+                'title'      => $this->language->get('text_title'),
                 'quote'      => $quote_data,
                 'sort_order' => $this->config->get('shipping_collector_sort_order'),
                 'error'      => false
