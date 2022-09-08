@@ -10,7 +10,7 @@ class ControllerCheckoutSuccess extends Controller {
 
 			//
 
-            $this->model_sale_order->createWebracun($this->session->data['order_id']);
+            $this->createWebracun($this->session->data['order_id']);
 
             //
 
