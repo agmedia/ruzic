@@ -311,17 +311,7 @@ class ControllerCheckoutSuccess extends Controller {
                 $reward += $product['reward'];
             }
 
-            $this->load->model('customer/customer');
 
-            $affiliate_info = $this->model_customer_customer->getCustomer($order_query->row['affiliate_id']);
-
-            if ($affiliate_info) {
-                $affiliate_firstname = $affiliate_info['firstname'];
-                $affiliate_lastname = $affiliate_info['lastname'];
-            } else {
-                $affiliate_firstname = '';
-                $affiliate_lastname = '';
-            }
 
             $this->load->model('localisation/language');
 
