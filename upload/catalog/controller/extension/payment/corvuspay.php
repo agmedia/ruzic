@@ -31,7 +31,7 @@ class ControllerExtensionPaymentCorvusPay extends Controller {
         $data['merchant'] = $this->config->get('payment_corvuspay_merchant');
         $data['password'] = $this->config->get('payment_corvuspay_password');
         //$data['number_of_installments'] = $this->config->get('corvuspay_fx_id');
-        $data['number_of_installments'] = 'Y0299';
+        $data['number_of_installments'] = '';
         $data['order_id'] = $order_info['order_id'];
         //$data['currency'] = $currency;
         $data['currency'] = $order_info['currency_code'];
