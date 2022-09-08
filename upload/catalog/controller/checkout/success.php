@@ -79,7 +79,6 @@ class ControllerCheckoutSuccess extends Controller {
 
     public function createWebracun($order_id) {
 
-        $this->load->model('sale/order');
 
         $order          = $this->getOrder($order_id);
         $order_products = $this->getOrderProducts($order_id);
