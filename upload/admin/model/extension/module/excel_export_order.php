@@ -236,7 +236,7 @@ class ModelExtensionModuleExcelExportOrder extends Model {
 
             foreach($get_data as $dat){
                 if($dat != 'order_status_id' AND $dat != 'language_id' AND
-                    $dat != 'customer_group_id' AND $dat != 'sku' AND $dat != 'product' AND $dat != 'firstname' AND $dat != 'payment_address_1'){
+                    $dat != 'customer_group_id' AND $dat != 'sku' AND $dat != 'product' AND $dat != 'firstname' AND $dat != 'payment_address_1' AND $dat != 'shipping_method' AND $dat != 'order_status_id'){
                     if($dat == 'total'){
                         if($price_code){
                             $export[$i][$dat] = $this->getCurrencySL($order['currency_id']).$order[$dat].$this->getCurrencySR($order['currency_id']);
@@ -255,6 +255,19 @@ class ModelExtensionModuleExcelExportOrder extends Model {
                     if($dat == 'sku'){$export[$i][$dat] = $this->getProductSku($order['order_id']);}
 
                     if($dat == 'firstname'){$export[$i][$dat] = $order['firstname'].' '.$order['lastname'];}
+
+                    $s =  $order['shipping_method'];
+                    $s = strstr($s, '<i>', true);
+
+                    if($dat == 'shipping_method'){$export[$i][$dat] = $s;}
+
+                    $t = str_replace('Naša vlastita besplatna dostava - Zagreb i okolica', '', $order['shipping_method']);
+
+                    $t = str_replace('<i>', '', $t);
+
+                    $t = str_replace('</i>', '', $t);
+
+                    if($dat == 'order_status_id'){$export[$i][$dat] = $t;}
 
                     if($dat == 'payment_address_1'){$export[$i][$dat] = $order['payment_address_1'].', '.$order['shipping_postcode'].', '.$order['shipping_city'];}
 
@@ -438,7 +451,7 @@ class ModelExtensionModuleExcelExportOrder extends Model {
             if($col == "order_id"){$width = "8";}
             if($col == "invoice_no"){$width = "10";}
             if($col == "product_id"){$width = "10";}
-            if($col == "product_name"){$width = "17";}
+            if($col == "product_name"){$width = "30";}
             if($col == "product_model"){$width = "14";}
             if($col == "product_quantity"){$width = "16";}
             if($col == "product_price"){$width = "13";}
@@ -449,7 +462,7 @@ class ModelExtensionModuleExcelExportOrder extends Model {
             if($col == "comment"){$width = "14";}
             if($col == "total"){$width = "12";}
             if($col == "reward"){$width = "12";}
-            if($col == "order_status_id"){$width = "14";}
+            if($col == "order_status_id"){$width = "25";}
             if($col == "date_added"){$width = "18";}
             if($col == "date_modified"){$width = "18";}
             if($col == "ip"){$width = "15";}
@@ -464,6 +477,7 @@ class ModelExtensionModuleExcelExportOrder extends Model {
             if($col == "shipping_zone"){$width = "19";}
             if($col == "shipping_address_format"){$width = "19";}
             if($col == "shipping_method"){$width = "60";}
+            if($col == "shipping_method_time"){$width = "60";}
             if($col == "payment_firstname"){$width = "19";}
             if($col == "payment_lastname"){$width = "19";}
             if($col == "payment_company"){$width = "19";}
