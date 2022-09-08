@@ -256,18 +256,39 @@ class ModelExtensionModuleExcelExportOrder extends Model {
 
                     if($dat == 'firstname'){$export[$i][$dat] = $order['firstname'].' '.$order['lastname'];}
 
-                    $s =  $order['shipping_method'];
-                    $s = strstr($s, '<i>', true);
 
-                    if($dat == 'shipping_method'){$export[$i][$dat] = $s;}
+                    if($order['shipping_code'] =='collector.collector'){
 
-                    $t = str_replace('Naša vlastita besplatna dostava - Zagreb i okolica', '', $order['shipping_method']);
+                        $s =  $order['shipping_method'];
+                        $s = strstr($s, '<i>', true);
 
-                    $t = str_replace('<i>', '', $t);
+                        if($dat == 'shipping_method'){$export[$i][$dat] = $s;}
 
-                    $t = str_replace('</i>', '', $t);
 
-                    if($dat == 'order_status_id'){$export[$i][$dat] = $t;}
+                        $t = str_replace('Naša vlastita besplatna dostava - Zagreb i okolica', '', $order['shipping_method']);
+
+                        $t = str_replace('<i>', '', $t);
+
+                        $t = str_replace('</i>', '', $t);
+
+                        if($dat == 'order_status_id'){$export[$i][$dat] = $t;}
+
+                    }
+                    else{
+
+                        if($dat == 'shipping_method'){$export[$i][$dat] = $order['shipping_method'];}
+
+                        if($dat == 'order_status_id'){$export[$i][$dat] = '';}
+                    }
+
+
+
+
+
+
+
+
+
 
                     if($dat == 'payment_address_1'){$export[$i][$dat] = $order['payment_address_1'].', '.$order['shipping_postcode'].', '.$order['shipping_city'];}
 
