@@ -31,7 +31,7 @@ class ControllerExtensionPaymentCorvusPay extends Controller {
         $data['merchant'] = $this->config->get('payment_corvuspay_merchant');
         $data['password'] = $this->config->get('payment_corvuspay_password');
         //$data['number_of_installments'] = $this->config->get('corvuspay_fx_id');
-        $data['number_of_installments'] = '';
+       // $data['number_of_installments'] = '';
         $data['order_id'] = $order_info['order_id'];
         //$data['currency'] = $currency;
         $data['currency'] = $order_info['currency_code'];
@@ -65,7 +65,7 @@ class ControllerExtensionPaymentCorvusPay extends Controller {
         // $hash = SHA1($keym.':'.$ordernum.':'.$ukupno.':'.$data['currency']);
 
 
-        $string = 'amount'.$ukupno.'cardholder_address'.$data['address'].'cardholder_city'.$data['city'].'cardholder_country'.$data['country'].'cardholder_email'.$data['email'].'cardholder_name'.$data['firstname'].'cardholder_phone'.$data['telephone'].'cardholder_surname'.$data['lastname'].'cardholder_zip_code'.$data['postcode'].'cartWeb shop kupnja '.$ordernum.'currency'.$data['currency'].'language'.$data['language'].'order_number'.$ordernum.'payment_all'.$data['number_of_installments'].'require_completefalsestore_id'.$data['merchant'].'version1.3';
+        $string = 'amount'.$ukupno.'cardholder_address'.$data['address'].'cardholder_city'.$data['city'].'cardholder_country'.$data['country'].'cardholder_email'.$data['email'].'cardholder_name'.$data['firstname'].'cardholder_phone'.$data['telephone'].'cardholder_surname'.$data['lastname'].'cardholder_zip_code'.$data['postcode'].'cartWeb shop kupnja '.$ordernum.'currency'.$data['currency'].'language'.$data['language'].'order_number'.$ordernum.'require_completefalsestore_id'.$data['merchant'].'version1.3';
 
 
 
