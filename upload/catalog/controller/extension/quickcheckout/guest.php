@@ -271,9 +271,20 @@ class ControllerExtensionQuickCheckoutGuest extends Controller {
 			$country_info = $this->model_localisation_country->getCountry($this->request->post['country_id']);
 
 			if ($country_info) {
-				if ($country_info['postcode_required'] && (utf8_strlen($this->request->post['postcode']) < 2) || (utf8_strlen($this->request->post['postcode']) > 10)) {
+
+                $zips = array("20226", "20225", "23286", "23285", "23292", "21430","21225","20290","21432","21430","51552","23293","22235","20221","20224","20225","20290","20222","23282","23284","20224","21430","23292","21432","23296","20290","20226","23287","22233","22234","23283","23291","21430","20225","23281","23285","23291","23295","20290","23287","20223","51561","20290","20290","51562","23284","23287","23287","23281","20290","23292","22232","23291","23286","22236","23282");
+
+
+            if( in_array( $this->request->post['postcode'] ,$zips ))  {
+
+                $json['error']['postcode'] = 'Na odabrani poštanski broj otoka ne dostavljamo.';
+            }
+
+
+           elseif ($country_info['postcode_required'] && (utf8_strlen($this->request->post['postcode']) != 5) ) {
 					$json['error']['postcode'] = $this->language->get('error_postcode');
 				}
+
 			}
 
 			$country = $this->config->get('quickcheckout_field_country');
