@@ -7803,7 +7803,15 @@ max-width: 85%;
 
 
 
-@media (max-width: 767px) {.basel_cookie_bar .table-cell {display:block;text-align:center}}
+@media (max-width: 767px) {
+
+	.basel_cookie_bar .table-cell {display:block;text-align:center}
+
+.font-zero .icon-element span{display:none}
+	.header-main .table-cell.w29 {width:25%!important}
+	.header-main .table-cell.w71 {width:75%!important}
+	.btn-webshop{padding: 8px 10px!important;}
+}
 
 @media (max-width: 415px) {
 	.blog .date_added .day {

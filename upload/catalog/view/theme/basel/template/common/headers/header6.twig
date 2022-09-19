@@ -36,7 +36,7 @@
   <div class="container {{ main_header_width }}">
     <div class="table header-main {{ main_menu_align }}">
     
-    <div class="table-cell text-left w20 logo">
+    <div class="table-cell text-left w20  w29 logo">
     	{% if logo %}
         <div id="logo">
     	<a href="{{ home }}"><img src="image/logo-square.svg" title="{{ name }}" alt="{{ name }}" /></a>
@@ -62,9 +62,12 @@
     </div>
     {% endif %}
     
-    <div class="table-cell w20 shortcuts text-right">
+    <div class="table-cell w20 w71 shortcuts text-right">
        
        <div class="font-zero">
+           <div class="icon-element ">
+               <a class="btn btn-contrast btn-webshop" href="shop">WEB SHOP</a>
+           </div>
            <div class="icon-element ">
 
                {% if logged %}
@@ -73,7 +76,7 @@
                {% else %}
                    <a class="shortcut-wrapper wishlist" title="Korisnički račun" href="{{ login }}">
                        <div class="wishlist-hover"><i class="icon-user icon"></i></div>
-                   </a>Moj račun
+                   </a> <span>Moj račun</span>
                {% endif %}
            </div>
 
@@ -89,7 +92,7 @@
         <a href="{{ shopping_cart }}" class="shortcut-wrapper cart">
         <i id="cart-icon" class="global-cart icon"></i> <span id="cart-total" class="nowrap">
         <span class="counter cart-total-items">{{ cart_items }}</span>
-        </a> Košarica
+        </a> <span>Košarica</span>
         <div class="dropdown-content dropdown-right hidden-sm hidden-xs">
         {{ cart }}
         </div>
