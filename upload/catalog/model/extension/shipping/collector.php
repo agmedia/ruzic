@@ -25,6 +25,8 @@ class ModelExtensionShippingCollector extends Model {
                 if ($collector) {
                     $value = $collector->price;
                     $collect_date = $collector->collect_date.' - '.$collector->collect_time;
+
+                    $collect_only_date = $collector->collect_date;
                 }
             }
 
@@ -38,6 +40,7 @@ class ModelExtensionShippingCollector extends Model {
                 'code'         => 'collector.collector',
                 'title'        => $this->language->get('text_description'). ' <i>'.$collect_date. '</i>',
                 'cost'         => $value,
+                'collect_date' => $collect_only_date,
                 'tax_class_id' => 0,
                 'text'         => $this->currency->format($value, $this->session->data['currency'])
             );

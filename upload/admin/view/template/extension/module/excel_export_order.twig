@@ -96,19 +96,14 @@
 
               <div class="export-line"></div>
      
-              <h4><label for="filter_order_date_start">{{ text_order_date }}:</label></h4>
+              <h4><label for="filter_order_date_start">Date of Shipping:</label></h4>
               <div class="input-group date">
                 <input type="text" name="filter[order_date_start]" value="" placeholder="{{ text_date_start }}" data-date-format="YYYY-MM-DD" id="filter_order_date_start" class="form-control" />
                 <span class="input-group-btn">
                   <button class="btn btn-default" type="button"><i class="fa fa-calendar"></i></button>
                 </span>
               </div>
-              <div class="input-group date">
-                <input type="text" name="filter[order_date_stop]" value="" placeholder="{{ text_date_stop }}" data-date-format="YYYY-MM-DD" class="form-control" />
-                <span class="input-group-btn">
-                  <button class="btn btn-default" type="button"><i class="fa fa-calendar"></i></button>
-                </span>
-              </div>
+
 
               <div class="export-line"></div>
 
@@ -216,6 +211,6 @@ $("#saveCronItems").click(function(){
 $('.date').datetimepicker({
 	language: document.cookie.match(new RegExp('language=([^;]+)'))[1],
 	pickTime: false
-});		
+});
 //--></script>
 {{ footer }}

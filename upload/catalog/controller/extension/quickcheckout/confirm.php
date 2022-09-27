@@ -178,6 +178,12 @@ class ControllerExtensionQuickCheckoutConfirm extends Controller {
 					$order_data['shipping_method'] = '';
 				}
 
+                if (isset($this->session->data['shipping_method']['collect_date'])) {
+                    $order_data['collect_date'] = $this->session->data['shipping_method']['collect_date'];
+                } else {
+                    $order_data['collect_date'] = '';
+                }
+
 				if (isset($this->session->data['shipping_method']['code'])) {
 					$order_data['shipping_code'] = $this->session->data['shipping_method']['code'];
 				} else {

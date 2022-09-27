@@ -214,10 +214,10 @@ class ModelExtensionModuleExcelExportOrder extends Model {
 
         $sql = "SELECT * FROM `" . DB_PREFIX . "order` WHERE 1 = 1";
 
-        if(isset($data['filter']['order_date_start']) && isset($data['filter']['order_date_start']) && $data['filter']['order_date_start'] != '' && $data['filter']['order_date_stop'] != ''){
-            $date_start = $data['filter']['order_date_start']." 00:00:00";
-            $date_stop  = $data['filter']['order_date_stop']." 23:59:59";
-            $sql .= " AND date_added >= '".$this->db->escape($date_start)."' AND date_added <= '".$this->db->escape($date_stop)."'";
+        if(isset($data['filter']['order_date_start']) && isset($data['filter']['order_date_start']) && $data['filter']['order_date_start'] != ''){
+            $date_start = $data['filter']['order_date_start'];
+            $date_stop  = $data['filter']['order_date_start'];
+            $sql .= " AND collect_date >= '".$this->db->escape($date_start)."' AND collect_date <= '".$this->db->escape($date_stop)."'";
         }
 
         if(isset($data['filter']['order_store']) && $data['filter']['order_store'] != '-'){
