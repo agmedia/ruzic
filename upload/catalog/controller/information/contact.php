@@ -26,7 +26,7 @@ class ControllerInformationContact extends Controller {
             $mail->setFrom($this->request->post['email']);
             $mail->setReplyTo($this->request->post['email']);
             $mail->setSender(html_entity_decode($this->request->post['name'], ENT_QUOTES, 'UTF-8'));
-            $mail->setSubject('Upit sa kontakt obrasca - Videonadzor.hr');
+            $mail->setSubject('Upit sa kontakt obrasca - OPG Ružić');
             $mail->setText($message);
             $mail->send();
 
