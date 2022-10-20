@@ -68,7 +68,7 @@ $_['text_checkout_shipping_address'] = 'Adresa';
 $_['text_checkout_shipping_method']  = 'Dostava';
 $_['text_checkout_payment_method']   = 'Način plaćanja';
 $_['text_checkout_confirm']          = 'Potvrdi narudžbu';
-$_['text_agree']                     = 'Slažem se s <a class="agree" href="%s" alt="%s"><b>Općim uvjetima kupnje</b></a>';
+$_['text_agree']                     = 'Dovršavanjem narudžbe prihvaćate  <a class="agree" href="%s" alt="%s"><b>Opće uvjete kupovine</b></a>';
 $_['text_create_account']			 = 'Ujedno kreiraj i korisnički račun.';
 $_['text_or']						 = '-- ILIR --';
 $_['text_please_wait']				 = 'Molimo pričekajte...';
