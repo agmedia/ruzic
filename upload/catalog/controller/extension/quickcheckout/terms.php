@@ -4,7 +4,7 @@ class ControllerExtensionQuickCheckoutTerms extends Controller {
 		$data = $this->load->language('checkout/checkout');
 		$data = array_merge($data, $this->load->language('extension/quickcheckout/checkout'));
 		
-		if ($this->config->get('config_checkout_id')) {
+
 			$this->load->model('catalog/information');
 			
 			$information_info = $this->model_catalog_information->getInformation(5);
@@ -14,9 +14,7 @@ class ControllerExtensionQuickCheckoutTerms extends Controller {
 			} else {
 				$data['text_agree'] = '';
 			}
-		} else {
-			$data['text_agree'] = '';
-		}
+
 		
 		// All variables
 		$data['confirmation_page'] = $this->config->get('quickcheckout_confirmation_page');
