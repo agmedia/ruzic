@@ -3,14 +3,14 @@ class ControllerExtensionQuickCheckoutTerms extends Controller {
   	public function index() {
 		$data = $this->load->language('checkout/checkout');
 		$data = array_merge($data, $this->load->language('extension/quickcheckout/checkout'));
-        $this->config->get('config_checkout_id') = 5;
+
 		if ($this->config->get('config_checkout_id')) {
 			$this->load->model('catalog/information');
 			
-			$information_info = $this->model_catalog_information->getInformation($this->config->get('config_checkout_id'));
+			$information_info = $this->model_catalog_information->getInformation(5);
 			
 			if ($information_info) {
-				$data['text_agree'] = sprintf($this->language->get('text_agree'), $this->url->link('information/information/agree', 'information_id=' . $this->config->get('config_checkout_id'), true), $information_info['title'], $information_info['title']);
+				$data['text_agree'] = sprintf($this->language->get('text_agree'), $this->url->link('information/information/agree', 'information_id=5', $information_info['title'], $information_info['title']);
 			} else {
 				$data['text_agree'] = '';
 			}
