@@ -24,7 +24,7 @@ class ModelExtensionShippingCollector extends Model {
 
                 if ($collector) {
                     $value = $collector->price;
-                    $collect_date = $collector->collect_date.' - '.$collector->collect_time;
+                    $collect_date = date("d-m-Y", strtotime($collector->collect_date)).' - '.$collector->collect_time;
 
                     $collect_only_date = $collector->collect_date;
                 }
