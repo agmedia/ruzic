@@ -109,3 +109,6 @@ $_['entry_coupon']        		     = 'Unesite kupon kod:';
 $_['entry_voucher']      		     = 'Unesite poklon bon:';
 $_['entry_reward']          		 = 'Enter reward points to use (Max %s, Available %s):';
 
+$_['error_coupon']  = 'Upozorenje: Kupon je ili neispravan ili istekao ili je dosegao njegov maksimalni broj korištenja (limit)!';
+$_['error_empty']   = 'Upozorenje: Molim unesite kupon kod za popust!';
+
