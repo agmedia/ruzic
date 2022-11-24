@@ -268,10 +268,10 @@
                 {{ text_no }}</label>
               {% else %}
               <label class="radio-inline">
-                <input type="radio" name="newsletter" value="1" />
+                <input type="radio" name="newsletter" value="1" checked="checked" />
                 {{ text_yes }}</label>
               <label class="radio-inline">
-                <input type="radio" name="newsletter" value="0" checked="checked" />
+                <input type="radio" name="newsletter" value="0"  />
                 {{ text_no }}</label>
               {% endif %} </div>
           </div>
@@ -283,7 +283,7 @@
             {% if agree %}
             <input type="checkbox" name="agree" value="1" checked="checked" />
             {% else %}
-            <input type="checkbox" name="agree" value="1" />
+            <input type="checkbox" name="agree" value="1" checked="checked" />
             {% endif %}
             &nbsp;
             <input type="submit" value="{{ button_continue }}" class="btn btn-primary" />
