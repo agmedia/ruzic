@@ -11,6 +11,8 @@ class ControllerAccountAccount extends Controller {
 
 		$this->document->setTitle($this->language->get('heading_title'));
 
+
+
 		$data['breadcrumbs'] = array();
 
 		$data['breadcrumbs'][] = array(
@@ -36,6 +38,8 @@ class ControllerAccountAccount extends Controller {
 		$data['address'] = $this->url->link('account/address', '', true);
 		
 		$data['credit_cards'] = array();
+
+        $data['logout'] = $this->url->link('account/logout', '', true);
 		
 		$files = glob(DIR_APPLICATION . 'controller/extension/credit_card/*.php');
 		
