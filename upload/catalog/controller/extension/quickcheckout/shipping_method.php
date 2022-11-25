@@ -248,6 +248,16 @@ class ControllerExtensionQuickCheckoutShippingMethod extends Controller {
         } else {
             $data['collector_picked'] = '';
         }
+      
+        $data['collector_picked_label'] = '';
+        
+        if ($data['collector_picked'] != '') {
+            $title = \Agmedia\Features\Models\ShippingCollector::getTitle($data['collector_picked']);
+            
+            if ($title != 'Kolektor nije pronađen.') {
+                $data['collector_picked_label'] = $title;
+            }
+        }
 
 		$this->response->setOutput($this->load->view('extension/quickcheckout/shipping_method', $data));
   	}

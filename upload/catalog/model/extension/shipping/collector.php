@@ -14,6 +14,7 @@ class ModelExtensionShippingCollector extends Model {
         }
 
         $method_data = array();
+        $collect_only_date = '';
 
         if ($status) {
             $quote_data = array();
@@ -38,7 +39,7 @@ class ModelExtensionShippingCollector extends Model {
 
             $quote_data['collector'] = array(
                 'code'         => 'collector.collector',
-                'title'        => $this->language->get('text_description'). ' <i>'.$collect_date. '</i>',
+                'title'        => $this->language->get('text_description')/*. ' <i>'.$collect_date. '</i>'*/,
                 'cost'         => $value,
                 'collect_date' => $collect_only_date,
                 'tax_class_id' => 0,
