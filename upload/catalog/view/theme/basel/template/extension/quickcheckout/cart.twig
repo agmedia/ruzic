@@ -13,9 +13,9 @@
       {% for product in products %}
         <tr>
           <td class="image">{% if product.thumb %} 
-            <a href="{{ product.href }}"><img src="{{ product.thumb }}" alt="{{ product.name }}" title="{{ product.name }}" /></a>
+           <img src="{{ product.thumb }}" alt="{{ product.name }}" title="{{ product.name }}" />
             {% endif %}</td>
-          <td class="name"><a href="{{ product.href }}">{{ product.name }}</a>
+          <td class="name">{{ product.name }}
             <div>
               {% for option in product.option %} 
               <small>{{ option.name }}: {{ option.value }}</small><br />

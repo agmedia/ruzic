@@ -28,7 +28,7 @@
     {% if attribute(_context, 'field_' ~ field).display %}
         <div class="col-sm-6{{ attribute(_context, 'field_' ~ field).required ? ' required' }}">
 		{% if  delivery_region =='zagreb' %}
-            <label class="control-label">Ovirno odaberite područje dostave</label>
+            <label class="control-label">Okvirno odaberite područje dostave</label>
 		{% else %}
 			<label class="control-label">{{ entry_zone }}</label>
 		{% endif %}
