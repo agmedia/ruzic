@@ -827,6 +827,8 @@ class ControllerSaleOrder extends Controller {
             $data['payment_code'] = $order_info['payment_code'];
             $data['more_for_refund'] = $order_info['total'] - $order_info['amount'];
 			$data['store_name'] = $order_info['store_name'];
+
+            $data['collect_date'] = date($language->get('date_format_short'), strtotime($order_info['collect_date']));
 			
 			if ($order_info['store_id'] == 0) {
 				$data['store_url'] = $this->request->server['HTTPS'] ? HTTPS_CATALOG : HTTP_CATALOG;
