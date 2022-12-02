@@ -265,7 +265,7 @@ class ModelExtensionModuleExcelExportOrder extends Model {
                         if($dat == 'shipping_method'){$export[$i][$dat] = $s;}
 
 
-                        $t =  $order['colelct_date'];
+                        $t =  $order['collect_date'];
 
 
                         if($dat == 'order_status_id'){$export[$i][$dat] = $t;}
