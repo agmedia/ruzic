@@ -260,6 +260,12 @@ class ModelExtensionModuleExcelExportOrder extends Model {
                     if($order['shipping_code'] =='collector.collector'){
 
                         $s =  $order['shipping_method'];
+                        $s = strstr($s, '<i>', true);
+
+                        if($dat == 'shipping_method'){$export[$i][$dat] = $s;}
+
+
+                        $s =  $order['shipping_method'];
 
 
                         if($dat == 'shipping_method'){$export[$i][$dat] = $s;}
@@ -269,6 +275,8 @@ class ModelExtensionModuleExcelExportOrder extends Model {
 
 
                         if($dat == 'order_status_id'){$export[$i][$dat] = $t;}
+
+
 
                     }
                     else{
