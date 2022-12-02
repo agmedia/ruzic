@@ -260,16 +260,13 @@ class ModelExtensionModuleExcelExportOrder extends Model {
                     if($order['shipping_code'] =='collector.collector'){
 
                         $s =  $order['shipping_method'];
-                        $s = strstr($s, '<i>', true);
+
 
                         if($dat == 'shipping_method'){$export[$i][$dat] = $s;}
 
 
-                        $t = str_replace('Naša vlastita besplatna dostava - Zagreb i okolica', '', $order['shipping_method']);
+                        $t =  $order['colelct_date'];
 
-                        $t = str_replace('<i>', '', $t);
-
-                        $t = str_replace('</i>', '', $t);
 
                         if($dat == 'order_status_id'){$export[$i][$dat] = $t;}
 
