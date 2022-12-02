@@ -43,7 +43,7 @@
                                 <td colspan="3">
                                     <div class="form-group">
                                         <select name="shipping_collector_id" class="block select2 form-control required"  id="input-collector-pick" style="width: 100% !important;">
-                                            <option>Odaberite datum dostave...</option>
+                                            {#<option>Odaberite datum dostave...</option>#}
                                             {% for pick in collector_list %}
                                                 {% if pick.value == collector_picked %}
                                                     <option value="{{ pick.value }}" selected="selected">{{ pick.label }}</option>
