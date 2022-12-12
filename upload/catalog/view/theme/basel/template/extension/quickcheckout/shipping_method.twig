@@ -135,39 +135,7 @@
 
 <script type="text/javascript"><!--
 
-  // fj.agmedia.hr
-  $('#input-payment-zone').on('change', () => {
 
-
-    $.ajax({
-      url: 'index.php?route=extension/quickcheckout/shipping_method/getDeliveryTime',
-      type: 'post',
-      data: {destination: $('#input-payment-zone').val()},
-      dataType: 'html',
-      cache: false,
-      success: function (json) {
-
-
-        var select = document.getElementById("input-collector-pick");
-        var options = JSON.parse(json);
-
-        select.options.length = 0;
-        for (var i = 0; i < options.list.length; i++) {
-          var opt = options.list[i];
-
-          console.log(opt)
-
-          var el = document.createElement("option");
-          el.textContent = opt.label;
-          el.value = opt.value;
-          select.appendChild(el);
-        }
-      },
-      error: function (xhr, ajaxOptions, thrownError) {
-        alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
-      }
-    })
-  })
 
 
   $('#shipping-method input[name=\'shipping_method\'], #shipping-method select[name=\'shipping_method\']').on('change', function() {
@@ -239,6 +207,41 @@
   $(document).ready(function() {
     $('#shipping-method input[name=\'shipping_method\']:checked, #shipping-method select[name=\'shipping_method\']').trigger('change');
   });
+
+
+    // fj.agmedia.hr
+    $('#input-payment-zone').on('change', () => {
+
+
+        $.ajax({
+            url: 'index.php?route=extension/quickcheckout/shipping_method/getDeliveryTime',
+            type: 'post',
+            data: {destination: $('#input-payment-zone').val()},
+            dataType: 'html',
+            cache: false,
+            success: function (json) {
+
+
+                var select = document.getElementById("input-collector-pick");
+                var options = JSON.parse(json);
+
+                select.options.length = 0;
+                for (var i = 0; i < options.list.length; i++) {
+                    var opt = options.list[i];
+
+                    console.log(opt)
+
+                    var el = document.createElement("option");
+                    el.textContent = opt.label;
+                    el.value = opt.value;
+                    select.appendChild(el);
+                }
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+            }
+        })
+    })
 
 
 
