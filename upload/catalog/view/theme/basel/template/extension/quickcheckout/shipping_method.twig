@@ -251,7 +251,9 @@
 
   $(document).ready(function() {
     $('#shipping-method input[name=\'shipping_method\']:checked, #shipping-method select[name=\'shipping_method\']').trigger('change');
-    $('#collector-radio-text').text(', ' + '{{ collector_picked_label }}');
+
+    let sele = $('#input-collector-pick option:selected').text();
+    $('#collector-radio-text').text(', ' + sele);
   });
 
   function checkShipping() {
