@@ -28,6 +28,8 @@ class ShippingCollector extends Model
         'shipping_collector_id'
     ];
     
+    public $timestamps = false;
+    
     
     /**
      * @param int $days
