@@ -177,12 +177,22 @@ class ControllerExtensionQuickCheckoutConfirm extends Controller {
 				} else {
 					$order_data['shipping_method'] = '';
 				}
-
+                
                 if (isset($this->session->data['shipping_method']['collect_date'])) {
                     $order_data['collect_date'] = $this->session->data['shipping_method']['collect_date'];
                 } else {
                     $order_data['collect_date'] = '';
                 }
+                
+                if (isset($this->session->data['shipping_collector_id'])) {
+                    $order_data['shipping_collector_id'] = $this->session->data['shipping_collector_id'];
+                } else {
+                    $order_data['shipping_collector_id'] = '';
+                }
+                
+                \Agmedia\Helpers\Log::store($order_data, 'data');
+                \Agmedia\Helpers\Log::store($this->session->data['shipping_method'], 'data');
+                \Agmedia\Helpers\Log::store($this->session->data['shipping_collector_id'], 'data');
 
 				if (isset($this->session->data['shipping_method']['code'])) {
 					$order_data['shipping_code'] = $this->session->data['shipping_method']['code'];

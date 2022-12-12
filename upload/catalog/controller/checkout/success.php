@@ -11,6 +11,14 @@ class ControllerCheckoutSuccess extends Controller {
 			//
 
             $this->createWebracun($this->session->data['order_id']);
+            
+            // fj.agmedia.hr
+            // Dodaj u SC ako je narudžba uspješna.
+            $order = \Agmedia\Models\Order\Order::query()->where('order_id', $this->session->data['order_id'])->first();
+            if ($order->shipping_collector_id) {
+                \Agmedia\Features\Models\ShippingCollector::query()->where('shipping_collector_id', $order->shipping_collector_id)->increment('collected');
+            }
+            
 
             //
 
@@ -386,8 +394,8 @@ class ControllerCheckoutSuccess extends Controller {
                 'order_status_id'         => $order_query->row['order_status_id'],
                 'order_status'            => $order_query->row['order_status'],
                 'affiliate_id'            => $order_query->row['affiliate_id'],
-                'affiliate_firstname'     => $affiliate_firstname,
-                'affiliate_lastname'      => $affiliate_lastname,
+                'affiliate_firstname'     => '', //$affiliate_firstname,
+                'affiliate_lastname'      => '', //$affiliate_lastname,
                 'commission'              => $order_query->row['commission'],
                 'language_id'             => $order_query->row['language_id'],
                 'language_code'           => $language_code,

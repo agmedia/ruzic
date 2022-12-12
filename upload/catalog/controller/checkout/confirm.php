@@ -190,6 +190,12 @@ class ControllerCheckoutConfirm extends Controller {
                 } else {
                     $order_data['collect_date'] = '';
                 }
+                
+                if (isset($this->session->data['shipping_collector_id'])) {
+                    $order_data['shipping_collector_id'] = $this->session->data['shipping_collector_id'];
+                } else {
+                    $order_data['shipping_collector_id'] = '';
+                }
 
 				if (isset($this->session->data['shipping_method']['code'])) {
 					$order_data['shipping_code'] = $this->session->data['shipping_method']['code'];
