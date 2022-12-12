@@ -158,6 +158,8 @@
             el.value = opt.value;
             select.appendChild(el);
           }
+
+          $('#collector-radio-text').text(', ' + options.list[0].label);
         },
         error: function (xhr, ajaxOptions, thrownError) {
           alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
@@ -233,9 +235,9 @@
       {% endif %}
   });
 
-  $(document).ready(function() {
+  /*$(document).ready(function() {
     $('#shipping-method input[name=\'shipping_method\']:checked, #shipping-method select[name=\'shipping_method\']').trigger('change');
-  });
+  });*/
 
 
 
