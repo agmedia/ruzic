@@ -137,7 +137,7 @@
 
   // fj.agmedia.hr
   $('#input-payment-zone').on('change', () => {
-    
+
     setTimeout(() => {
       $.ajax({
         url: 'index.php?route=extension/quickcheckout/shipping_method/getDeliveryTime',
@@ -163,7 +163,7 @@
           alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
         }
       })
-    }, 100);
+    }, 500);
   })
 
 
