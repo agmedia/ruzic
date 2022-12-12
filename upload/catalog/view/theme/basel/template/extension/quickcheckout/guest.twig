@@ -180,8 +180,8 @@
 $(document).ready(function() {
 
   $('#input-payment-zone').on('change', () => {
+    document.getElementById("input-payment-postcode").value = "";
 
-	  document.getElementById("input-payment-postcode").value = "";
     $.ajax({
       url: 'index.php?route=extension/quickcheckout/shipping_method/getDeliveryTime',
       type: 'post',
@@ -205,7 +205,7 @@ $(document).ready(function() {
 
         }
 
-		  $("#input-payment-city").prepend("<option value='' selected='selected'>Molimo odaberite</option>");
+        $("#input-payment-city").prepend("<option value='' selected='selected'>Molimo odaberite</option>");
 
       },
       error: function (xhr, ajaxOptions, thrownError) {
