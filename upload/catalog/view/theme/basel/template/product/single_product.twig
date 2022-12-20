@@ -1,11 +1,11 @@
 <div class="item single-product">
 <div class="image" {% if columns == 'list' %}style="width:{{ img_width }}px"{% endif %}>
-  
+    <a href="{{ product.href }}">
     <img src="{{ product.thumb }}" alt="{{ product.name }}" title="{{ product.name }}" />
     {% if product.thumb2 %}
     <img class="thumb2" src="{{ product.thumb2 }}" alt="{{ product.name }}" title="{{ product.name }}" />
     {% endif %}
-
+    </a>
 {% if product.price and product.special and salebadge_status %}
     <div class="sale-counter id{{ product.product_id }}"></div>
     <span class="badge sale_badge"><i>{{ product.sale_badge }}</i></span>
@@ -29,7 +29,7 @@
 </div> <!-- .icons-wrapper -->
 </div><!-- .image ends -->
 <div class="caption">
-<h3 class="product-name" >{{ product.name }}</h3>
+    <h3 class="product-name" > <a href="{{ product.href }}">{{ product.name }}</a></h3>
 <p>Odaberite broj paketa i dodajte u košaricu.</p>
 {% if product.rating %}      
     <div class="rating">
