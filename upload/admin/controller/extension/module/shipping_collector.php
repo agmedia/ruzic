@@ -466,7 +466,7 @@ class ControllerExtensionModuleShippingCollector extends Controller {
         
         $counter = 0;
         
-        for ($i = 0; $i < 7; $i++) {
+        for ($i = 0; $i < 15; $i++) {
             $destination = $last ? (($last->collect_destination == 'zapad') ? 'istok' : 'zapad') : 'istok';
             if (($counter+1) % 2 == 0) {
                 $destination = ($destination == 'zapad') ? 'istok' : 'zapad';
