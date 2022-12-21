@@ -36,7 +36,7 @@ class ShippingCollector extends Model
      *
      * @return array
      */
-    public static function getList(string $destination = 'istok', int $days = 6): array
+    public static function getList(string $destination = 'istok', int $days = 15): array
     {
         $response = [];
         $list     = self::where('status', 1)
