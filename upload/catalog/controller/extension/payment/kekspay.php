@@ -85,7 +85,7 @@ class ControllerExtensionPaymentKeksPay extends Controller
         $headers = $headers['Authorization'];
 
         
-        $order_id = substr($json_response['bill_id'], 16);
+        $order_id = substr($json_response['bill_id'], 17);
         
         if ( ! $json_response['status'] && $this->verify_kekspay_token($headers)) {
 
