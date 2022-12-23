@@ -453,7 +453,9 @@ class ModelSaleOrder extends Model {
 
                 }
                 else if ($order['payment_code'] == 'cod') {
-                    $pay_code = 'Cash on Delivery (COD)';
+                  //  $pay_code = 'Cash on Delivery (COD)';
+
+                    $pay_code = 'Bank Deposit';
 
                 } else {
                     $pay_code = 'Bank Deposit';
