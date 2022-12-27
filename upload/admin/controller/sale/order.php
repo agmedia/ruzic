@@ -829,7 +829,20 @@ class ControllerSaleOrder extends Controller {
             $data['more_for_refund'] = $order_info['total'] - $order_info['amount'];
 			$data['store_name'] = $order_info['store_name'];
 
+            // fj.agmedia.hr
+            $dates = \Agmedia\Features\Models\ShippingCollector::query()->where('collect_date', '>', \Illuminate\Support\Carbon::now()->subDays(3))->get()->toArray();
+            
+            for ($i = 0; $i < count($dates); $i++) {
+                if ($order_info['collect_date'] == $dates[$i]['collect_date'] . ' 00:00:00') {
+                    $dates[$i]['selected'] = 1;
+                } else {
+                    $dates[$i]['selected'] = 0;
+                }
+            }
+            
+            $data['collector_dates'] = $dates;
             $data['collect_date'] = date($this->language->get('date_format_short'), strtotime($order_info['collect_date']));
+            // END ::: fj.agmedia.hr
 			
 			if ($order_info['store_id'] == 0) {
 				$data['store_url'] = $this->request->server['HTTPS'] ? HTTPS_CATALOG : HTTP_CATALOG;
@@ -1910,4 +1923,48 @@ class ControllerSaleOrder extends Controller {
 
 		$this->response->setOutput($this->load->view('sale/order_shipping', $data));
 	}
+    
+    
+    /**
+     * @return void
+     */
+    public function changeCollectorDate() {
+        $this->load->language('sale/order');
+        
+        $json = array();
+    
+        if (isset($this->request->get['order_id'])) {
+            $order_id = $this->request->get['order_id'];
+        } else {
+            $order_id = 0;
+        }
+        
+        if ($order_id) {
+            if (isset($this->request->get['shipping_collector_id'])) {
+                $shipping_collector_id = $this->request->get['shipping_collector_id'];
+            } else {
+                $shipping_collector_id = 0;
+            }
+            
+            if ($shipping_collector_id) {
+                $collector = \Agmedia\Features\Models\ShippingCollector::query()->where('shipping_collector_id', $shipping_collector_id)->first();
+                
+                if ($collector) {
+                    \Agmedia\Models\Order\Order::query()->where('order_id', $order_id)->update([
+                        'collect_date' => $collector->collect_date,
+                        'shipping_collector_id' => $collector->shipping_collector_id
+                    ]);
+                    
+                    $json['success'] = 200;
+                }
+            }
+        }
+        
+        if ( ! isset($json['success'])) {
+            $json['error'] = 300;
+        }
+        
+        $this->response->addHeader('Content-Type: application/json');
+        $this->response->setOutput(json_encode($json));
+    }
 }

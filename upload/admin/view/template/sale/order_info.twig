@@ -35,7 +35,20 @@
               {% if shipping_method %}
                 <tr>
                   <td><button data-toggle="tooltip" title="{{ text_shipping_method }}" class="btn btn-info btn-xs"><i class="fa fa-truck fa-fw"></i></button></td>
-                  <td>{{ shipping_method }}   {% if collect_date %} {{ collect_date }}   {% endif %}</td>
+                  <td>{{ shipping_method }}<br>
+                      {% if collect_date %} {{ collect_date }}   {% endif %}
+
+                      <select name="collect_date_select" id="select-collect-date" class="form-control">
+                          {% for date in collector_dates %}
+                              {% if date.selected %}
+                                  <option value="{{ date.shipping_collector_id }}" selected="selected">{{ date.collect_date }}</option>
+                              {% else %}
+                                  <option value="{{ date.shipping_collector_id }}">{{ date.collect_date }}</option>
+                              {% endif %}
+                          {% endfor %}
+                      </select>
+
+                  </td>
                 </tr>
               {% endif %}
             </tbody>
@@ -383,6 +396,24 @@
     </div>
   </div>
   <script type="text/javascript"><!--
+
+    $(() => {
+      $('#select-collect-date').on('change', (e) => {
+        $.ajax({
+          url: 'index.php?route=sale/order/changeCollectorDate&user_token={{ user_token }}&order_id={{ order_id }}&shipping_collector_id=' + e.currentTarget.value,
+          dataType: 'json',
+          success: function(json) {
+            if (json['success']) {
+              $('#content > .container-fluid').prepend('<div class="alert success alert-dismissible"><i class="fa fa-check"></i> Datum uspješno snimljen.</div>');
+            }
+          },
+          error: function(xhr, ajaxOptions, thrownError) {
+            alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+          }
+        });
+
+      });
+    });
 
     $(document).delegate('#button-refund-send', 'click', function() {
       $.ajax({
