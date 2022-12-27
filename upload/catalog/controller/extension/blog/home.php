@@ -97,7 +97,7 @@ class ControllerExtensionBlogHome extends Controller {
 			'date_added_month' 	=> $date_added_month,
 			'author' 			=> $result['author'],
 			'image'   			=> $this->model_tool_image->resize($result['image'], $img_width, $img_height),
-			'href' 				=> $this->url->link('extension/blog/blog', 'blog_id=' . $result['blog_id'])
+			'href' 				=> $this->model_extension_blog_blog->getBlogSeoUrls($result['blog_id']),
 			);
 		}
 		
