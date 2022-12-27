@@ -10,7 +10,9 @@ class ControllerCheckoutSuccess extends Controller {
 
 			//
 
-            $this->createWebracun($this->session->data['order_id']);
+
+
+            $order_id = $this->session->data['order_id'];
             
             // fj.agmedia.hr
             // Dodaj u SC ako je narudžba uspješna.
@@ -18,6 +20,8 @@ class ControllerCheckoutSuccess extends Controller {
             if ($order->shipping_collector_id) {
                 \Agmedia\Features\Models\ShippingCollector::query()->where('shipping_collector_id', $order->shipping_collector_id)->increment('collected');
             }
+
+            $this->createWebracun($order_id);
             
 
             //
@@ -226,6 +230,9 @@ class ControllerCheckoutSuccess extends Controller {
             );
 
 
+            $this->log->write($order_data);
+
+
             $order_data = json_encode($order_data);
 
             #connect to WebRacun API
@@ -245,9 +252,13 @@ class ControllerCheckoutSuccess extends Controller {
             #send JSON data
 
             $result = curl_exec($ch);
+
+            $this->log->write($result);
             // Neema razulatata u $response jer AP Ivraća samo HEADER
 
             $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+            $this->log->write($httpcode);
 
             curl_close($ch);
 
