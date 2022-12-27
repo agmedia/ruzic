@@ -328,6 +328,8 @@ class ControllerExtensionQuickCheckoutShippingMethod extends Controller {
 		// fj.agmedia.hr
         if (isset($this->request->post['shipping_collector_id'])) {
             $this->session->data['shipping_collector_id'] = $this->request->post['shipping_collector_id'];
+            \Agmedia\Helpers\Log::debug('set() ::: shipping_collector_id je SETAN()');
+            \Agmedia\Helpers\Log::debug($this->session->data['shipping_collector_id']);
         }
 		
 		if (isset($this->request->post['delivery_date'])) {
@@ -453,6 +455,9 @@ class ControllerExtensionQuickCheckoutShippingMethod extends Controller {
         ];
     
         $this->session->data['shipping_collector_id'] = collect($response['list'])->first()['value'];
+    
+        \Agmedia\Helpers\Log::debug('getDeliveryTime() ::: shipping_collector_id je SETAN()');
+        \Agmedia\Helpers\Log::debug($this->session->data['shipping_collector_id']);
     
         $this->response->addHeader('Content-Type: application/json');
         $this->response->setOutput(json_encode($response));
