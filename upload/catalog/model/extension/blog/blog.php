@@ -180,11 +180,7 @@ class ModelExtensionBlogBlog extends Model {
 
         $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "seo_url WHERE query = 'blog_id=" . (int)$blog_id . "'");
 
-        foreach ($query->rows as $result) {
-            $blog_seo_url_data[$result['store_id']][$result['language_id']] = $result['keyword'];
-        }
-
-        return $blog_seo_url_data;
+        return $query->row['keyword'];
     }
 	
 
