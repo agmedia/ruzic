@@ -184,19 +184,6 @@ class ControllerCheckoutConfirm extends Controller {
 					$order_data['shipping_method'] = '';
 				}
 
-
-                if (isset($this->session->data['shipping_method']['collect_date'])) {
-                    $order_data['collect_date'] = $this->session->data['shipping_method']['collect_date'];
-                } else {
-                    $order_data['collect_date'] = '';
-                }
-                
-                if (isset($this->session->data['shipping_collector_id'])) {
-                    $order_data['shipping_collector_id'] = $this->session->data['shipping_collector_id'];
-                } else {
-                    $order_data['shipping_collector_id'] = '';
-                }
-
 				if (isset($this->session->data['shipping_method']['code'])) {
 					$order_data['shipping_code'] = $this->session->data['shipping_method']['code'];
 				} else {
@@ -219,6 +206,20 @@ class ControllerCheckoutConfirm extends Controller {
 				$order_data['shipping_method'] = '';
 				$order_data['shipping_code'] = '';
 			}
+            
+            // fj.agmedia.hr
+            if (isset($this->session->data['shipping_method']['collect_date'])) {
+                $order_data['collect_date'] = $this->session->data['shipping_method']['collect_date'];
+            } else {
+                $order_data['collect_date'] = '';
+            }
+            
+            if (isset($this->session->data['shipping_collector_id'])) {
+                $order_data['shipping_collector_id'] = $this->session->data['shipping_collector_id'];
+            } else {
+                $order_data['shipping_collector_id'] = '';
+            }
+            // END ::: fj.agmedia.hr
 
 			$order_data['products'] = array();
 
