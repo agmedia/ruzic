@@ -6,8 +6,7 @@ class ControllerCheckoutSuccess extends Controller {
 		if (isset($this->session->data['order_id'])) {
 			$this->cart->clear();
 
-
-
+            $this->log->write($this->session->data);
 			//
 
 
@@ -95,6 +94,10 @@ class ControllerCheckoutSuccess extends Controller {
         $order          = $this->getOrder($order_id);
         $order_products = $this->getOrderProducts($order_id);
         $order_totals   = $this->getOrderTotals($order_id);
+
+        $this->log->write($order);
+        $this->log->write($order_products);
+        $this->log->write($order_totals);
 
         if ($order &&  $order['payment_code'] != 'cod') {
 
