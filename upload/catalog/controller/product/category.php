@@ -387,7 +387,7 @@ class ControllerProductCategory extends Controller {
                 $data['changed_region_warning'] = false;
             }
             
-            if ( isset($this->session->data['delivery_region']) && $this->session->data['delivery_region'] != $target && ! $this->cart->hasProducts()) {
+            if ($this->session->data['delivery_region'] != $target && ! $this->cart->hasProducts()) {
                 $this->session->data['delivery_region'] = $target;
             }
             
