@@ -9,7 +9,7 @@ class ControllerCheckoutSuccess extends Controller {
             $this->log->write($this->session->data);
 			//
 
-
+            $this->createWebracun($this->session->data['order_id']);
 
             $order_id = $this->session->data['order_id'];
             
@@ -20,7 +20,7 @@ class ControllerCheckoutSuccess extends Controller {
                 \Agmedia\Features\Models\ShippingCollector::query()->where('shipping_collector_id', $order->shipping_collector_id)->increment('collected');
             }
 
-            $this->createWebracun($order_id);
+
             
 
             //
