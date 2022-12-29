@@ -105,6 +105,8 @@ class ControllerExtensionPaymentCorvusPay extends Controller {
 
         if (isset($_POST['approval_code'])) {
 
+            $this->session->data['order_id'] = $order_id;
+
             $this->model_checkout_order->addOrderHistory($order_id, $this->config->get('payment_corvuspay_order_status_id'), '', true);
             $this->response->redirect($this->url->link('checkout/success', '', 'SSL'));
 
