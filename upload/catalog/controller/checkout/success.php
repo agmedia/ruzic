@@ -3,10 +3,12 @@ class ControllerCheckoutSuccess extends Controller {
 	public function index() {
 		$this->load->language('checkout/success');
 
+        $this->log->write($this->session->data);
+
 		if (isset($this->session->data['order_id'])) {
 			$this->cart->clear();
 
-            $this->log->write($this->session->data);
+
 			//
 
             $this->createWebracun($this->session->data['order_id']);
@@ -70,11 +72,9 @@ class ControllerCheckoutSuccess extends Controller {
 
 		if ($this->customer->isLogged()) {
 			$data['text_message'] = sprintf($this->language->get('text_customer'), $this->url->link('account/account', '', true), $this->url->link('account/order', '', true), $this->url->link('account/download', '', true), $this->url->link('information/contact'));
-		} else if ($shipping['code'] == 'collector.collector')  {
-			$data['text_message'] = sprintf($this->language->get('text_guest'), $this->url->link('information/contact'));
 		} else {
-            $data['text_message'] = sprintf($this->language->get('text_guest_hrv'), $this->url->link('information/contact'));
-        }
+			$data['text_message'] = sprintf($this->language->get('text_guest'), $this->url->link('information/contact'));
+		}
 
 		$data['continue'] = $this->url->link('common/home');
 
