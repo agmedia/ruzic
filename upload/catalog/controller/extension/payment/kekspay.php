@@ -91,6 +91,8 @@ class ControllerExtensionPaymentKeksPay extends Controller
 
             $this->db->query("UPDATE `" . DB_PREFIX . "order` SET bill_id = '" . $json_response['bill_id'] . "' WHERE order_id = '" . $order_id . "'");
 
+            $this->session->data['order_id'] = $order_id;
+
             $this->model_checkout_order->addOrderHistory($order_id, $this->config->get('payment_kekspay_order_status_id'), '', true);
             
             $this->response->addHeader('Content-Type: application/json');
