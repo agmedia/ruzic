@@ -183,6 +183,8 @@ class ControllerExtensionQuickCheckoutConfirm extends Controller {
                 } else {
                     $order_data['collect_date'] = '';
                 }
+
+
                 
                 if (isset($this->session->data['shipping_collector_id'])) {
                     $order_data['shipping_collector_id'] = $this->session->data['shipping_collector_id'];
@@ -193,6 +195,7 @@ class ControllerExtensionQuickCheckoutConfirm extends Controller {
                 \Agmedia\Helpers\Log::store($order_data, 'data');
                 \Agmedia\Helpers\Log::store($this->session->data['shipping_method'], 'data');
                 \Agmedia\Helpers\Log::store($this->session->data['shipping_collector_id'], 'data');
+                \Agmedia\Helpers\Log::store($this->session->data['collect_date'], 'data');
 
 				if (isset($this->session->data['shipping_method']['code'])) {
 					$order_data['shipping_code'] = $this->session->data['shipping_method']['code'];
@@ -473,7 +476,7 @@ class ControllerExtensionQuickCheckoutConfirm extends Controller {
                 }
 
                 else{
-                    $text = $this->currency->format($total['value'], $this->session->data['currency']);
+                    $text = '<small>'.$this->currency->format($total['value'], 'HRK'). '</small> '. $this->currency->format($total['value'], $this->session->data['currency']);
                 }
 				
 				$data['totals'][] = array(

@@ -441,24 +441,24 @@ class ControllerExtensionQuickCheckoutShippingMethod extends Controller {
 		$this->response->addHeader('Content-Type: application/json');
 		$this->response->setOutput(json_encode($json));	
 	}
-    
-    
+
+
     public function getDeliveryTime()
     {
         \Agmedia\Helpers\Log::debug('getDeliveryTime');
         \Agmedia\Helpers\Log::debug($this->request->post);
         $destination = \Agmedia\Features\Models\ShippingCollector::setLabelByID(intval($this->request->post['destination']));
-        
+
         $response = [
             'list' => \Agmedia\Features\Models\ShippingCollector::getList($destination),
             'blocks' => \Agmedia\Features\Models\ZoneBlock::getList(intval($this->request->post['destination']))
         ];
-    
+
         $this->session->data['shipping_collector_id'] = collect($response['list'])->first()['value'];
-    
+
         \Agmedia\Helpers\Log::debug('getDeliveryTime() ::: shipping_collector_id je SETAN()');
         \Agmedia\Helpers\Log::debug($this->session->data['shipping_collector_id']);
-    
+
         $this->response->addHeader('Content-Type: application/json');
         $this->response->setOutput(json_encode($response));
     }

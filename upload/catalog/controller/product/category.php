@@ -176,7 +176,7 @@ class ControllerProductCategory extends Controller {
 
 				if ($this->customer->isLogged() || !$this->config->get('config_customer_price')) {
 					$price = $this->currency->format($this->tax->calculate($result['price'], $result['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']);
-                    $priceeur = $this->currency->format($this->tax->calculate(($result['price']), $result['tax_class_id'], $this->config->get('config_tax')), 'EUR');
+                    $priceeur = $this->currency->format($this->tax->calculate(($result['price']), $result['tax_class_id'], $this->config->get('config_tax')), 'HRK');
 				} else {
 					$price = false;
                     $priceeur = false;
@@ -184,7 +184,7 @@ class ControllerProductCategory extends Controller {
 
 				if (!is_null($result['special']) && (float)$result['special'] >= 0) {
 					$special = $this->currency->format($this->tax->calculate($result['special'], $result['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']);
-                    $specialeur = $this->currency->format($this->tax->calculate($result['special'], $result['tax_class_id'], $this->config->get('config_tax')), 'EUR');
+                    $specialeur = $this->currency->format($this->tax->calculate($result['special'], $result['tax_class_id'], $this->config->get('config_tax')), 'HRK');
 					$tax_price = (float)$result['special'];
 				} else {
 					$special = false;

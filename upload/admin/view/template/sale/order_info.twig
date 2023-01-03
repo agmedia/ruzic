@@ -99,36 +99,6 @@
                     <button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-refresh"></i></button>
                   {% endif %}</td>
               </tr>
-           <!--   <tr>
-                <td>{{ text_reward }}</td>
-                <td class="text-right">{{ reward }}</td>
-                <td class="text-center">{% if customer and reward %}
-                    {% if not reward_total %}
-                      <button id="button-reward-add" data-loading-text="{{ text_loading }}" data-toggle="tooltip" title="{{ button_reward_add }}" class="btn btn-success btn-xs"><i class="fa fa-plus-circle"></i></button>
-                    {% else %}
-                      <button id="button-reward-remove" data-loading-text="{{ text_loading }}" data-toggle="tooltip" title="{{ button_reward_remove }}" class="btn btn-danger btn-xs"><i class="fa fa-minus-circle"></i></button>
-                    {% endif %}
-                  {% else %}
-                    <button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-plus-circle"></i></button>
-                  {% endif %}</td>
-              </tr>
-              <tr>
-                <td>{{ text_affiliate }}
-                  {% if affiliate %}
-                    (<a href="{{ affiliate }}">{{ affiliate_firstname }} {{ affiliate_lastname }}</a>)
-                  {% endif %}</td>
-                <td class="text-right">{{ commission }}</td>
-                <td class="text-center">{% if affiliate %}
-                    {% if not commission_total %}
-                      <button id="button-commission-add" data-loading-text="{{ text_loading }}" data-toggle="tooltip" title="{{ button_commission_add }}" class="btn btn-success btn-xs"><i class="fa fa-plus-circle"></i></button>
-                    {% else %}
-                      <button id="button-commission-remove" data-loading-text="{{ text_loading }}" data-toggle="tooltip" title="{{ button_commission_remove }}" class="btn btn-danger btn-xs"><i class="fa fa-minus-circle"></i></button>
-                    {% endif %}
-                  {% else %}
-                    <button disabled="disabled" class="btn btn-success btn-xs"><i class="fa fa-plus-circle"></i></button>
-                  {% endif %}</td>
-              </tr> -->
-
               {% if payment_code =='kekspay' %}
                 <tr>
                   {% if  refund_qty >= 2 or amount == total %}
