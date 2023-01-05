@@ -330,7 +330,12 @@ class ControllerExtensionQuickCheckoutShippingMethod extends Controller {
             $this->session->data['shipping_collector_id'] = $this->request->post['shipping_collector_id'];
             \Agmedia\Helpers\Log::debug('set() ::: shipping_collector_id je SETAN()');
             \Agmedia\Helpers\Log::debug($this->session->data['shipping_collector_id']);
+
+            $id = \Agmedia\Features\Models\ShippingCollector::query()->where('shipping_collector_id', $this->request->post['shipping_collector_id'])->first();
+            $this->session->data['collect_date'] = $id->collect_date;
         }
+
+
 		
 		if (isset($this->request->post['delivery_date'])) {
 			$this->session->data['delivery_date'] = strip_tags($this->request->post['delivery_date']);
