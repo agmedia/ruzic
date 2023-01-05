@@ -20,6 +20,11 @@ class Order extends Model
     protected $primaryKey = 'order_id';
     
     /**
+     * @var bool
+     */
+    public $timestamps = false;
+    
+    /**
      * @var array
      */
     protected $guarded = [
