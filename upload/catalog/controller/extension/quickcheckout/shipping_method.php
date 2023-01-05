@@ -248,6 +248,12 @@ class ControllerExtensionQuickCheckoutShippingMethod extends Controller {
         } else {
             $data['collector_picked'] = '';
         }
+
+        if($data['collector_picked'] = ''){
+            $id = \Agmedia\Features\Models\ShippingCollector::query()->where('shipping_collector_id', $data['collector_picked'])->first();
+            $this->session->data['collect_date'] = $id->collect_date;
+        }
+
       
         $data['collector_picked_label'] = '';
         
