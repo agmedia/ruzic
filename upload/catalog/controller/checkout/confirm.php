@@ -208,8 +208,8 @@ class ControllerCheckoutConfirm extends Controller {
             }
 
             // fj.agmedia.hr
-            if (isset($this->session->data['shipping_method']['collect_date'])) {
-                $order_data['collect_date'] = $this->session->data['shipping_method']['collect_date'];
+            if (isset($this->session->data['collect_date'])) {
+                $order_data['collect_date'] = $this->session->data['collect_date'];
             } else {
                 $order_data['collect_date'] = '';
             }
