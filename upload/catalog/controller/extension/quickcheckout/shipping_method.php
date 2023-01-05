@@ -465,7 +465,7 @@ class ControllerExtensionQuickCheckoutShippingMethod extends Controller {
             'blocks' => \Agmedia\Features\Models\ZoneBlock::getList(intval($this->request->post['destination']))
         ];
 
-        $this->session->data['shipping_collector_id'] = collect($response['list'])->first()['value'];
+        $this->session->data['shipping_collector_id'] = collect($response['list'])->first()['shipping_collector_id'];
 
         $id = \Agmedia\Features\Models\ShippingCollector::query()->where('shipping_collector_id', $this->session->data['shipping_collector_id'])->first();
         $this->session->data['collect_date'] = $id->collect_date;
