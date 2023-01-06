@@ -177,35 +177,43 @@ class ControllerExtensionQuickCheckoutConfirm extends Controller {
 				} else {
 					$order_data['shipping_method'] = '';
 				}
-                
-                if (isset($this->session->data['collect_date'])) {
-                    $order_data['collect_date'] = $this->session->data['collect_date'];
-                    $data['collect_date'] = $this->session->data['collect_date'];
-                } else {
-                    $order_data['collect_date'] = '';
-                    $data['collect_date'] = '';
-                }
-
-
-                
-                if (isset($this->session->data['shipping_collector_id'])) {
-                    $order_data['shipping_collector_id'] = $this->session->data['shipping_collector_id'];
-                    $data['shipping_collector_id'] = $this->session->data['shipping_collector_id'];
-                } else {
-                    $order_data['shipping_collector_id'] = '';
-                    $data['shipping_collector_id'] ='';
-                }
-                
-                \Agmedia\Helpers\Log::store($order_data, 'data');
-                \Agmedia\Helpers\Log::store($this->session->data['shipping_method'], 'data');
-                \Agmedia\Helpers\Log::store($this->session->data['shipping_collector_id'], 'data');
-                \Agmedia\Helpers\Log::store($this->session->data['collect_date'], 'data');
 
 				if (isset($this->session->data['shipping_method']['code'])) {
 					$order_data['shipping_code'] = $this->session->data['shipping_method']['code'];
 				} else {
 					$order_data['shipping_code'] = '';
 				}
+
+                // fj.agmedia.hr
+                if (isset($this->session->data['collect_date'])) {
+                    $order_data['collect_date'] = $this->session->data['collect_date'];
+                } else {
+                    $order_data['collect_date'] = '';
+                }
+
+                if (isset($this->session->data['shipping_collector_id'])) {
+                    $order_data['shipping_collector_id'] = $this->session->data['shipping_collector_id'];
+                } else {
+                    $order_data['shipping_collector_id'] = '';
+                }
+
+                $correct_destination = \Agmedia\Features\Models\ShippingCollector::setLabelByID((int)$this->session->data['shipping_address']['zone_id']);
+                $first_collector = \Agmedia\Features\Models\ShippingCollector::getCleanList($correct_destination)->first()->toArray();
+
+                if ($order_data['collect_date'] == '' || $order_data['collect_date'] != $first_collector['collect_date']) {
+                    $order_data['collect_date'] = $first_collector['collect_date'];
+                }
+
+                if ($order_data['shipping_collector_id'] == '' || $order_data['shipping_collector_id'] != $first_collector['shipping_collector_id']) {
+                    $order_data['shipping_collector_id'] = $first_collector['shipping_collector_id'];
+                }
+
+                \Agmedia\Helpers\Log::store($order_data, 'data');
+                \Agmedia\Helpers\Log::store($this->session->data['shipping_method'], 'data');
+                \Agmedia\Helpers\Log::store($this->session->data['shipping_collector_id'], 'data');
+                \Agmedia\Helpers\Log::store($this->session->data['collect_date'], 'data');
+                // END ::: fj.agmedia.hr
+
 			} else {
 				$order_data['shipping_firstname'] = '';
 				$order_data['shipping_lastname'] = '';

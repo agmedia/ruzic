@@ -5,6 +5,7 @@ namespace Agmedia\Features\Models;
 
 
 use Agmedia\Helpers\Log;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
@@ -39,11 +40,7 @@ class ShippingCollector extends Model
     public static function getList(string $destination = 'zapad', int $days = 15): array
     {
         $response = [];
-        $list     = self::where('status', 1)
-                        ->where('collect_destination', $destination)
-                        ->where('collect_date', '>', Carbon::now())
-                        ->where('collect_date', '<', Carbon::now()->addDays($days))
-                        ->orderBy('collect_date')->orderBy('shipping_collector_id', 'desc')->get();
+        $list     = self::getCleanList($destination, $days);
         
         foreach ($list as $item) {
             if ($item->collected < $item->collect_max) {
@@ -78,6 +75,22 @@ class ShippingCollector extends Model
         }
         
         return $response;
+    }
+
+
+    /**
+     * @param string $destination
+     * @param int    $days
+     *
+     * @return Collection
+     */
+    public static function getCleanList(string $destination = 'zapad', int $days = 15): Collection
+    {
+        return self::where('status', 1)
+                   ->where('collect_destination', $destination)
+                   ->where('collect_date', '>', Carbon::now())
+                   ->where('collect_date', '<', Carbon::now()->addDays($days))
+                   ->orderBy('collect_date')->orderBy('shipping_collector_id', 'desc')->get();
     }
 
 
