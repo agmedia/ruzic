@@ -204,9 +204,13 @@ class ControllerExtensionQuickCheckoutConfirm extends Controller {
                     $order_data['collect_date'] = $first_collector['collect_date'];
                 }
 
+
+
                 if ($order_data['shipping_collector_id'] == '' || $order_data['shipping_collector_id'] != $first_collector['shipping_collector_id']) {
                     $order_data['shipping_collector_id'] = $first_collector['shipping_collector_id'];
                 }
+
+                $data['collect_date']  = $order_data['collect_date'];
 
                 \Agmedia\Helpers\Log::store($order_data, 'data');
                 \Agmedia\Helpers\Log::store($this->session->data['shipping_method'], 'data');
