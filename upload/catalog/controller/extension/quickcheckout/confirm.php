@@ -198,15 +198,19 @@ class ControllerExtensionQuickCheckoutConfirm extends Controller {
                 }
 
                 $correct_destination = \Agmedia\Features\Models\ShippingCollector::setLabelByID((int)$this->session->data['shipping_address']['zone_id']);
-                $first_collector = \Agmedia\Features\Models\ShippingCollector::getCleanList($correct_destination)->first()->toArray();
+                $correct_collectors = \Agmedia\Features\Models\ShippingCollector::getCleanList($correct_destination);
+                $collect_date_ok = false;
 
-                if ($order_data['collect_date'] == '' || $order_data['collect_date'] != $first_collector['collect_date']) {
-                    $order_data['collect_date'] = $first_collector['collect_date'];
+                foreach ($correct_collectors->toArray() as $collector) {
+                    if ($order_data['collect_date'] == $collector['collect_date'] && $order_data['shipping_collector_id'] == $collector['shipping_collector_id']) {
+                        $collect_date_ok = true;
+                    }
                 }
 
+                if ( ! $collect_date_ok) {
+                    $first_collector = $correct_collectors->first();
 
-
-                if ($order_data['shipping_collector_id'] == '' || $order_data['shipping_collector_id'] != $first_collector['shipping_collector_id']) {
+                    $order_data['collect_date'] = $first_collector['collect_date'];
                     $order_data['shipping_collector_id'] = $first_collector['shipping_collector_id'];
                 }
 
