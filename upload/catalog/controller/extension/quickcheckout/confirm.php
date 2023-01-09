@@ -201,7 +201,7 @@ class ControllerExtensionQuickCheckoutConfirm extends Controller {
                 $correct_collectors = \Agmedia\Features\Models\ShippingCollector::getList($correct_destination, 15, true);
                 $collect_date_ok = false;
 
-                foreach ($correct_collectors->toArray() as $collector) {
+                foreach ($correct_collectors as $collector) {
                     if ($order_data['collect_date'] == $collector['collect_date'] && $order_data['shipping_collector_id'] == $collector['shipping_collector_id']) {
                         $collect_date_ok = true;
                     }
