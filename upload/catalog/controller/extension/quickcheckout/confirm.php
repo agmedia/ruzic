@@ -198,7 +198,7 @@ class ControllerExtensionQuickCheckoutConfirm extends Controller {
                 }
 
                 $correct_destination = \Agmedia\Features\Models\ShippingCollector::setLabelByID((int)$this->session->data['shipping_address']['zone_id']);
-                $correct_collectors = \Agmedia\Features\Models\ShippingCollector::getCleanList($correct_destination);
+                $correct_collectors = \Agmedia\Features\Models\ShippingCollector::getList($correct_destination, 15, true);
                 $collect_date_ok = false;
 
                 foreach ($correct_collectors->toArray() as $collector) {

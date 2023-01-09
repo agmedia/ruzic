@@ -30,14 +30,16 @@ class ShippingCollector extends Model
     ];
     
     public $timestamps = false;
-    
-    
+
+
     /**
-     * @param int $days
+     * @param string $destination
+     * @param int    $days
+     * @param bool   $raw
      *
      * @return array
      */
-    public static function getList(string $destination = 'zapad', int $days = 15): array
+    public static function getList(string $destination = 'zapad', int $days = 15, bool $raw = false): array
     {
         $response = [];
         $list     = self::getCleanList($destination, $days);
@@ -45,52 +47,18 @@ class ShippingCollector extends Model
         foreach ($list as $item) {
             if ($item->collected < $item->collect_max) {
                 $date = Carbon::make($item->collect_date);
-                
-                /*if (self::isToday($date)) {
-                    $now = Carbon::now()->format('H') + 1;
-
-                    if ($item->collect_time == '09-11h' && $now < 9) {
-                        $response[] = self::response($date, $item);
-                    }
-                    if ($item->collect_time == '11-13h' && $now < 11) {
-                        $response[] = self::response($date, $item);
-                    }
-                    if ($item->collect_time == '13-15h' && $now < 13) {
-                        $response[] = self::response($date, $item);
-                    }
-                    if ($item->collect_time == '17-19h' && $now < 17) {
-                        $response[] = self::response($date, $item);
-                    }
-                    if ($item->collect_time == '19-21h' && $now < 19) {
-                        $response[] = self::response($date, $item);
-                    }
-                } else {
-                    $response[] = self::response($date, $item);
-                }*/
 
                 if ( ! self::isToday($date)) {
-                    $response[] = self::response($date, $item);
+                    if ($raw) {
+                        $response[] = $item;
+                    } else {
+                        $response[] = self::response($date, $item);
+                    }
                 }
             }
         }
         
         return $response;
-    }
-
-
-    /**
-     * @param string $destination
-     * @param int    $days
-     *
-     * @return Collection
-     */
-    public static function getCleanList(string $destination = 'zapad', int $days = 15): Collection
-    {
-        return self::where('status', 1)
-                   ->where('collect_destination', $destination)
-                   ->where('collect_date', '>', Carbon::now())
-                   ->where('collect_date', '<', Carbon::now()->addDays($days))
-                   ->orderBy('collect_date')->orderBy('shipping_collector_id', 'desc')->get();
     }
 
 
@@ -145,6 +113,26 @@ class ShippingCollector extends Model
         }
     
         return 'istok';
+    }
+
+    /*******************************************************************************
+    *                                Copyright : AGmedia                           *
+    *                              email: filip@agmedia.hr                         *
+    *******************************************************************************/
+
+    /**
+     * @param string $destination
+     * @param int    $days
+     *
+     * @return Collection
+     */
+    private static function getCleanList(string $destination = 'zapad', int $days = 15): Collection
+    {
+        return self::where('status', 1)
+                   ->where('collect_destination', $destination)
+                   ->where('collect_date', '>', Carbon::now())
+                   ->where('collect_date', '<', Carbon::now()->addDays($days))
+                   ->orderBy('collect_date')->orderBy('shipping_collector_id', 'desc')->get();
     }
     
     
