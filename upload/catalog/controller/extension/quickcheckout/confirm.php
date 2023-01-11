@@ -207,7 +207,8 @@ class ControllerExtensionQuickCheckoutConfirm extends Controller {
                     }
                 }
 
-                if ($correct_collectors->count() && ! $collect_date_ok) {
+                if ( ! empty($correct_collectors) && ! $collect_date_ok) {
+                    $correct_collectors = collect($correct_collectors);
                     $first_collector = $correct_collectors->first();
 
                     $order_data['collect_date'] = $first_collector['collect_date'];
