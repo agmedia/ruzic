@@ -1,5 +1,5 @@
 {% if addresses %}
-<div  style="padding:0 10px">
+<div class="hide" style="padding:0 10px">
 <div class="radio">
   <label><input type="radio" name="shipping_address" value="existing" id="shipping-address-existing" checked="checked" />
   {{ text_address_existing }}</label>
@@ -21,7 +21,7 @@
 </div>
 </div>
 {% else %}   
-<input type="radio" name="shipping_address" value="new" id="shipping-address-new" class="hide"  />
+<input type="radio" name="shipping_address" value="new" id="shipping-address-new" class="hide" checked="checked" />
 {% endif %}
 <div id="shipping-new" class="hide" style="display: {{ addresses ? 'none' : 'block' }};">
 {% for field in fields %} 
