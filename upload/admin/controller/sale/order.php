@@ -1950,7 +1950,17 @@ class ControllerSaleOrder extends Controller {
                 $collector = \Agmedia\Features\Models\ShippingCollector::query()->where('shipping_collector_id', $shipping_collector_id)->first();
                 
                 if ($collector) {
+                    $zone_id = 0;
+
+                    foreach (agconf('shipping_collector_regions') as $zone) {
+                        if ($zone['label'] == $collector->collect_destination) {
+                            $zone_id = $zone['id'];
+                        }
+                    }
+                    
                     \Agmedia\Models\Order\Order::query()->where('order_id', $order_id)->update([
+                        'payment_zone' => 'Područje Zagreba i okolica - ' . $collector->collect_destination,
+                        'payment_zone_id' => $zone_id,
                         'collect_date' => $collector->collect_date,
                         'shipping_collector_id' => $collector->shipping_collector_id
                     ]);
