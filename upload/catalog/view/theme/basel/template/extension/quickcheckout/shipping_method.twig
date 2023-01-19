@@ -101,8 +101,6 @@
         </select><br />
     {% endif %}
     <br />
-{% else %}
-    <button type="button" id="button-payment-method" class="btn btn-primary" data-loading-text="loading...">Pogledajte načine dostave</button>
 {% endif %}
 {% if delivery and (not delivery_delivery_time or delivery_delivery_time == '1' or delivery_delivery_time == '3') %}
     <div{{ delivery_required ? ' class="required"' }}>
