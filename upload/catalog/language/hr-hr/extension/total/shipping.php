@@ -18,4 +18,5 @@ $_['error_postcode']       = 'Poštanski broj mora sadržavati između 2 i 10 ka
 $_['error_country']        = 'Molim odaberite državu!';
 $_['error_zone']           = 'Molim odaberite županiju / regiju!';
 $_['error_shipping']       = 'Upozorenje: Način/metoda dostave je obavezan podatak!';
-$_['error_no_shipping']    = 'Upozorenje: Nema dostupnih načina/metoda dostave. Molimo <a href="%s">kontaktirajte nas</a> za pomoć!';
+$_['error_no_shipping']    = '<a href="javascript:window.location.reload(true)">Refreshajte stranicu za prikaz dostave</a>
+';
