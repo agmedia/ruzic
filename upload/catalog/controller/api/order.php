@@ -722,6 +722,11 @@ class ControllerApiOrder extends Controller {
 			if ($order_info) {
 				$this->model_checkout_order->deleteOrder($order_id);
 
+                // fj.agmedia.hr
+                if (isset($order_info['shipping_collector_id'])) {
+                    \Agmedia\Features\Models\ShippingCollector::query()->where('shipping_collector_id', $order_info['shipping_collector_id'])->decrement('collected', 1);
+                }
+
 				$json['success'] = $this->language->get('text_success');
 			} else {
 				$json['error'] = $this->language->get('error_not_found');
