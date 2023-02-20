@@ -68,10 +68,21 @@ class ControllerExtensionQuickCheckoutCheckout extends Equotix {
 		
 		$data = array_merge($data, $this->load->language('checkout/checkout'));
 		$data = array_merge($data, $this->load->language('extension/quickcheckout/checkout'));
+
+
+
+
+       if($this->session->data['delivery_region']=='zagreb') {
+
+           $mind = 10;
+
+       }else{
+           $mind = 20;
+       }
 		
 		// Validate minimum order total
-		if ($this->cart->getTotal() < (float)$this->config->get('quickcheckout_minimum_order')) {
-			$this->session->data['error'] = sprintf($this->language->get('error_minimum_order'), $this->currency->format($this->config->get('quickcheckout_minimum_order'), $this->session->data['currency']));
+		if ($this->cart->getTotal() < (float)$mind)) {
+			$this->session->data['error'] = sprintf($this->language->get('error_minimum_order'), $this->currency->format($mind, $this->session->data['currency']));
 			
 			$this->response->redirect($this->url->link('checkout/cart'));
 		}
