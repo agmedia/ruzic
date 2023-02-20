@@ -81,7 +81,7 @@ class ControllerExtensionQuickCheckoutCheckout extends Equotix {
        }
 		
 		// Validate minimum order total
-		if ($this->cart->getTotal() < (float)$mind)) {
+		if ($this->cart->getTotal() < (float)$mind) {
 			$this->session->data['error'] = sprintf($this->language->get('error_minimum_order'), $this->currency->format($mind, $this->session->data['currency']));
 			
 			$this->response->redirect($this->url->link('checkout/cart'));
