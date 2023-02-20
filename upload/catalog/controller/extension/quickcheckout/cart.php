@@ -220,8 +220,17 @@ class ControllerExtensionQuickCheckoutCart extends Controller {
 		if ((!$this->cart->hasProducts() && empty($this->session->data['vouchers'])) || (!$this->cart->hasStock() && !$this->config->get('config_stock_checkout'))) {
 			$json['redirect'] = $this->url->link('checkout/cart');
 		}
+
+
+        if($this->session->data['delivery_region']=='zagreb') {
+
+            $mind = 10;
+
+        }else{
+            $mind = 20;
+        }
 		
-		if ($this->cart->getTotal() < $this->config->get('quickcheckout_minimum_order')) {
+		if ($this->cart->getTotal() < $mind) {
 			$json['redirect'] = $this->url->link('checkout/cart');
 		}
 		
