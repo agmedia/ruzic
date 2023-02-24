@@ -102,6 +102,7 @@ class ControllerMailOrder extends Controller {
 		$data['date_added'] = date($language->get('date_format_short'), strtotime($order_info['date_added']));
 		$data['payment_method'] = $order_info['payment_method'];
 		$data['shipping_method'] = $order_info['shipping_method'];
+        $data['shipping_code'] = $order_info['shipping_code'];
 		$data['email'] = $order_info['email'];
 		$data['telephone'] = $order_info['telephone'];
 		$data['ip'] = $order_info['ip'];
