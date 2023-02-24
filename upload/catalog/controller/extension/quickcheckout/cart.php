@@ -227,7 +227,7 @@ class ControllerExtensionQuickCheckoutCart extends Controller {
             $mind = 10;
 
         }else{
-            $mind = 20;
+            $mind = 15;
         }
 		
 		if ($this->cart->getTotal() < $mind) {
