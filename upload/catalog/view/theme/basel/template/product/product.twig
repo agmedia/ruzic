@@ -340,7 +340,7 @@
 
             <input type="number" step="1" min="{{ minimum }}" name="quantity" value="{{ minimum }}" id="input-quantity" class="form-control input-quantity" />
               <input type="hidden" name="product_id" value="{{ product_id }}" />
-              <button type="button" {% if ((qty < 1) and (stock_badge_status)) %}{% else %} id="button-cart" {% endif %}  data-loading-text="{{ text_loading }}" class="btn btn-primary">{% if ((qty < 1) and (stock_badge_status)) %}{{ basel_text_out_of_stock }}{% else %}{{ button_cart }}{% endif %}</button>
+              <button type="button" {% if not btnCartEnable %} disabled {% endif %} {% if ((qty < 1) and (stock_badge_status)) %}{% else %} id="button-cart" {% endif %}  data-loading-text="{{ text_loading }}" class="btn btn-primary">{% if ((qty < 1) and (stock_badge_status)) %}{{ basel_text_out_of_stock }}{% else %}{{ button_cart }}{% endif %}</button>
             </div>
             {% if minimum > 1 %}
             <div class="alert alert-sm alert-info"><i class="fa fa-info-circle"></i> {{ text_minimum }}</div>

@@ -21,6 +21,8 @@ class ControllerProductProduct extends Controller {
 
 			$category_id = (int)array_pop($parts);
 
+            $data['cat_id'] = $category_id;
+
 			foreach ($parts as $path_id) {
 				if (!$path) {
 					$path = $path_id;
@@ -158,7 +160,34 @@ class ControllerProductProduct extends Controller {
 
 		$product_info = $this->model_catalog_product->getProduct($product_id);
 
-		//check product page open from cateory page
+        // fj.agmedia.hr
+        $session = isset($this->session->data['delivery_region']) ? $this->session->data['delivery_region'] : null;
+        $target = \Agmedia\Features\Helper::resolveSession($data['cat_id'], $session);
+
+        /*  if ($this->cart->hasProducts() && $session != $target) {
+              $data['changed_region_warning'] = true;
+          } else {
+              $data['changed_region_warning'] = false;
+          }*/
+
+        $region = \Agmedia\Features\CartHelper::checkRegion($this->customer, $this->session);
+
+        if ($region && ($region != $target)) {
+            $data['btnCartEnable'] = false;
+            $data['changed_region_warning'] = true;
+        } else {
+            $data['btnCartEnable'] = true;
+            $data['changed_region_warning'] = false;
+        }
+
+        if ($this->session->data['delivery_region'] != $target && ! $this->cart->hasProducts()) {
+            $this->session->data['delivery_region'] = $target;
+        }
+
+
+
+
+        //check product page open from cateory page
 		if (isset($this->request->get['path'])) {
 			$parts = explode('_', (string)$this->request->get['path']);
 						
