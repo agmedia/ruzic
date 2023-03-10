@@ -184,38 +184,43 @@ class ControllerExtensionQuickCheckoutConfirm extends Controller {
 					$order_data['shipping_code'] = '';
 				}
 
+                $collector_regions = collect(agconf('shipping_collector_regions'))->pluck('id');
+                $selected_zone = (int)$this->session->data['shipping_address']['zone_id'];
+
                 // fj.agmedia.hr
-                if (isset($this->session->data['collect_date'])) {
+                if (isset($this->session->data['collect_date']) && in_array($selected_zone, $collector_regions)) {
                     $order_data['collect_date'] = $this->session->data['collect_date'];
                 } else {
                     $order_data['collect_date'] = '';
                 }
 
-                if (isset($this->session->data['shipping_collector_id'])) {
+                if (isset($this->session->data['shipping_collector_id']) && in_array($selected_zone, $collector_regions)) {
                     $order_data['shipping_collector_id'] = $this->session->data['shipping_collector_id'];
                 } else {
                     $order_data['shipping_collector_id'] = '';
                 }
 
-                $correct_destination = \Agmedia\Features\Models\ShippingCollector::setLabelByID((int)$this->session->data['shipping_address']['zone_id']);
-                $correct_collectors = \Agmedia\Features\Models\ShippingCollector::getList($correct_destination, 15, true);
-                $collect_date_ok = false;
+                if (in_array($selected_zone, $collector_regions)) {
+                    $correct_destination = \Agmedia\Features\Models\ShippingCollector::setLabelByID((int)$this->session->data['shipping_address']['zone_id']);
+                    $correct_collectors = \Agmedia\Features\Models\ShippingCollector::getList($correct_destination, 15, true);
+                    $collect_date_ok = false;
 
-                foreach ($correct_collectors as $collector) {
-                    if ($order_data['collect_date'] == $collector['collect_date'] && $order_data['shipping_collector_id'] == $collector['shipping_collector_id']) {
-                        $collect_date_ok = true;
+                    foreach ($correct_collectors as $collector) {
+                        if ($order_data['collect_date'] == $collector['collect_date'] && $order_data['shipping_collector_id'] == $collector['shipping_collector_id']) {
+                            $collect_date_ok = true;
+                        }
                     }
+
+                    if ( ! empty($correct_collectors) && ! $collect_date_ok) {
+                        $correct_collectors = collect($correct_collectors);
+                        $first_collector = $correct_collectors->first();
+
+                        $order_data['collect_date'] = $first_collector['collect_date'];
+                        $order_data['shipping_collector_id'] = $first_collector['shipping_collector_id'];
+                    }
+
+                    $data['collect_date']  = $order_data['collect_date'];
                 }
-
-                if ( ! empty($correct_collectors) && ! $collect_date_ok) {
-                    $correct_collectors = collect($correct_collectors);
-                    $first_collector = $correct_collectors->first();
-
-                    $order_data['collect_date'] = $first_collector['collect_date'];
-                    $order_data['shipping_collector_id'] = $first_collector['shipping_collector_id'];
-                }
-
-                $data['collect_date']  = $order_data['collect_date'];
 
                 \Agmedia\Helpers\Log::store($order_data, 'data');
                 \Agmedia\Helpers\Log::store($this->session->data['shipping_method'], 'data');

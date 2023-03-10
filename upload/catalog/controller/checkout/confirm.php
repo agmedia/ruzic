@@ -208,13 +208,16 @@ class ControllerCheckoutConfirm extends Controller {
             }
 
             // fj.agmedia.hr
-            if (isset($this->session->data['collect_date'])) {
+            $collector_regions = collect(agconf('shipping_collector_regions'))->pluck('id');
+            $selected_zone = (int)$this->session->data['shipping_address']['zone_id'];
+
+            if (isset($this->session->data['collect_date']) && in_array($selected_zone, $collector_regions)) {
                 $order_data['collect_date'] = $this->session->data['collect_date'];
             } else {
                 $order_data['collect_date'] = '';
             }
 
-            if (isset($this->session->data['shipping_collector_id'])) {
+            if (isset($this->session->data['shipping_collector_id']) && in_array($selected_zone, $collector_regions)) {
                 $order_data['shipping_collector_id'] = $this->session->data['shipping_collector_id'];
             } else {
                 $order_data['shipping_collector_id'] = '';
