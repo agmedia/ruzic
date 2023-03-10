@@ -188,19 +188,19 @@ class ControllerExtensionQuickCheckoutConfirm extends Controller {
                 $selected_zone = (int)$this->session->data['shipping_address']['zone_id'];
 
                 // fj.agmedia.hr
-                if (isset($this->session->data['collect_date']) && in_array($selected_zone, $collector_regions)) {
+                if (isset($this->session->data['collect_date'])/* && in_array($selected_zone, $collector_regions)*/) {
                     $order_data['collect_date'] = $this->session->data['collect_date'];
                 } else {
                     $order_data['collect_date'] = '';
                 }
 
-                if (isset($this->session->data['shipping_collector_id']) && in_array($selected_zone, $collector_regions)) {
+                if (isset($this->session->data['shipping_collector_id'])/* && in_array($selected_zone, $collector_regions)*/) {
                     $order_data['shipping_collector_id'] = $this->session->data['shipping_collector_id'];
                 } else {
                     $order_data['shipping_collector_id'] = '';
                 }
 
-                if (in_array($selected_zone, $collector_regions)) {
+                //if (in_array($selected_zone, $collector_regions)) {
                     $correct_destination = \Agmedia\Features\Models\ShippingCollector::setLabelByID((int)$this->session->data['shipping_address']['zone_id']);
                     $correct_collectors = \Agmedia\Features\Models\ShippingCollector::getList($correct_destination, 15, true);
                     $collect_date_ok = false;
@@ -220,7 +220,7 @@ class ControllerExtensionQuickCheckoutConfirm extends Controller {
                     }
 
                     $data['collect_date']  = $order_data['collect_date'];
-                }
+                //}
 
                 \Agmedia\Helpers\Log::store($order_data, 'data');
                 \Agmedia\Helpers\Log::store($this->session->data['shipping_method'], 'data');
