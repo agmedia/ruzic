@@ -458,6 +458,20 @@ class ControllerExtensionQuickCheckoutShippingMethod extends Controller {
     {
         \Agmedia\Helpers\Log::debug('getDeliveryTime');
         \Agmedia\Helpers\Log::debug($this->request->post);
+
+        if ( ! isset($this->request->post['destination'])) {
+            $this->request->post['destination'] = 4239;
+
+            if (isset($this->request->post['address_id'])) {
+                $this->load->model('account/address');
+                $address = $this->model_account_address->getAddress($this->request->post['address_id']);
+
+                if ($address) {
+                    $this->request->post['destination'] = $address['zone_id'];
+                }
+            }
+        }
+
         $destination = \Agmedia\Features\Models\ShippingCollector::setLabelByID(intval($this->request->post['destination']));
 
         $response = [

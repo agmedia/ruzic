@@ -5,7 +5,7 @@
 	  {{ text_address_existing }}</label>
 	</div>
 	<div id="payment-existing">
-	  <select name="address_id" class="form-control">
+	  <select name="address_id" id="select-saved-address" class="form-control">
 		{% for address in addresses %}
 		{% if address.address_id == address_id %}
 		<option value="{{ address.address_id }}" selected="selected">{{ address.firstname }} {{ address.lastname }} , {{ address.address_1 }} , {{ address.city }} , {{ address.postcode }} , {{ address.zone }} , {{ address.country }}</option>
@@ -171,41 +171,78 @@
 // Payment address form function
 $(document).ready(function() {
   // fj.agmedia.hr
-	$('#input-payment-zone').on('change', () => {
-		console.log('guest - ' + $('#input-payment-zone').val())
-		document.getElementById("input-payment-postcode").value = "";
-		$.ajax({
-			url: 'index.php?route=extension/quickcheckout/shipping_method/getDeliveryTime',
-			type: 'post',
-			data: {destination: $('#input-payment-zone').val()},
-			dataType: 'html',
-			cache: false,
-			success: function (json) {
-				console.log(json)
+    $('#input-payment-zone').on('change', () => {
+        console.log('guest - ' + $('#input-payment-zone').val())
+        document.getElementById("input-payment-postcode").value = "";
+        $.ajax({
+            url: 'index.php?route=extension/quickcheckout/shipping_method/getDeliveryTime',
+            type: 'post',
+            data: {destination: $('#input-payment-zone').val()},
+            dataType: 'html',
+            cache: false,
+            success: function (json) {
+                console.log(json)
 
-				var select = document.getElementById("input-payment-city");
-				var options = JSON.parse(json);
-				select.options.length = 0;
-				for (var i = 0; i < options.blocks.length; i++) {
-					var opt = options.blocks[i];
-					var el = document.createElement("option");
-					el.textContent = opt.title;
-					el.value = opt.title;
-					el.id = opt.zip;
-					select.appendChild(el);
+                var select = document.getElementById("input-payment-city");
+                var options = JSON.parse(json);
+                select.options.length = 0;
+                for (var i = 0; i < options.blocks.length; i++) {
+                    var opt = options.blocks[i];
+                    var el = document.createElement("option");
+                    el.textContent = opt.title;
+                    el.value = opt.title;
+                    el.id = opt.zip;
+                    select.appendChild(el);
 
-				}
+                }
 
-				$("#input-payment-city").prepend("<option value='' selected='selected'>Molimo odaberite</option>");
+                $("#input-payment-city").prepend("<option value='' selected='selected'>Molimo odaberite</option>");
 
-			},
-			error: function (xhr, ajaxOptions, thrownError) {
-				alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
-			}
-		})
-	})
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+            }
+        })
+    });
 
-	function init() {
+    /**
+     *
+     */
+    $('#select-saved-address').on('change', (e) => {
+        console.log(e.currentTarget.value)
+        $.ajax({
+            url: 'index.php?route=extension/quickcheckout/shipping_method/getDeliveryTime',
+            type: 'post',
+            data: {address_id: e.currentTarget.value},
+            dataType: 'html',
+            cache: false,
+            success: function (json) {
+                console.log(json)
+
+                var select = document.getElementById("input-collector-pick");
+                var options = JSON.parse(json);
+
+                select.options.length = 0;
+                for (var i = 0; i < options.list.length; i++) {
+                    var opt = options.list[i];
+
+                    var el = document.createElement("option");
+                    el.textContent = opt.label;
+                    el.value = opt.value;
+                    select.appendChild(el);
+                }
+
+                $('#collector-radio-text').text(', ' + options.list[0].label);
+
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+            }
+        })
+
+    })
+
+    function init() {
 		// Clear forms here
 		document.getElementById("input-payment-city").value = "";
 		document.getElementById("input-payment-postcode").value = "";
