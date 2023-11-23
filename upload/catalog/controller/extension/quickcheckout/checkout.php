@@ -77,7 +77,7 @@ class ControllerExtensionQuickCheckoutCheckout extends Equotix {
            $mind = 12.5;
 
        }else{
-           $mind = 15;
+           $mind = 20;
        }
 		
 		// Validate minimum order total
