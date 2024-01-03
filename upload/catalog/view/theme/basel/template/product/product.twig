@@ -130,9 +130,9 @@
     {% if price %}
       <ul class="list-unstyled price">
         {% if not special %}
-        <li><span class="live-price">{{ price }}<span> <small>{{ priceeur }}</small></li>
+        <li><span class="live-price">{{ price }}<span></li>
         {% else %}
-        <li><span class="price-old">{{ price }} <small>{{ priceeur }}</small></span><span class="live-price-new">{{ special }}<small>{{ specialeur }}</small></span> </li>
+        <li><span class="price-old">{{ price }} </span><span class="live-price-new">{{ special }}</span> </li>
 
         <span id="special_countdown"></span>
         {% endif %}

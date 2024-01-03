@@ -497,12 +497,12 @@ class ControllerExtensionQuickCheckoutConfirm extends Controller {
 
                 if($this->session->data['currency']=='HRK'){
 
-                    $text = '<small>'.$this->currency->format($total['value'], 'EUR'). '</small> '. $this->currency->format($total['value'], $this->session->data['currency']);
+                    $text =  $this->currency->format($total['value'], $this->session->data['currency']);
 
                 }
 
                 else{
-                    $text = '<small>'.$this->currency->format($total['value'], 'HRK'). '</small> '. $this->currency->format($total['value'], $this->session->data['currency']);
+                    $text =  $this->currency->format($total['value'], $this->session->data['currency']);
                 }
 				
 				$data['totals'][] = array(
