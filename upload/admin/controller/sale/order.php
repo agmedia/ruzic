@@ -214,7 +214,8 @@ class ControllerSaleOrder extends Controller {
 			'href' => $this->url->link('sale/order', 'user_token=' . $this->session->data['user_token'] . $url, true)
 		);
 
-		$data['invoice'] = $this->url->link('sale/order/invoice', 'user_token=' . $this->session->data['user_token'], true);
+        $data['eracuni_invoice'] = $this->url->link('sale/order/createWebracun', 'user_token=' . $this->session->data['user_token'], true);
+        $data['invoice'] = $this->url->link('sale/order/invoice', 'user_token=' . $this->session->data['user_token'], true);
 		$data['shipping'] = $this->url->link('sale/order/shipping', 'user_token=' . $this->session->data['user_token'], true);
 		$data['add'] = $this->url->link('sale/order/add', 'user_token=' . $this->session->data['user_token'] . $url, true);
 		$data['delete'] = str_replace('&amp;', '&', $this->url->link('sale/order/delete', 'user_token=' . $this->session->data['user_token'] . $url, true));
@@ -1395,6 +1396,20 @@ class ControllerSaleOrder extends Controller {
                 $json['invoice_no'] = $invoice_no;
             } else {
                 $json['error'] = $this->language->get('error_action');
+            }
+
+        } elseif (isset($this->request->get['ids'])) {
+            $this->load->model('sale/order');
+            $ids = explode(',', $this->request->get['ids']);
+
+            foreach ($ids as $id) {
+                $invoice_no = $this->model_sale_order->createWebracun($id);
+
+                if ($invoice_no) {
+                    $json['invoice_no'] .= $invoice_no . ',';
+                } else {
+                    $json['error'] = $this->language->get('error_action');
+                }
             }
         }
 

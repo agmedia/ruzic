@@ -4,6 +4,7 @@
   <div class="container-fluid">
     <div class="pull-right">
       <button type="button" data-toggle="tooltip" title="{{ button_filter }}" onclick="$('#filter-order').toggleClass('hidden-sm hidden-xs');" class="btn btn-default hidden-md hidden-lg"><i class="fa fa-filter"></i></button>
+        <button type="button" id="button-eracuni" data-toggle="tooltip" title="Print eRačuni" class="btn btn-primary"><i class="fa fa-plus"></i> eRačuni</button>
       <button type="submit" id="button-shipping" form="form-order" formaction="{{ shipping }}" formtarget="_blank" data-toggle="tooltip" title="{{ button_shipping_print }}" class="btn btn-info"><i class="fa fa-truck"></i></button>
       <button type="submit" id="button-invoice" form="form-order" formaction="{{ invoice }}" formtarget="_blank" data-toggle="tooltip" title="{{ button_invoice_print }}" class="btn btn-info"><i class="fa fa-print"></i></button>
       <a href="{{ add }}" data-toggle="tooltip" title="{{ button_add }}" class="btn btn-primary"><i class="fa fa-plus"></i></a> </div>
@@ -236,12 +237,12 @@ $('input[name=\'filter_customer\']').autocomplete({
 //--></script> 
   <script type="text/javascript"><!--
 $('input[name^=\'selected\']').on('change', function() {
-	$('#button-shipping, #button-invoice').prop('disabled', true);
+	$('#button-shipping, #button-invoice, #button-eracuni').prop('disabled', true);
 
 	var selected = $('input[name^=\'selected\']:checked');
 
 	if (selected.length) {
-		$('#button-invoice').prop('disabled', false);
+		$('#button-invoice, #button-eracuni').prop('disabled', false);
 	}
 
 	for (i = 0; i < selected.length; i++) {
@@ -253,13 +254,34 @@ $('input[name^=\'selected\']').on('change', function() {
 	}
 });
 
-$('#button-shipping, #button-invoice').prop('disabled', true);
+$('#button-shipping, #button-invoice, #button-eracuni').prop('disabled', true);
 
 $('input[name^=\'selected\']:first').trigger('change');
 
 // IE and Edge fix!
 $('#button-shipping, #button-invoice').on('click', function(e) {
 	$('#form-order').attr('action', this.getAttribute('formAction'));
+});
+
+$('#button-eracuni').on('click', (e) => {
+    let items = [];
+    var selected = $('input[name^=\'selected\']:checked');
+
+    Object.keys(selected).forEach(function(key) {
+        if (selected[key].value) {
+            items.push(selected[key].value)
+        }
+    });
+
+    console.log(items)
+
+    $.ajax({
+        url: 'index.php?route=sale/order/createWebracun&user_token={{ user_token }}&ids=' +  items,
+        dataType: 'json',
+        success: function(json) {
+            console.log(json)
+        }
+    });
 });
 
 $('#form-order li:last-child a').on('click', function(e) {
