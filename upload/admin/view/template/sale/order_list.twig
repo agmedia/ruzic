@@ -79,6 +79,17 @@
               <button type="button" class="btn btn-default"><i class="fa fa-calendar"></i></button>
               </span> </div>
           </div>
+
+            <div class="form-group">
+                <label class="control-label" for="input-collect_date">Datum dostave</label>
+                <div class="input-group date">
+                    <input type="text" name="filter_collect_date" value="{{ filter_collect_date }}" placeholder="Datum dostave" data-date-format="YYYY-MM-DD" id="input-date-modified" class="form-control" />
+                    <span class="input-group-btn">
+              <button type="button" class="btn btn-default"><i class="fa fa-calendar"></i></button>
+              </span> </div>
+            </div>
+
+
             <div class="form-group">
                 <label class="control-label" for="input-shipping_method">Način dostave</label>
                 <input type="text" name="filter_shipping_method" id="input-shipping_method" class="form-control" value="{{filter_shipping_method}}"/>
@@ -210,6 +221,12 @@ $('#button-filter').on('click', function() {
 	if (filter_date_modified) {
 		url += '&filter_date_modified=' + encodeURIComponent(filter_date_modified);
 	}
+
+    var filter_collect_date = $('input[name=\'filter_collect_date\']').val();
+
+    if (filter_collect_date) {
+        url += '&filter_collect_date=' + encodeURIComponent(filter_collect_date);
+    }
 
 	location = 'index.php?route=sale/order&user_token={{ user_token }}' + url;
 });

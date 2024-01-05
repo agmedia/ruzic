@@ -139,6 +139,13 @@ class ControllerSaleOrder extends Controller {
 			$filter_date_modified = '';
 		}
 
+
+        if (isset($this->request->get['filter_collect_date'])) {
+            $filter_collect_date = $this->request->get['filter_collect_date'];
+        } else {
+            $filter_collect_date = '';
+        }
+
 		if (isset($this->request->get['sort'])) {
 			$sort = $this->request->get['sort'];
 		} else {
@@ -190,6 +197,11 @@ class ControllerSaleOrder extends Controller {
 			$url .= '&filter_date_modified=' . $this->request->get['filter_date_modified'];
 		}
 
+
+        if (isset($this->request->get['filter_collect_date'])) {
+            $url .= '&filter_collect_date=' . $this->request->get['filter_collect_date'];
+        }
+
 		if (isset($this->request->get['sort'])) {
 			$url .= '&sort=' . $this->request->get['sort'];
 		}
@@ -230,6 +242,7 @@ class ControllerSaleOrder extends Controller {
 			'filter_total'           => $filter_total,
 			'filter_date_added'      => $filter_date_added,
 			'filter_date_modified'   => $filter_date_modified,
+            'filter_collect_date'   => $filter_collect_date,
             'filter_shipping_method'   => $filter_shipping_method,
             'sort'                   => $sort,
 			'order'                  => $order,
@@ -312,6 +325,10 @@ class ControllerSaleOrder extends Controller {
 		if (isset($this->request->get['filter_date_modified'])) {
 			$url .= '&filter_date_modified=' . $this->request->get['filter_date_modified'];
 		}
+
+        if (isset($this->request->get['filter_collect_date'])) {
+            $url .= '&filter_collect_date=' . $this->request->get['filter_collect_date'];
+        }
 
 		if ($order == 'ASC') {
 			$url .= '&order=DESC';

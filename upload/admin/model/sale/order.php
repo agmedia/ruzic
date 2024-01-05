@@ -195,6 +195,10 @@ class ModelSaleOrder extends Model {
 			$sql .= " AND DATE(o.date_modified) = DATE('" . $this->db->escape($data['filter_date_modified']) . "')";
 		}
 
+        if (!empty($data['filter_collect_date'])) {
+            $sql .= " AND DATE(o.collect_date) = DATE('" . $this->db->escape($data['filter_collect_date']) . "')";
+        }
+
 		if (!empty($data['filter_total'])) {
 			$sql .= " AND o.total = '" . (float)$data['filter_total'] . "'";
 		}
@@ -409,6 +413,10 @@ class ModelSaleOrder extends Model {
 		if (!empty($data['filter_date_modified'])) {
 			$sql .= " AND DATE(date_modified) = DATE('" . $this->db->escape($data['filter_date_modified']) . "')";
 		}
+
+        if (!empty($data['filter_collect_date'])) {
+            $sql .= " AND DATE(collect_date) = DATE('" . $this->db->escape($data['filter_collect_date']) . "')";
+        }
 
 		if (!empty($data['filter_total'])) {
 			$sql .= " AND total = '" . (float)$data['filter_total'] . "'";
