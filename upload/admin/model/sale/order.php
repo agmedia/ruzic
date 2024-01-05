@@ -208,6 +208,7 @@ class ModelSaleOrder extends Model {
 			'customer',
 			'order_status',
 			'o.date_added',
+            'o.collect_date',
 			'o.date_modified',
 			'o.total'
 		);
@@ -307,6 +308,10 @@ class ModelSaleOrder extends Model {
 		if (!empty($data['filter_date_modified'])) {
 			$sql .= " AND DATE(date_modified) = DATE('" . $this->db->escape($data['filter_date_modified']) . "')";
 		}
+
+        if (!empty($data['filter_collect_date'])) {
+            $sql .= " AND DATE(collect_date) = DATE('" . $this->db->escape($data['filter_collect_date']) . "')";
+        }
 
 		if (!empty($data['filter_total'])) {
 			$sql .= " AND total = '" . (float)$data['filter_total'] . "'";
