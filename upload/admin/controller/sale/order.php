@@ -382,7 +382,7 @@ class ControllerSaleOrder extends Controller {
 
 
         if (isset($this->request->get['filter_collect_date'])) {
-            $url .= '&filter_collect_date=' . $this->request->get['filtercollect_date'];
+            $url .= '&filter_collect_date=' . $this->request->get['filter_collect_date'];
         }
 
 		if (isset($this->request->get['sort'])) {
