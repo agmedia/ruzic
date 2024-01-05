@@ -405,7 +405,7 @@ class ControllerSaleOrder extends Controller {
 		$data['filter_total'] = $filter_total;
 		$data['filter_date_added'] = $filter_date_added;
 		$data['filter_date_modified'] = $filter_date_modified;
-
+        $data['filter_collect_date'] = $filter_collect_date;
         $data['filter_shipping_method'] = $filter_shipping_method;
 
         $data['sort'] = $sort;
