@@ -96,6 +96,13 @@ class ControllerExtensionReportSaleOrder extends Controller {
 			$filter_order_status_id = 0;
 		}
 
+
+        if (isset($this->request->get['filter_payment_code'])) {
+            $filter_payment_code = $this->request->get['filter_payment_code'];
+        } else {
+            $filter_payment_code = '';
+        }
+
 		if (isset($this->request->get['page'])) {
 			$page = (int)$this->request->get['page'];
 		} else {
@@ -111,6 +118,7 @@ class ControllerExtensionReportSaleOrder extends Controller {
 			'filter_date_end'	     => $filter_date_end,
 			'filter_group'           => $filter_group,
 			'filter_order_status_id' => $filter_order_status_id,
+            'filter_payment_code' => $filter_payment_code,
 			'start'                  => ($page - 1) * $this->config->get('config_limit_admin'),
 			'limit'                  => $this->config->get('config_limit_admin')
 		);
@@ -158,6 +166,24 @@ class ControllerExtensionReportSaleOrder extends Controller {
 			'value' => 'day',
 		);
 
+        $data['payments'] = array();
+
+        $data['payments'][] = array(
+            'value' => 'cod',
+            'text'  => 'Pouzeće',
+        );
+
+        $data['payments'][] = array(
+            'value' => 'kekspay',
+            'text'  => 'Kekspay',
+        );
+
+        $data['payments'][] = array(
+            'value' => 'corvuspay',
+            'text'  => 'CorvusPay',
+        );
+
+
 		$url = '';
 
 		if (isset($this->request->get['filter_date_start'])) {
@@ -176,6 +202,10 @@ class ControllerExtensionReportSaleOrder extends Controller {
 			$url .= '&filter_order_status_id=' . $this->request->get['filter_order_status_id'];
 		}
 
+        if (isset($this->request->get['filter_payment_code'])) {
+            $url .= '&filter_payment_code=' . $this->request->get['filter_payment_code'];
+        }
+
 		$pagination = new Pagination();
 		$pagination->total = $order_total;
 		$pagination->page = $page;
@@ -190,6 +220,8 @@ class ControllerExtensionReportSaleOrder extends Controller {
 		$data['filter_date_end'] = $filter_date_end;
 		$data['filter_group'] = $filter_group;
 		$data['filter_order_status_id'] = $filter_order_status_id;
+
+        $data['filter_payment_code'] = $filter_payment_code;
 
 		return $this->load->view('extension/report/sale_order_info', $data);
 	}

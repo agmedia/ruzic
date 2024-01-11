@@ -35,6 +35,23 @@
                   {% endfor %}
           </select>
         </div>
+
+        <div class="form-group">
+          <label class="control-label" for="input-payment-code">Način plaćanja</label>
+          <select name="filter_payment_code" id="input-payment-code" class="form-control">
+
+            <option value=""></option>
+            {% for pt in payments %}
+              {% if pt.value == filter_payment_code %}
+                <option value="{{ pt.value }}" selected="selected">{{ pt.text }}</option>
+              {% else %}
+                <option value="{{ pt.value }}">{{ pt.text }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+
+
         <div class="form-group">
           <label class="control-label" for="input-status">{{ entry_status }}</label>
           <select name="filter_order_status_id" id="input-status" class="form-control">
@@ -125,10 +142,19 @@ $('#button-filter').on('click', function() {
 	}
 	
 	var filter_order_status_id = $('select[name=\'filter_order_status_id\']').val();
+
+
 	
 	if (filter_order_status_id != 0) {
 		url += '&filter_order_status_id=' + encodeURIComponent(filter_order_status_id);
-	}	
+	}
+
+
+  var filter_payment_code = $('select[name=\'filter_payment_code\']').val();
+
+  if (filter_payment_code) {
+    url += '&filter_payment_code=' + encodeURIComponent(filter_payment_code);
+  }
 
 	location = 'index.php?route=report/report&code=sale_order&user_token={{ user_token }}' + url;
 });
