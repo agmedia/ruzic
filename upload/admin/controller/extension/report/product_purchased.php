@@ -84,6 +84,13 @@ class ControllerExtensionReportProductPurchased extends Controller {
 			$filter_date_end = '';
 		}
 
+
+        if (isset($this->request->get['filter_name'])) {
+            $filter_name = $this->request->get['filter_name'];
+        } else {
+            $filter_name = '';
+        }
+
 		if (isset($this->request->get['filter_order_status_id'])) {
 			$filter_order_status_id = $this->request->get['filter_order_status_id'];
 		} else {
@@ -103,6 +110,8 @@ class ControllerExtensionReportProductPurchased extends Controller {
 		$filter_data = array(
 			'filter_date_start'	     => $filter_date_start,
 			'filter_date_end'	     => $filter_date_end,
+
+            'filter_name'	     => $filter_name,
 			'filter_order_status_id' => $filter_order_status_id,
 			'start'                  => ($page - 1) * $this->config->get('config_limit_admin'),
 			'limit'                  => $this->config->get('config_limit_admin')
@@ -116,6 +125,7 @@ class ControllerExtensionReportProductPurchased extends Controller {
 			$data['products'][] = array(
 				'name'     => $result['name'],
 				'model'    => $result['model'],
+                'product_id'    => $result['product_id'],
 				'quantity' => $result['quantity'],
 				'total'    => $this->currency->format($result['total'], $this->config->get('config_currency'))
 			);
@@ -141,6 +151,10 @@ class ControllerExtensionReportProductPurchased extends Controller {
 			$url .= '&filter_order_status_id=' . $this->request->get['filter_order_status_id'];
 		}
 
+        if (isset($this->request->get['filter_name'])) {
+            $url .= '&filter_name=' . $this->request->get['filter_name'];
+        }
+
 		$pagination = new Pagination();
 		$pagination->total = $product_total;
 		$pagination->page = $page;
@@ -154,6 +168,8 @@ class ControllerExtensionReportProductPurchased extends Controller {
 		$data['filter_date_start'] = $filter_date_start;
 		$data['filter_date_end'] = $filter_date_end;
 		$data['filter_order_status_id'] = $filter_order_status_id;
+        $data['filter_name'] = $filter_name;
+
 
 		return $this->load->view('extension/report/product_purchased_info', $data);
 	}

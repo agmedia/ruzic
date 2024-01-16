@@ -39,11 +39,17 @@ class ModelExtensionReportProduct extends Model {
 	public function getPurchased($data = array()) {
 		$sql = "SELECT op.name, op.model, SUM(op.quantity) AS quantity, SUM((op.price + op.tax) * op.quantity) AS total FROM " . DB_PREFIX . "order_product op LEFT JOIN `" . DB_PREFIX . "order` o ON (op.order_id = o.order_id)";
 
-		if (!empty($data['filter_order_status_id'])) {
-			$sql .= " WHERE o.order_status_id = '" . (int)$data['filter_order_status_id'] . "'";
-		} else {
-            $sql .= " WHERE o.order_status_id = '1' OR o.order_status_id > '5'";
-		}
+        if (!empty($data['filter_order_status_id'])) {
+
+            if($data['filter_order_status_id'] =='all'){
+
+                $sql .= " WHERE o.order_status_id IN (5,1) ";
+
+            }else{
+                $sql .= " WHERE o.order_status_id = '" . (int)$data['filter_order_status_id'] . "'";
+            }
+
+        }
 
 		if (!empty($data['filter_date_start'])) {
 			$sql .= " AND DATE(o.collect_date) >= DATE('" . $this->db->escape($data['filter_date_start']) . "')";
@@ -75,11 +81,20 @@ class ModelExtensionReportProduct extends Model {
 	public function getTotalPurchased($data) {
 		$sql = "SELECT COUNT(DISTINCT op.product_id) AS total FROM `" . DB_PREFIX . "order_product` op LEFT JOIN `" . DB_PREFIX . "order` o ON (op.order_id = o.order_id)";
 
-		if (!empty($data['filter_order_status_id'])) {
-			$sql .= " WHERE o.order_status_id = '" . (int)$data['filter_order_status_id'] . "'";
-		} else {
-            $sql .= " WHERE o.order_status_id = '1' OR o.order_status_id > '5'";
-		}
+
+
+
+        if (!empty($data['filter_order_status_id'])) {
+
+            if($data['filter_order_status_id'] =='all'){
+
+                $sql .= " WHERE o.order_status_id IN (5,1) ";
+
+            }else{
+                $sql .= " WHERE o.order_status_id = '" . (int)$data['filter_order_status_id'] . "'";
+            }
+
+        }
 
 		if (!empty($data['filter_date_start'])) {
 			$sql .= " AND DATE(o.collect_date) >= DATE('" . $this->db->escape($data['filter_date_start']) . "')";
