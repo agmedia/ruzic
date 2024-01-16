@@ -142,7 +142,7 @@ class ModelExtensionReportSale extends Model {
 		if (!empty($data['filter_order_status_id'])) {
 			$sql .= " WHERE o.order_status_id = '" . (int)$data['filter_order_status_id'] . "'";
 		} else {
-			$sql .= " WHERE o.order_status_id = '1' OR o.order_status_id > '5'";
+            $sql .= " WHERE o.order_status_id IN (5,1) ";
 		}
 
 
@@ -161,7 +161,7 @@ class ModelExtensionReportSale extends Model {
 		if (!empty($data['filter_group'])) {
 			$group = $data['filter_group'];
 		} else {
-			$group = 'week';
+			$group = 'day';
 		}
 
 		switch($group) {
@@ -194,6 +194,8 @@ class ModelExtensionReportSale extends Model {
 			$sql .= " LIMIT " . (int)$data['start'] . "," . (int)$data['limit'];
 		}
 
+
+
 		$query = $this->db->query($sql);
 
 
@@ -205,7 +207,7 @@ class ModelExtensionReportSale extends Model {
 		if (!empty($data['filter_group'])) {
 			$group = $data['filter_group'];
 		} else {
-			$group = 'week';
+			$group = 'day';
 		}
 
 		switch($group) {
@@ -227,7 +229,7 @@ class ModelExtensionReportSale extends Model {
 		if (!empty($data['filter_order_status_id'])) {
 			$sql .= " WHERE order_status_id = '" . $data['filter_order_status_id'] . "'";
 		} else {
-            $sql .= " WHERE order_status_id = '1' OR order_status_id > '5'";
+            $sql .= " WHERE order_status_id IN (5,1) ";
 		}
 
         if (!empty($data['filter_payment_code'])) {
