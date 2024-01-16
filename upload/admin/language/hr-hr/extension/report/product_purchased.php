@@ -5,7 +5,7 @@ $_['heading_title']     = 'Kupljeni artikli - Izvještaj';
 
 // Text
 $_['text_list']         = 'Popis/lista kupljenih artikala';
-$_['text_all_status']   = 'Svi statusi';
+$_['text_all_status']   = 'Naručeno i dovršeno';
 
 // Column
 $_['column_date_start'] = 'Početni datum';

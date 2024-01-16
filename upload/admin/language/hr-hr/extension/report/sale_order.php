@@ -9,7 +9,7 @@ $_['text_year']         = 'Godinama';
 $_['text_month']        = 'Mjesecima';
 $_['text_week']         = 'Tjednima';
 $_['text_day']          = 'Danima';
-$_['text_all_status']   = 'Svi statusi';
+$_['text_all_status']   = 'Naručeno i dovršeno';
 
 // Column
 $_['column_date_start'] = 'Početni datum';

@@ -42,7 +42,7 @@ class ModelExtensionReportProduct extends Model {
 		if (!empty($data['filter_order_status_id'])) {
 			$sql .= " WHERE o.order_status_id = '" . (int)$data['filter_order_status_id'] . "'";
 		} else {
-			$sql .= " WHERE o.order_status_id > '0'";
+            $sql .= " WHERE o.order_status_id = '1' OR o.order_status_id > '5'";
 		}
 
 		if (!empty($data['filter_date_start'])) {
@@ -78,7 +78,7 @@ class ModelExtensionReportProduct extends Model {
 		if (!empty($data['filter_order_status_id'])) {
 			$sql .= " WHERE o.order_status_id = '" . (int)$data['filter_order_status_id'] . "'";
 		} else {
-			$sql .= " WHERE o.order_status_id > '0'";
+            $sql .= " WHERE o.order_status_id = '1' OR o.order_status_id > '5'";
 		}
 
 		if (!empty($data['filter_date_start'])) {
