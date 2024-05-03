@@ -74,7 +74,7 @@ class ControllerExtensionQuickCheckoutCheckout extends Equotix {
 
        if($this->session->data['delivery_region']=='zagreb') {
 
-           $mind = 12.5;
+           $mind = 12;
 
        }else{
            $mind = 20;
