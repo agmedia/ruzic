@@ -224,10 +224,11 @@ class ControllerExtensionQuickCheckoutCart extends Controller {
 
         if($this->session->data['delivery_region']=='zagreb') {
 
-            $mind = 10;
+            $mind = $this->config->get('quickcheckout_minimum_order');
+
 
         }else{
-            $mind = 15;
+            $mind = 20;
         }
 		
 		if ($this->cart->getTotal() < $mind) {
