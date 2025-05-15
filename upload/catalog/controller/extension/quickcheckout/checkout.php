@@ -77,7 +77,8 @@ class ControllerExtensionQuickCheckoutCheckout extends Equotix {
            $mind = $this->config->get('quickcheckout_minimum_order');
 
        }else{
-           $mind = 20;
+           //$mind = 20;
+           $mind = $this->config->get('quickcheckout_minimum_order');
        }
 		
 		// Validate minimum order total

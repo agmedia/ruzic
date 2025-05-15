@@ -228,7 +228,9 @@ class ControllerExtensionQuickCheckoutCart extends Controller {
 
 
         }else{
-            $mind = 20;
+           // $mind = 20;
+
+            $mind = $this->config->get('quickcheckout_minimum_order');
         }
 		
 		if ($this->cart->getTotal() < $mind) {
