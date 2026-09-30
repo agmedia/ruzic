@@ -26,7 +26,7 @@ class ModelLocalisationReturnReason extends Model {
 
 			$query = $this->db->query($sql);
 
-			return $query->rows;
+			return $this->localiseDefaultNames($query->rows);
 		} else {
 			$return_reason_data = $this->cache->get('return_reason.' . (int)$this->config->get('config_language_id'));
 
@@ -38,7 +38,24 @@ class ModelLocalisationReturnReason extends Model {
 				$this->cache->set('return_reason.' . (int)$this->config->get('config_language_id'), $return_reason_data);
 			}
 
-			return $return_reason_data;
+			return $this->localiseDefaultNames($return_reason_data);
 		}
+	}
+
+	private function localiseDefaultNames($reasons) {
+		$this->load->language('localisation/return_reason');
+		$translations = $this->language->get('return_reason_default_names');
+
+		if (is_array($translations)) {
+			foreach ($reasons as &$reason) {
+				$name = strtolower(trim($reason['name']));
+				if (isset($translations[$name])) {
+					$reason['name'] = $translations[$name];
+				}
+			}
+			unset($reason);
+		}
+
+		return $reasons;
 	}
 }
