@@ -802,3 +802,16 @@ html[dir=rtl] #cart .dropdown-menu {
     }
    
 }
+
+/* Sidrena cijena */
+.anchor-price {
+	display: block;
+	margin-top: 4px;
+	color: #666;
+	font-size: 12px;
+	line-height: 1.35;
+}
+.anchor-price-detail {
+	margin-top: 8px;
+	font-size: 14px;
+}

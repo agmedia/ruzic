@@ -30,23 +30,39 @@
           </tr>
         </tbody>
       </table>
-      <h2>{{ text_product }}</h2>
+      <h2>{{ text_return_products_title }}</h2>
       <table class="table table-bordered margin-b30">
         <thead>
           <tr>
-            <td class="text-left" style="width: 33.3%;">{{ column_product }}</td>
-            <td class="text-left" style="width: 33.3%;">{{ column_model }}</td>
-            <td class="text-right" style="width: 33.3%;">{{ column_quantity }}</td>
+            <td class="text-left">{{ entry_product_code }}</td>
+            <td class="text-right">{{ column_quantity }}</td>
+            <td class="text-right">{{ column_price }}</td>
+          </tr>
+        </thead>
+        <tbody>
+          {% for return_product in return_products %}
+          <tr>
+            <td class="text-left">{{ return_product.code }}</td>
+            <td class="text-right">{{ return_product.quantity }}</td>
+            <td class="text-right">{{ return_product.price }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% if refund_iban %}
+      <table class="table table-bordered margin-b30">
+        <thead>
+          <tr>
+            <td class="text-left">{{ entry_refund_iban }}</td>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td class="text-left">{{ product }}</td>
-            <td class="text-left">{{ model }}</td>
-            <td class="text-right">{{ quantity }}</td>
+            <td class="text-left">{{ refund_iban }}</td>
           </tr>
         </tbody>
       </table>
+      {% endif %}
       <h2>{{ text_reason }}</h2>
       <table class="list table table-bordered margin-b30">
         <thead>
@@ -103,6 +119,7 @@
           {% endif %}
         </tbody>
       </table>
+
       {{ content_bottom }}</div>
     {{ column_right }}</div>
 </div>

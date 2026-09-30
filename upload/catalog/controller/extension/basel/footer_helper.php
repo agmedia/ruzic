@@ -88,6 +88,35 @@
 		);
 	  }
 	}
+
+	// Keep the legally required return form and the public price list visible even
+	// when Basel replaces OpenCart's standard footer links with custom columns.
+	if (!empty($data['basel_footer_columns'])) {
+		$footer_column_index = count($data['basel_footer_columns']) - 1;
+		$required_footer_links = array(
+			array(
+				'title'  => $this->language->get('text_return'),
+				'target' => $this->url->link('account/return/add', '', true),
+				'sort'   => 900
+			)
+		);
+
+		if ($this->config->get('module_anchor_price_status')) {
+			$required_footer_links[] = array(
+				'title'  => $this->language->get('text_price_list'),
+				'target' => $this->url->link('information/price_list'),
+				'sort'   => 910
+			);
+		}
+
+		$existing_footer_targets = array_column($data['basel_footer_columns'][$footer_column_index]['links'], 'target');
+
+		foreach ($required_footer_links as $required_footer_link) {
+			if (!in_array($required_footer_link['target'], $existing_footer_targets, true)) {
+				$data['basel_footer_columns'][$footer_column_index]['links'][] = $required_footer_link;
+			}
+		}
+	}
 	}
 	
 	// Payment icon

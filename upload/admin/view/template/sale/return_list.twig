@@ -5,7 +5,8 @@
       <div class="pull-right">
         <button type="button" data-toggle="tooltip" title="{{ button_filter }}" onclick="$('#filter-return').toggleClass('hidden-sm hidden-xs');" class="btn btn-default hidden-md hidden-lg"><i class="fa fa-filter"></i></button>
         <a href="{{ add }}" data-toggle="tooltip" title="{{ button_add }}" class="btn btn-primary"><i class="fa fa-plus"></i></a>
-        <button type="button" data-toggle="tooltip" title="{{ button_delete }}" class="btn btn-danger" onclick="confirm('{{ text_confirm }}') ? $('#form-return').submit() : false;"><i class="fa fa-trash-o"></i></button>
+        <button type="button" data-toggle="tooltip" title="{{ button_export }}" class="btn btn-success" onclick="submitReturnSelection('{{ export|e('js') }}');"><i class="fa fa-download"></i></button>
+        <button type="button" data-toggle="tooltip" title="{{ button_delete }}" class="btn btn-danger" onclick="if (confirm('{{ text_confirm|e('js') }}')) { submitReturnSelection('{{ delete|e('js') }}'); }"><i class="fa fa-trash-o"></i></button>
       </div>
       <h1>{{ heading_title }}</h1>
       <ul class="breadcrumb">
@@ -123,9 +124,17 @@
                     <td class="text-right">{{ return.return_id }}</td>
                     <td class="text-right">{{ return.order_id }}</td>
                     <td class="text-left">{{ return.customer }}</td>
-                    <td class="text-left">{{ return.product }}</td>
+                    <td class="text-left">{{ return.product }}
+                      {% if return.return_items %}
+                      <ul class="list-unstyled" style="margin:5px 0 0">
+                        {% for return_item in return.return_items %}
+                        <li><small>{{ return_item.code }} &times; {{ return_item.quantity }}{% if return_item.price %} — {{ return_item.price }}{% endif %}</small></li>
+                        {% endfor %}
+                      </ul>
+                      {% endif %}
+                    </td>
                     <td class="text-left">{{ return.model }}</td>
-                    <td class="text-left">{{ return.return_status }}</td>
+                    <td class="text-left">{{ return.status }}</td>
                     <td class="text-left">{{ return.date_added }}</td>
                     <td class="text-left">{{ return.date_modified }}</td>
                     <td class="text-right"><a href="{{ return.edit }}" data-toggle="tooltip" title="{{ button_edit }}" class="btn btn-primary"><i class="fa fa-pencil"></i></a></td>
@@ -150,6 +159,18 @@
       </div>
     </div>
   </div>
+  <script type="text/javascript"><!--
+function submitReturnSelection(action) {
+	var form = document.getElementById('form-return');
+
+	if (!form) {
+		return;
+	}
+
+	form.action = action;
+	form.submit();
+}
+//--></script>
   <script type="text/javascript"><!--
 $('#button-filter').on('click', function() {
 	url = 'index.php?route=sale/return&user_token={{ user_token }}';

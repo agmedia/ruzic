@@ -123,6 +123,14 @@
 </div>
 </div><!-- .row ends -->
 
+<div class="col-xs-12 text-center" style="margin-top:15px;margin-bottom:5px">
+  <a href="{{ return }}"><strong>{{ text_return }}</strong></a>
+  {% if price_list %}
+    <span aria-hidden="true"> &nbsp;|&nbsp; </span>
+    <a href="{{ price_list }}"><strong>{{ text_price_list }}</strong></a>
+  {% endif %}
+</div>
+
   <!--<div class="col-xs-12 text-center" style="margin-top:0px;display:block">
     <a href="http://www.corvuspay.hr" title="CorvusPay - internet Payment Gateway" target="_blank"><img src="image/catalog/credit-cards/CorvusPAY.svg" style="max-width:180px" alt="Corvus Payment"></a>
 

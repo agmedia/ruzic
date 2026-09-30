@@ -45,6 +45,18 @@
                 </div>
               </div>
               <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-invoice-number">{{ entry_invoice_number }}</label>
+                <div class="col-sm-10">
+                  <input type="text" name="invoice_number" value="{{ invoice_number }}" placeholder="{{ entry_invoice_number }}" maxlength="64" id="input-invoice-number" class="form-control" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-invoice-date">{{ entry_invoice_date }}</label>
+                <div class="col-sm-3">
+                  <input type="date" name="invoice_date" value="{{ invoice_date }}" id="input-invoice-date" class="form-control" />
+                </div>
+              </div>
+              <div class="form-group">
                 <label class="col-sm-2 control-label" for="input-date-ordered">{{ entry_date_ordered }}</label>
                 <div class="col-sm-3">
                   <div class="input-group date">
@@ -98,6 +110,12 @@
                   {% endif %}
                 </div>
               </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-refund-iban">{{ entry_refund_iban }}</label>
+                <div class="col-sm-10">
+                  <input type="text" name="refund_iban" value="{{ refund_iban }}" placeholder="{{ entry_refund_iban }}" maxlength="64" id="input-refund-iban" class="form-control" autocomplete="off" />
+                </div>
+              </div>
             </fieldset>
             <fieldset>
               <legend>{{ text_product }}</legend>
@@ -123,6 +141,31 @@
                 <label class="col-sm-2 control-label" for="input-quantity">{{ entry_quantity }}</label>
                 <div class="col-sm-10">
                   <input type="text" name="quantity" value="{{ quantity }}" placeholder="{{ entry_quantity }}" id="input-quantity" class="form-control" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label">{{ text_return_items }}</label>
+                <div class="col-sm-10">
+                  <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                      <thead>
+                        <tr>
+                          <td>{{ column_product_code }}</td>
+                          <td>{{ column_quantity }}</td>
+                          <td>{{ column_price }}</td>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for item_row, return_item in return_items %}
+                        <tr>
+                          <td><input type="text" name="return_items[{{ item_row }}][code]" value="{{ return_item.code }}" maxlength="128" class="form-control" /></td>
+                          <td><input type="text" name="return_items[{{ item_row }}][quantity]" value="{{ return_item.quantity }}" maxlength="32" class="form-control" /></td>
+                          <td><input type="text" name="return_items[{{ item_row }}][price]" value="{{ return_item.price }}" maxlength="64" class="form-control" /></td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
               <div class="form-group">

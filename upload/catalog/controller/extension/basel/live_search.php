@@ -43,6 +43,12 @@ class ControllerExtensionBaselLiveSearch extends Controller {
 				
 				$results = $this->model_catalog_product->getProducts($filter_data);
 				$search_result = $this->model_catalog_product->getTotalProducts($filter_data);
+				$this->load->model('extension/module/anchor_price');
+				$anchor_product_ids = array();
+				foreach ($results as $anchor_result) {
+					$anchor_product_ids[] = (int)$anchor_result['product_id'];
+				}
+				$anchor_records = $this->model_extension_module_anchor_price->getByProductIds($anchor_product_ids);
 				$image_width        = $this->config->get('theme_default_image_cart_width');
 				$image_height       = $this->config->get('theme_default_image_cart_height');
 				$title_length       = '100';
@@ -74,12 +80,14 @@ class ControllerExtensionBaselLiveSearch extends Controller {
 
 					
 					$json['total'] = (int)$search_result;
+					$anchor_display = isset($anchor_records[(int)$result['product_id']]) ? $this->model_extension_module_anchor_price->getDisplayData($anchor_records[(int)$result['product_id']]) : array();
 					$json['products'][] = array(
 						'product_id'  => $result['product_id'],
 						'image'       => $image,
 						'name' 		  => $name,
 						'price'       => $price,
 						'special'     => $special,
+						'anchor_text' => isset($anchor_display['anchor_price_text']) ? $anchor_display['anchor_price_text'] : '',
 						'url'         => $this->url->link('product/product', 'product_id=' . $result['product_id'])
 					);
 				}

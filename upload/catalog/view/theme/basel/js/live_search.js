@@ -58,6 +58,9 @@ $(document).ready(function() {
 										html += '<div class="price"><span class="price">' + product.price + '</span></div>';
 									}
 								}
+								if (show_price && product.price && product.anchor_text) {
+									html += '<div class="anchor-price">' + $('<div>').text(product.anchor_text).html() + '</div>';
+								}
 								html += '</td>';
 								html += '</tr>';
 								$('.live-search .table.products').append(html);

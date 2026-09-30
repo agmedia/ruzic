@@ -16,6 +16,7 @@
         <ul class="list-unstyled">
           <li><a href="{{ contact }}">{{ text_contact }}</a></li>
           <li><a href="{{ return }}">{{ text_return }}</a></li>
+          {% if price_list %}<li><a href="{{ price_list }}">{{ text_price_list }}</a></li>{% endif %}
           <li><a href="{{ sitemap }}">{{ text_sitemap }}</a></li>
         </ul>
       </div>
