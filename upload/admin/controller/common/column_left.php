@@ -28,7 +28,7 @@ class ControllerCommonColumnLeft extends Controller {
 
 			if ($this->config->get('module_anchor_price_status') && $this->user->hasPermission('access', 'extension/module/anchor_price')) {
 				$catalog[] = array(
-					'name'     => 'Sidrene cijene',
+					'name'     => $this->language->get('text_anchor_price'),
 					'href'     => $this->url->link('extension/module/anchor_price', 'user_token=' . $this->session->data['user_token'], true),
 					'children' => array()
 				);

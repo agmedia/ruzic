@@ -93,18 +93,18 @@ WHERE LOWER(language_row.code) IN ('hr-hr', 'en-gb')
   );
 
 -- Završna provjera: očekuju se četiri retka stupaca te po jedan SEO redak za svaki aktivni HR/EN jezik.
-SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE
-FROM information_schema.COLUMNS
-WHERE TABLE_SCHEMA = @database_name
-  AND TABLE_NAME = 'oc_return'
-  AND COLUMN_NAME IN ('invoice_number', 'invoice_date', 'refund_iban', 'return_items')
-ORDER BY ORDINAL_POSITION;
-
 SELECT language_row.code, seo_url.query, seo_url.keyword
 FROM `oc_seo_url` AS seo_url
 INNER JOIN `oc_language` AS language_row ON language_row.language_id = seo_url.language_id
 WHERE seo_url.store_id = 0
   AND seo_url.query = 'account/return/add'
 ORDER BY language_row.code;
+
+SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE
+FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = @database_name
+  AND TABLE_NAME = 'oc_return'
+  AND COLUMN_NAME IN ('invoice_number', 'invoice_date', 'refund_iban', 'return_items')
+ORDER BY ORDINAL_POSITION;
 
 SET SESSION sql_mode = @previous_sql_mode;

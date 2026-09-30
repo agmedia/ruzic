@@ -5,6 +5,7 @@ $_['text_affiliate']                 = 'Partneri (affiliates)';
 $_['text_api']                       = 'API';
 $_['text_attribute']                 = 'Atributi';
 $_['text_attribute_group']           = 'Grupe atributa';
+$_['text_anchor_price']               = 'Sidrene cijene';
 $_['text_backup']                    = 'Pohrana i povrat podataka';
 $_['text_banner']                    = 'Baneri';
 $_['text_catalog']                   = 'Katalog';

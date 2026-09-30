@@ -133,6 +133,43 @@ WHERE NOT EXISTS (SELECT 1 FROM `oc_setting` WHERE `store_id` = 0 AND `code` = '
 UPDATE `oc_setting` SET `value` = '1', `serialized` = 0
 WHERE `store_id` = 0 AND `code` = 'module_anchor_price' AND `key` = 'module_anchor_price_status';
 
+-- phpMyAdmin deployment bypasses ControllerExtensionModuleAnchorPrice::install().
+-- Grant this route only to administrator-capable groups and append it to the
+-- existing JSON arrays so no current permissions are replaced or removed.
+UPDATE `oc_user_group`
+SET `permission` = JSON_SET(
+  `permission`,
+  '$.access',
+  CASE
+    WHEN JSON_TYPE(JSON_EXTRACT(`permission`, '$.access')) = 'ARRAY'
+      THEN JSON_ARRAY_APPEND(JSON_EXTRACT(`permission`, '$.access'), '$', 'extension/module/anchor_price')
+    ELSE JSON_ARRAY('extension/module/anchor_price')
+  END
+)
+WHERE JSON_VALID(`permission`)
+  AND JSON_SEARCH(JSON_EXTRACT(`permission`, '$.access'), 'one', 'extension/module/anchor_price') IS NULL
+  AND (
+    `name` = 'Administrator'
+    OR JSON_SEARCH(JSON_EXTRACT(`permission`, '$.access'), 'one', 'user/user_permission') IS NOT NULL
+  );
+
+UPDATE `oc_user_group`
+SET `permission` = JSON_SET(
+  `permission`,
+  '$.modify',
+  CASE
+    WHEN JSON_TYPE(JSON_EXTRACT(`permission`, '$.modify')) = 'ARRAY'
+      THEN JSON_ARRAY_APPEND(JSON_EXTRACT(`permission`, '$.modify'), '$', 'extension/module/anchor_price')
+    ELSE JSON_ARRAY('extension/module/anchor_price')
+  END
+)
+WHERE JSON_VALID(`permission`)
+  AND JSON_SEARCH(JSON_EXTRACT(`permission`, '$.modify'), 'one', 'extension/module/anchor_price') IS NULL
+  AND (
+    `name` = 'Administrator'
+    OR JSON_SEARCH(JSON_EXTRACT(`permission`, '$.access'), 'one', 'user/user_permission') IS NOT NULL
+  );
+
 DELETE FROM `oc_event` WHERE `code` = 'anchor_price';
 INSERT INTO `oc_event` (`code`, `trigger`, `action`, `status`, `sort_order`) VALUES
 ('anchor_price', 'admin/model/catalog/product/addProduct/after', 'extension/module/anchor_price/captureProduct', 1, 0),
