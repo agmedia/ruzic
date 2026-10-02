@@ -5,6 +5,7 @@ $_['text_intro']         = 'Dnevni digitalni cjenik web trgovine dostupan je u C
 $_['text_empty']         = 'Trenutačno nema objavljenih cjenika.';
 $_['text_location']      = 'OPG Ružić web trgovina';
 $_['text_archive_correction'] = 'Ispravak objave #%s; izvorno objavljeno %s';
+$_['text_archive_corrected_at'] = 'Ispravljeno %s';
 $_['column_location']    = 'Cjenik';
 $_['column_published']   = 'Vrijeme objave';
 $_['column_products']    = 'Broj artikala';

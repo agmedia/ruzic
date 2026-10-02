@@ -5,6 +5,7 @@ $_['text_intro']         = 'The daily digital web-shop price list is available i
 $_['text_empty']         = 'There are currently no published price lists.';
 $_['text_location']      = 'OPG Ružić web shop';
 $_['text_archive_correction'] = 'Correction of publication #%s; originally published %s';
+$_['text_archive_corrected_at'] = 'Corrected on %s';
 $_['column_location']    = 'Price list';
 $_['column_published']   = 'Published';
 $_['column_products']    = 'Products';

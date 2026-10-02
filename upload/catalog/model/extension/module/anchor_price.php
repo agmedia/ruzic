@@ -610,6 +610,49 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		return $publications;
 	}
 
+	public function getPublicationGroups() {
+		$groups = array();
+
+		foreach ($this->getPublications() as $publication) {
+			$original_id = !empty($publication['corrects_publication_id']) ? (int)$publication['corrects_publication_id'] : (int)$publication['publication_id'];
+
+			if (!isset($groups[$original_id])) {
+				$groups[$original_id] = array('original' => false, 'correction' => false);
+			}
+
+			if (empty($publication['corrects_publication_id'])) {
+				$groups[$original_id]['original'] = $publication;
+				continue;
+			}
+
+			$existing = $groups[$original_id]['correction'];
+			// Normally there is one correction; keep the choice deterministic if there are more.
+			if (!$existing || strcmp($publication['published_at'], $existing['published_at']) > 0
+				|| ($publication['published_at'] === $existing['published_at'] && (int)$publication['publication_id'] > (int)$existing['publication_id'])) {
+				$groups[$original_id]['correction'] = $publication;
+			}
+		}
+
+		$publications = array();
+		foreach ($groups as $group) {
+			$publication = $group['correction'] ? $group['correction'] : $group['original'];
+			$publication['display_published_at'] = $group['original'] ? $group['original']['published_at']
+				: (!empty($publication['source_published_at']) ? $publication['source_published_at'] : $publication['published_at']);
+			// An expired or unavailable original must not produce a broken download link.
+			$publication['original_publication'] = $group['correction'] ? $group['original'] : false;
+			$publications[] = $publication;
+		}
+
+		usort($publications, function ($left, $right) {
+			$comparison = strcmp($right['display_published_at'], $left['display_published_at']);
+			$left_id = !empty($left['corrects_publication_id']) ? (int)$left['corrects_publication_id'] : (int)$left['publication_id'];
+			$right_id = !empty($right['corrects_publication_id']) ? (int)$right['corrects_publication_id'] : (int)$right['publication_id'];
+			return $comparison !== 0 ? $comparison : $right_id - $left_id;
+		});
+
+		return $publications;
+	}
+
 	public function getPublication($publication_id, $public_only = true) {
 		if (!$this->publicationTableExists()) {
 			return false;

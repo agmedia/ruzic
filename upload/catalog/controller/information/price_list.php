@@ -34,18 +34,17 @@ class ControllerInformationPriceList extends Controller {
 		);
 
 		$data['publications'] = array();
-		$publications = $this->model_extension_module_anchor_price->getPublications();
+		$publications = $this->model_extension_module_anchor_price->getPublicationGroups();
 
 		foreach ($publications as $publication) {
 			$corrects_publication_id = !empty($publication['corrects_publication_id']) ? (int)$publication['corrects_publication_id'] : 0;
-			$source_published_at = !empty($publication['source_published_at']) ? $publication['source_published_at'] : '';
 			$data['publications'][] = array(
 				'location_name' => $this->language->get('text_location'),
-				'published'     => date($this->language->get('datetime_format'), strtotime($publication['published_at'])),
+				'published'     => date($this->language->get('datetime_format'), strtotime($publication['display_published_at'])),
 				'product_count' => (int)$publication['product_count'],
 				'filename'      => $publication['filename'],
 				'xml_filename'  => $publication['xml_filename'],
-				'correction_note' => $corrects_publication_id && $source_published_at ? sprintf($this->language->get('text_archive_correction'), $corrects_publication_id, date($this->language->get('datetime_format'), strtotime($source_published_at))) : '',
+				'correction_note' => $corrects_publication_id ? sprintf($this->language->get('text_archive_corrected_at'), date($this->language->get('datetime_format'), strtotime($publication['published_at']))) : '',
 				'download_csv'  => $this->url->link('information/price_list/download', 'publication_id=' . (int)$publication['publication_id'] . '&format=csv'),
 				'download_xml'  => $this->url->link('information/price_list/download', 'publication_id=' . (int)$publication['publication_id'] . '&format=xml')
 			);
