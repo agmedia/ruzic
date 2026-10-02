@@ -47,9 +47,17 @@
 	            <label class="col-sm-2 control-label" for="input-reference-date-setting"><span data-toggle="tooltip" title="{{ help_reference_date_setting|escape }}">{{ entry_reference_date_setting }}</span></label>
 	            <div class="col-sm-3"><input type="date" name="reference_date_setting" value="{{ reference_date_setting|escape }}" id="input-reference-date-setting" class="form-control" /></div>
 	          </div>
-          <div class="form-group">
-            <label class="col-sm-2 control-label" for="input-default-unit"><span data-toggle="tooltip" title="{{ help_default_unit|escape }}">{{ entry_default_unit }}</span></label>
-            <div class="col-sm-3"><input type="text" name="default_unit" value="{{ default_unit|escape }}" id="input-default-unit" maxlength="16" class="form-control" /></div>
+          <div class="form-group required">
+            <label class="col-sm-2 control-label" for="input-publication-type">{{ entry_publication_type }}</label>
+            <div class="col-sm-3"><input type="text" name="publication_type" value="{{ publication_type|escape }}" id="input-publication-type" maxlength="24" class="form-control" /></div>
+          </div>
+          <div class="form-group required">
+            <label class="col-sm-2 control-label" for="input-publication-address">{{ entry_publication_address }}</label>
+            <div class="col-sm-7"><input type="text" name="publication_address" value="{{ publication_address|escape }}" id="input-publication-address" maxlength="120" class="form-control" /><p class="help-block">{{ help_publication_filename }}</p></div>
+          </div>
+          <div class="form-group required">
+            <label class="col-sm-2 control-label" for="input-publication-code">{{ entry_publication_code }}</label>
+            <div class="col-sm-3"><input type="text" name="publication_code" value="{{ publication_code|escape }}" id="input-publication-code" maxlength="16" class="form-control" /></div>
             <div class="col-sm-2"><button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> {{ button_settings }}</button></div>
           </div>
           <div class="form-group">
@@ -111,6 +119,9 @@
               <td><a href="{{ sort_model }}">{{ column_model }}</a></td>
               <td class="text-right"><a href="{{ sort_price }}">{{ column_net_price }}</a></td>
               <td class="text-right"><a href="{{ sort_gross_price }}">{{ column_gross_price }}</a></td>
+              <td>{{ column_package_quantity }}</td>
+              <td class="text-right">{{ column_unit_price }}</td>
+              <td class="text-right">{{ column_anchor_unit_price }}</td>
               <td><a href="{{ sort_reference_date }}">{{ column_reference_date }}</a></td>
               <td><a href="{{ sort_verification_status }}">{{ column_status }}</a></td>
               <td class="text-right">{{ column_action }}</td>
@@ -123,13 +134,16 @@
                 <td>{{ anchor.model|escape }}{% if anchor.sku %}<br /><small class="text-muted">{{ anchor.sku|escape }}</small>{% endif %}</td>
                 <td class="text-right">{{ anchor.price|escape }} {{ anchor.currency_code|escape }}</td>
                 <td class="text-right"><strong>{{ anchor.gross_price|escape }} {{ anchor.currency_code|escape }}</strong></td>
+                <td>{% if anchor.package_quantity %}{{ anchor.package_quantity|escape }} {{ anchor.unit|escape }}{% else %}<span class="text-danger">{{ text_measure_missing }}</span>{% endif %}</td>
+                <td class="text-right">{% if anchor.unit_price %}{{ anchor.unit_price|escape }} {{ anchor.currency_code|escape }}/{{ anchor.unit|escape }}{% else %}—{% endif %}</td>
+                <td class="text-right">{% if anchor.anchor_unit_price %}{{ anchor.anchor_unit_price|escape }} {{ anchor.currency_code|escape }}/{{ anchor.unit|escape }}{% else %}—{% endif %}</td>
                 <td>{{ anchor.reference_date|escape }}</td>
                 <td>{% if anchor.verification_status == 'confirmed' %}{% set status_class = 'label-success' %}{% elseif anchor.verification_status == 'pending' %}{% set status_class = 'label-warning' %}{% else %}{% set status_class = 'label-default' %}{% endif %}<span class="label {{ status_class }}">{{ anchor.status_text|escape }}</span></td>
                 <td class="text-right"><a href="{{ anchor.edit }}" data-toggle="tooltip" title="{{ button_edit }}" class="btn btn-primary"><i class="fa fa-pencil"></i></a></td>
               </tr>
               {% endfor %}
               {% else %}
-              <tr><td class="text-center" colspan="7">{{ text_no_results }}</td></tr>
+              <tr><td class="text-center" colspan="10">{{ text_no_results }}</td></tr>
               {% endif %}
             </tbody>
           </table>

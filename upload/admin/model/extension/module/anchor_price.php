@@ -1,4 +1,5 @@
 <?php
+require_once DIR_SYSTEM . 'library/anchor_price_unit.php';
 class ModelExtensionModuleAnchorPrice extends Model {
 	const STORE_ID = 0;
 	const CURRENCY_CODE = 'EUR';
@@ -6,6 +7,7 @@ class ModelExtensionModuleAnchorPrice extends Model {
 	const MAX_IMPORT_ROWS = 10000;
 
 	private $catalog_language_id;
+	private $measure_columns_exist;
 
 	public function install() {
 		$this->db->query("CREATE TABLE IF NOT EXISTS `" . DB_PREFIX . "anchor_price` (
@@ -14,6 +16,8 @@ class ModelExtensionModuleAnchorPrice extends Model {
 			`store_id` INT(11) UNSIGNED NOT NULL DEFAULT '0',
 			`price` DECIMAL(15,4) NOT NULL DEFAULT '0.0000',
 			`gross_price` DECIMAL(15,4) NOT NULL DEFAULT '0.0000',
+			`unit` VARCHAR(16) NOT NULL DEFAULT '',
+			`package_quantity` DECIMAL(15,6) NOT NULL DEFAULT '0.000000',
 			`currency_code` CHAR(3) NOT NULL DEFAULT 'EUR',
 			`tax_class_id` INT(11) UNSIGNED NOT NULL DEFAULT '0',
 			`tax_context` TEXT NOT NULL,
@@ -74,6 +78,8 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		$this->ensurePublicationColumn('xml_filename', "VARCHAR(255) NOT NULL DEFAULT '' AFTER `relative_path`");
 		$this->ensurePublicationColumn('xml_relative_path', "VARCHAR(255) NOT NULL DEFAULT '' AFTER `xml_filename`");
 		$this->ensurePublicationColumn('xml_checksum_sha256', "CHAR(64) NOT NULL DEFAULT '' AFTER `checksum_sha256`");
+		$this->ensureAnchorColumn('unit', "VARCHAR(16) NOT NULL DEFAULT '' AFTER `gross_price`");
+		$this->ensureAnchorColumn('package_quantity', "DECIMAL(15,6) NOT NULL DEFAULT '0.000000' AFTER `unit`");
 
 		$batch_column = $this->db->query("SHOW COLUMNS FROM `" . DB_PREFIX . "anchor_price_publication` LIKE 'batch_key'");
 		if (!$batch_column->num_rows) {
@@ -148,7 +154,23 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		if ($date && $date->format('Y-m-d') === $value) {
 			return $value;
 		}
-		return (new DateTime('now', new DateTimeZone('Europe/Zagreb')))->format('Y-m-d');
+		return '2025-05-02';
+	}
+
+	private function ensureAnchorColumn($name, $definition) {
+		$column = $this->db->query("SHOW COLUMNS FROM `" . DB_PREFIX . "anchor_price` LIKE '" . $this->db->escape($name) . "'");
+		if (!$column->num_rows) {
+			$this->db->query("ALTER TABLE `" . DB_PREFIX . "anchor_price` ADD `" . $name . "` " . $definition);
+		}
+		$this->measure_columns_exist = null;
+	}
+
+	public function measureColumnsExist() {
+		if ($this->measure_columns_exist === null) {
+			$columns = $this->db->query("SHOW COLUMNS FROM `" . DB_PREFIX . "anchor_price` WHERE Field IN ('unit', 'package_quantity')");
+			$this->measure_columns_exist = $columns->num_rows === 2;
+		}
+		return $this->measure_columns_exist;
 	}
 
 	private function ensurePublicationColumn($name, $definition) {
@@ -267,16 +289,9 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		$tax_class_id = (int)$product['tax_class_id'];
 		$gross_price = round((float)$this->tax->calculate($price, $tax_class_id, true), 4);
 		$tax_context = $this->buildTaxContext($price, $tax_class_id);
-		$today = new DateTime('now', new DateTimeZone('Europe/Zagreb'));
-		$reference_date_setting = $this->getReferenceDate();
-		$verification_status = (
-			in_array($source, array('sync', 'product_edit_event'), true)
-			|| ($source === 'install' && (
-				$reference_date > $reference_date_setting
-					|| empty($product['status'])
-					|| (!empty($product['date_available']) && $product['date_available'] > $today->format('Y-m-d'))
-			))
-		) ? 'pending' : 'confirmed';
+		// An observed package price is not evidence of its historical value.
+		// An administrator must verify the price and selling measure before publication.
+		$verification_status = 'pending';
 
 		$this->db->query('START TRANSACTION');
 		try {
@@ -291,6 +306,8 @@ class ModelExtensionModuleAnchorPrice extends Model {
 			$after = array(
 				'price' => number_format($price, 4, '.', ''),
 				'gross_price' => number_format($gross_price, 4, '.', ''),
+				'unit' => '',
+				'package_quantity' => '0.000000',
 				'currency_code' => self::CURRENCY_CODE,
 				'tax_class_id' => $tax_class_id,
 				'tax_context' => $tax_context,
@@ -334,7 +351,8 @@ class ModelExtensionModuleAnchorPrice extends Model {
 
 	public function getAnchorPrices($data = array()) {
 		$language_id = $this->getCatalogLanguageId();
-		$sql = "SELECT ap.*, p.model, p.sku, p.status AS product_status, p.price AS current_price, pd.name AS product_name, m.name AS manufacturer FROM `" . DB_PREFIX . "anchor_price` ap LEFT JOIN `" . DB_PREFIX . "product` p ON (p.product_id = ap.product_id) LEFT JOIN `" . DB_PREFIX . "product_description` pd ON (pd.product_id = ap.product_id AND pd.language_id = '" . (int)$language_id . "') LEFT JOIN `" . DB_PREFIX . "manufacturer` m ON (m.manufacturer_id = p.manufacturer_id) WHERE ap.store_id = '" . self::STORE_ID . "'";
+		$customer_group_id = (int)$this->config->get('config_customer_group_id');
+		$sql = "SELECT ap.*, p.model, p.sku, p.status AS product_status, p.price AS current_price, p.tax_class_id AS current_tax_class_id, pd.name AS product_name, m.name AS manufacturer, (SELECT d.price FROM `" . DB_PREFIX . "product_discount` d WHERE d.product_id = p.product_id AND d.customer_group_id = '" . $customer_group_id . "' AND d.quantity = '1' AND (d.date_start = '0000-00-00' OR d.date_start < NOW()) AND (d.date_end = '0000-00-00' OR d.date_end > NOW()) ORDER BY d.priority ASC, d.price ASC LIMIT 1) AS discount_price, (SELECT s.price FROM `" . DB_PREFIX . "product_special` s WHERE s.product_id = p.product_id AND s.customer_group_id = '" . $customer_group_id . "' AND (s.date_start = '0000-00-00' OR s.date_start < NOW()) AND (s.date_end = '0000-00-00' OR s.date_end > NOW()) ORDER BY s.priority ASC, s.price ASC LIMIT 1) AS special_price FROM `" . DB_PREFIX . "anchor_price` ap LEFT JOIN `" . DB_PREFIX . "product` p ON (p.product_id = ap.product_id) LEFT JOIN `" . DB_PREFIX . "product_description` pd ON (pd.product_id = ap.product_id AND pd.language_id = '" . (int)$language_id . "') LEFT JOIN `" . DB_PREFIX . "manufacturer` m ON (m.manufacturer_id = p.manufacturer_id) WHERE ap.store_id = '" . self::STORE_ID . "'";
 		$sql .= $this->buildFilterSql($data);
 
 		$sorts = array(
@@ -359,6 +377,8 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		$fallback_manufacturer = 'OPG Ružić';
 
 		foreach ($rows as &$row) {
+			$price = $row['special_price'] !== null ? (float)$row['special_price'] : ($row['discount_price'] !== null && (float)$row['discount_price'] > 0 ? (float)$row['discount_price'] : (float)$row['current_price']);
+			$row['current_gross_price'] = $this->tax->calculate($price, (int)$row['current_tax_class_id'], true);
 			if (trim((string)$row['manufacturer']) === '') {
 				$row['manufacturer'] = $fallback_manufacturer;
 			}
@@ -430,23 +450,22 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		$reference_date = isset($data['reference_date']) ? $data['reference_date'] : '';
 		$today = new DateTime('now', new DateTimeZone('Europe/Zagreb'));
 		$baseline_date = $this->getReferenceDate();
-		$rule_code = $before['rule_code'];
-		if ($before['verification_status'] === 'pending') {
-			if ($reference_date < $baseline_date || $reference_date > $today->format('Y-m-d')) {
-				throw new Exception('A pending reference date cannot be before the configured baseline or in the future.');
-			}
-			$product_date_added = isset($before['product_date_added']) ? substr($before['product_date_added'], 0, 10) : '';
-			if (($before['rule_code'] === 'first_listing' || $product_date_added > $baseline_date) && $reference_date <= $baseline_date) {
-				throw new Exception('A product first listed after the configured baseline cannot use the baseline date.');
-			}
-			$rule_code = $reference_date === $baseline_date ? 'baseline_configured' : 'first_listing';
-		} else {
-			if (strpos($rule_code, 'baseline_') === 0 && $reference_date !== $before['reference_date']) {
-				throw new Exception('A confirmed baseline anchor must keep its audited reference date.');
-			}
-			if ($rule_code === 'first_listing' && ($reference_date <= $baseline_date || $reference_date > $today->format('Y-m-d'))) {
-				throw new Exception('A first-listing date must be after the configured baseline and cannot be in the future.');
-			}
+		if (!$this->validImportDate($reference_date) || $reference_date < $baseline_date || $reference_date > $today->format('Y-m-d')) {
+			throw new Exception('Referentni datum mora biti između baznog datuma i današnjeg datuma.');
+		}
+		// date_added can reflect a migration rather than the first sale.
+		// Historical dates are supplied and justified explicitly by the administrator.
+		if ($before['verification_status'] === 'confirmed' && strpos($before['rule_code'], 'baseline_') === 0 && $reference_date !== $before['reference_date']) {
+			throw new Exception('A confirmed baseline anchor must keep its audited reference date.');
+		}
+		$rule_code = $reference_date === $baseline_date ? 'baseline_configured' : 'first_listing';
+		$unit = isset($data['unit']) ? strtolower(trim((string)$data['unit'])) : '';
+		$package_quantity = isset($data['package_quantity']) ? $data['package_quantity'] : 0;
+		if (($status === 'confirmed' || $unit !== '' || (float)$package_quantity != 0) && !AnchorPriceUnit::isValid($unit, $package_quantity)) {
+			throw new Exception('Unesite jedinicu kg ili l i pozitivnu količinu u pakiranju.');
+		}
+		if (!$this->measureColumnsExist()) {
+			throw new Exception('Najprije primijenite nadogradnju baze za jedinice mjere sidrenih cijena.');
 		}
 
 		$reason = trim($reason);
@@ -468,6 +487,8 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		$after = array(
 			'price' => number_format((float)$data['price'], 4, '.', ''),
 			'gross_price' => number_format((float)$data['gross_price'], 4, '.', ''),
+			'unit' => $unit,
+			'package_quantity' => number_format((float)$package_quantity, 6, '.', ''),
 			'currency_code' => $before['currency_code'],
 			'tax_class_id' => (int)$before['tax_class_id'],
 			'tax_context' => $tax_context,
@@ -480,7 +501,7 @@ class ModelExtensionModuleAnchorPrice extends Model {
 
 		$this->db->query('START TRANSACTION');
 		try {
-			$this->db->query("UPDATE `" . DB_PREFIX . "anchor_price` SET price = '" . (float)$after['price'] . "', gross_price = '" . (float)$after['gross_price'] . "', tax_context = '" . $this->db->escape($after['tax_context']) . "', reference_date = '" . $this->db->escape($after['reference_date']) . "', rule_code = '" . $this->db->escape($after['rule_code']) . "', source = 'admin', verification_status = '" . $this->db->escape($status) . "', date_modified = NOW() WHERE anchor_price_id = '" . (int)$anchor_price_id . "'");
+			$this->db->query("UPDATE `" . DB_PREFIX . "anchor_price` SET price = '" . (float)$after['price'] . "', gross_price = '" . (float)$after['gross_price'] . "', unit = '" . $this->db->escape($after['unit']) . "', package_quantity = '" . (float)$after['package_quantity'] . "', tax_context = '" . $this->db->escape($after['tax_context']) . "', reference_date = '" . $this->db->escape($after['reference_date']) . "', rule_code = '" . $this->db->escape($after['rule_code']) . "', source = 'admin', verification_status = '" . $this->db->escape($status) . "', date_modified = NOW() WHERE anchor_price_id = '" . (int)$anchor_price_id . "'");
 			$this->addAudit((int)$anchor_price_id, (int)$before['product_id'], (int)$before['store_id'], 'update', $before_snapshot, $after, $reason, (int)$created_by);
 			$this->db->query('COMMIT');
 		} catch (Exception $exception) {
@@ -592,11 +613,6 @@ class ModelExtensionModuleAnchorPrice extends Model {
 				$result['errors'][] = 'Redak ' . $line . ': referentni datum mora biti između ' . $baseline_date . ' i ' . $today . '.';
 				continue;
 			}
-			$product_date = substr((string)$product['date_added'], 0, 10);
-			if ($product_date > $baseline_date && $reference_date <= $baseline_date) {
-				$result['errors'][] = 'Redak ' . $line . ': proizvod objavljen nakon baznog datuma ne može koristiti bazni datum.';
-				continue;
-			}
 
 			$status = isset($row['verification_status']) && $row['verification_status'] !== '' ? strtolower($row['verification_status']) : 'confirmed';
 			$status = preg_replace('/\s+/u', '_', $status);
@@ -609,6 +625,18 @@ class ModelExtensionModuleAnchorPrice extends Model {
 				continue;
 			}
 
+			$existing = $this->db->query("SELECT * FROM `" . DB_PREFIX . "anchor_price` WHERE product_id = '" . $product_id . "' AND store_id = '" . self::STORE_ID . "' LIMIT 1")->row;
+			$unit = isset($row['unit']) ? strtolower(trim($row['unit'])) : (isset($existing['unit']) ? $existing['unit'] : '');
+			$package_quantity = isset($row['package_quantity']) ? $this->normaliseImportNumber($row['package_quantity']) : (isset($existing['package_quantity']) ? (float)$existing['package_quantity'] : 0);
+			if ($package_quantity === false || (($status === 'confirmed' || $unit !== '' || (float)$package_quantity != 0) && !AnchorPriceUnit::isValid($unit, $package_quantity))) {
+				$result['errors'][] = 'Redak ' . $line . ': potvrđena cijena mora imati jedinicu kg ili l i pozitivnu package_quantity (količinu u pakiranju).';
+				continue;
+			}
+			if (!$this->measureColumnsExist()) {
+				$result['errors'][] = 'Najprije primijenite nadogradnju baze za jedinice mjere sidrenih cijena.';
+				break;
+			}
+
 			$reason = isset($row['reason']) ? trim($row['reason']) : '';
 			if ($reason === '') {
 				$reason = 'Masovni CSV uvoz';
@@ -619,6 +647,8 @@ class ModelExtensionModuleAnchorPrice extends Model {
 				'product' => $product,
 				'price' => $net_price,
 				'gross_price' => round((float)$gross_price, 4),
+				'unit' => $unit,
+				'package_quantity' => (float)$package_quantity,
 				'reference_date' => $reference_date,
 				'rule_code' => $rule_code,
 				'verification_status' => $status,
@@ -654,6 +684,8 @@ class ModelExtensionModuleAnchorPrice extends Model {
 				$after = array(
 					'price' => number_format((float)$net_price, 4, '.', ''),
 					'gross_price' => number_format((float)$item['gross_price'], 4, '.', ''),
+					'unit' => $item['unit'],
+					'package_quantity' => number_format((float)$item['package_quantity'], 6, '.', ''),
 					'currency_code' => self::CURRENCY_CODE,
 					'tax_class_id' => (int)$product['tax_class_id'],
 					'tax_context' => $tax_context,
@@ -664,11 +696,11 @@ class ModelExtensionModuleAnchorPrice extends Model {
 				);
 
 				if ($existing) {
-					$this->db->query("UPDATE `" . DB_PREFIX . "anchor_price` SET price = '" . (float)$after['price'] . "', gross_price = '" . (float)$after['gross_price'] . "', currency_code = '" . self::CURRENCY_CODE . "', tax_class_id = '" . (int)$after['tax_class_id'] . "', tax_context = '" . $this->db->escape($tax_context) . "', reference_date = '" . $this->db->escape($after['reference_date']) . "', rule_code = '" . $this->db->escape($after['rule_code']) . "', source = 'csv_import', verification_status = '" . $this->db->escape($after['verification_status']) . "', date_modified = NOW() WHERE anchor_price_id = '" . (int)$existing['anchor_price_id'] . "'");
+					$this->db->query("UPDATE `" . DB_PREFIX . "anchor_price` SET price = '" . (float)$after['price'] . "', gross_price = '" . (float)$after['gross_price'] . "', unit = '" . $this->db->escape($after['unit']) . "', package_quantity = '" . (float)$after['package_quantity'] . "', currency_code = '" . self::CURRENCY_CODE . "', tax_class_id = '" . (int)$after['tax_class_id'] . "', tax_context = '" . $this->db->escape($tax_context) . "', reference_date = '" . $this->db->escape($after['reference_date']) . "', rule_code = '" . $this->db->escape($after['rule_code']) . "', source = 'csv_import', verification_status = '" . $this->db->escape($after['verification_status']) . "', date_modified = NOW() WHERE anchor_price_id = '" . (int)$existing['anchor_price_id'] . "'");
 					$this->addAudit((int)$existing['anchor_price_id'], $product_id, self::STORE_ID, 'csv_import_update', $this->snapshotFromRow($existing), $after, $item['reason'], (int)$created_by);
 					$result['updated']++;
 				} else {
-					$this->db->query("INSERT INTO `" . DB_PREFIX . "anchor_price` SET product_id = '" . $product_id . "', store_id = '" . self::STORE_ID . "', price = '" . (float)$after['price'] . "', gross_price = '" . (float)$after['gross_price'] . "', currency_code = '" . self::CURRENCY_CODE . "', tax_class_id = '" . (int)$after['tax_class_id'] . "', tax_context = '" . $this->db->escape($tax_context) . "', reference_date = '" . $this->db->escape($after['reference_date']) . "', rule_code = '" . $this->db->escape($after['rule_code']) . "', source = 'csv_import', verification_status = '" . $this->db->escape($after['verification_status']) . "', created_by = '" . (int)$created_by . "', date_added = NOW(), date_modified = NOW()");
+					$this->db->query("INSERT INTO `" . DB_PREFIX . "anchor_price` SET product_id = '" . $product_id . "', store_id = '" . self::STORE_ID . "', price = '" . (float)$after['price'] . "', gross_price = '" . (float)$after['gross_price'] . "', unit = '" . $this->db->escape($after['unit']) . "', package_quantity = '" . (float)$after['package_quantity'] . "', currency_code = '" . self::CURRENCY_CODE . "', tax_class_id = '" . (int)$after['tax_class_id'] . "', tax_context = '" . $this->db->escape($tax_context) . "', reference_date = '" . $this->db->escape($after['reference_date']) . "', rule_code = '" . $this->db->escape($after['rule_code']) . "', source = 'csv_import', verification_status = '" . $this->db->escape($after['verification_status']) . "', created_by = '" . (int)$created_by . "', date_added = NOW(), date_modified = NOW()");
 					$anchor_price_id = (int)$this->db->getLastId();
 					$this->addAudit($anchor_price_id, $product_id, self::STORE_ID, 'csv_import_create', null, $after, $item['reason'], (int)$created_by);
 					$result['created']++;
@@ -707,6 +739,8 @@ class ModelExtensionModuleAnchorPrice extends Model {
 			'sku' => 'sku', 'ean' => 'ean', 'barcode' => 'ean', 'barkod' => 'ean',
 			'anchor_price' => 'gross_price', 'gross_price' => 'gross_price', 'sidrena_cijena' => 'gross_price', 'sidrena_cijena_eur' => 'gross_price', 'bruto_cijena' => 'gross_price',
 			'net_price' => 'net_price', 'neto_cijena' => 'net_price',
+			'unit' => 'unit', 'jedinica' => 'unit', 'jedinica_mjere' => 'unit',
+			'package_quantity' => 'package_quantity', 'kolicina_u_pakiranju' => 'package_quantity', 'kolicina_pakiranja' => 'package_quantity',
 			'reference_date' => 'reference_date', 'referentni_datum' => 'reference_date', 'datum_sidrene_cijene' => 'reference_date',
 			'status' => 'verification_status', 'verification_status' => 'verification_status', 'status_provjere' => 'verification_status',
 			'reason' => 'reason', 'razlog' => 'reason'
@@ -756,6 +790,8 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		return array(
 			'price' => $row['price'],
 			'gross_price' => $row['gross_price'],
+			'unit' => isset($row['unit']) ? $row['unit'] : '',
+			'package_quantity' => isset($row['package_quantity']) ? $row['package_quantity'] : '0.000000',
 			'currency_code' => $row['currency_code'],
 			'tax_class_id' => (int)$row['tax_class_id'],
 			'tax_context' => $row['tax_context'],
@@ -890,6 +926,7 @@ class ModelExtensionModuleAnchorPrice extends Model {
 				'SKU',
 				'Marka/proizvođač',
 				'Jedinica mjere',
+				'Količina pakiranja',
 				'Cijena po jedinici (EUR)',
 				'Redovna maloprodajna cijena (EUR)',
 				'Aktualna maloprodajna cijena (EUR)',
@@ -897,6 +934,7 @@ class ModelExtensionModuleAnchorPrice extends Model {
 				'Naziv posebnog oblika prodaje',
 				'Aktualna akcijska cijena (EUR)',
 				'Sidrena cijena (EUR)',
+				'Sidrena cijena po jedinici (EUR)',
 				'Datum sidrene cijene',
 				'Barkod',
 				'Dostupnost',
@@ -913,11 +951,10 @@ class ModelExtensionModuleAnchorPrice extends Model {
 				$special_gross = $has_special ? round((float)$this->tax->calculate((float)$product['special_price'], (int)$product['tax_class_id'], true), 4) : null;
 				$has_sale_price = $has_special || $has_discount;
 				$selling_gross = $has_special ? $special_gross : $base_gross;
-				$unit = trim((string)$this->config->get('module_anchor_price_default_unit'));
-				if ($unit === '') {
-					$unit = 'kom';
-				}
-				$unit_price = $this->csvMoney($selling_gross);
+				$unit = $product['unit'];
+				$package_quantity = (float)$product['package_quantity'];
+				$unit_price = AnchorPriceUnit::calculate($selling_gross, $package_quantity);
+				$anchor_unit_price = AnchorPriceUnit::calculate($product['anchor_gross_price'], $package_quantity);
 
 				$barcode = $this->validPublicationBarcode($product);
 
@@ -932,13 +969,15 @@ class ModelExtensionModuleAnchorPrice extends Model {
 					$this->csvText($product['sku']),
 					$this->csvText($product['manufacturer']),
 					$unit,
-					$unit_price,
+					rtrim(rtrim(number_format($package_quantity, 6, ',', ''), '0'), ','),
+					$this->csvMoney($unit_price),
 					$this->csvMoney($regular_gross),
 					$this->csvMoney($selling_gross),
 					$has_sale_price ? 'DA' : 'NE',
 					$has_special ? 'Akcija' : ($has_discount ? 'Popust' : ''),
 					$has_sale_price ? $this->csvMoney($selling_gross) : '',
 					$this->csvMoney($product['anchor_gross_price']),
+					$this->csvMoney($anchor_unit_price),
 					$product['reference_date'],
 					$barcode,
 					$availability,
@@ -953,6 +992,9 @@ class ModelExtensionModuleAnchorPrice extends Model {
 					'sku' => $this->csvText($product['sku']),
 					'manufacturer' => $this->csvText($product['manufacturer']),
 					'unit' => $unit,
+					'package_quantity' => rtrim(rtrim(number_format($package_quantity, 6, '.', ''), '0'), '.'),
+					'unit_price' => number_format($unit_price, 2, '.', ''),
+					'anchor_unit_price' => number_format($anchor_unit_price, 2, '.', ''),
 					'regular_price' => number_format($regular_gross, 2, '.', ''),
 					'current_price' => number_format($selling_gross, 2, '.', ''),
 					'special_price' => $has_sale_price ? number_format($selling_gross, 2, '.', '') : '',
@@ -1101,7 +1143,7 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		$query = $this->db->query("SELECT COALESCE(MAX(sequence_no), 0) + 1 AS sequence_no FROM `" . DB_PREFIX . "anchor_price_publication` WHERE store_id = '" . (int)$store_id . "' AND location_code = '" . $this->db->escape($location_code) . "'");
 		$sequence_no = (int)$query->row['sequence_no'];
 		$location = $this->publicationLocation($location_code);
-		$base_filename = 'cjenik_' . $location['address'] . '_' . str_pad($sequence_no, 6, '0', STR_PAD_LEFT) . '_' . $now->format('Ymd_His');
+		$base_filename = $location['type'] . '_' . $location['address'] . '_' . $location['code'] . '_' . str_pad($sequence_no, 6, '0', STR_PAD_LEFT) . '_' . $now->format('Ymd_His');
 		$filename = $base_filename . '.csv';
 		$xml_filename = $base_filename . '.xml';
 		$relative_path = 'anchor_price/' . $filename;
@@ -1193,7 +1235,11 @@ class ModelExtensionModuleAnchorPrice extends Model {
 	private function getPublicationProducts($store_id) {
 		$language_id = $this->getCatalogLanguageId();
 		$customer_group_id = (int)$this->config->get('config_customer_group_id');
+		if (!$this->measureColumnsExist()) {
+			throw new Exception('Najprije primijenite nadogradnju baze za jedinice mjere sidrenih cijena.');
+		}
 		$sql = "SELECT p.product_id, p.model, p.sku, p.upc, p.ean, p.jan, p.isbn, p.quantity, p.stock_status_id, p.tax_class_id, p.manufacturer_id, p.price AS regular_price, pd.name AS product_name, COALESCE(m.name, '') AS manufacturer, COALESCE(ss.name, '') AS stock_status, ap.anchor_price_id, ap.verification_status, ap.gross_price AS anchor_gross_price, ap.reference_date, ap.currency_code, (SELECT pdsc.price FROM `" . DB_PREFIX . "product_discount` pdsc WHERE pdsc.product_id = p.product_id AND pdsc.customer_group_id = '" . $customer_group_id . "' AND pdsc.quantity = '1' AND (pdsc.date_start = '0000-00-00' OR pdsc.date_start < NOW()) AND (pdsc.date_end = '0000-00-00' OR pdsc.date_end > NOW()) ORDER BY pdsc.priority ASC, pdsc.price ASC LIMIT 1) AS discount_price, (SELECT ps.price FROM `" . DB_PREFIX . "product_special` ps WHERE ps.product_id = p.product_id AND ps.customer_group_id = '" . $customer_group_id . "' AND (ps.date_start = '0000-00-00' OR ps.date_start < NOW()) AND (ps.date_end = '0000-00-00' OR ps.date_end > NOW()) ORDER BY ps.priority ASC, ps.price ASC LIMIT 1) AS special_price FROM `" . DB_PREFIX . "product` p INNER JOIN `" . DB_PREFIX . "product_to_store` p2s ON (p2s.product_id = p.product_id AND p2s.store_id = '" . (int)$store_id . "') LEFT JOIN `" . DB_PREFIX . "product_description` pd ON (pd.product_id = p.product_id AND pd.language_id = '" . (int)$language_id . "') LEFT JOIN `" . DB_PREFIX . "anchor_price` ap ON (ap.product_id = p.product_id AND ap.store_id = '" . (int)$store_id . "') LEFT JOIN `" . DB_PREFIX . "manufacturer` m ON (m.manufacturer_id = p.manufacturer_id) LEFT JOIN `" . DB_PREFIX . "stock_status` ss ON (ss.stock_status_id = p.stock_status_id AND ss.language_id = '" . (int)$language_id . "') WHERE p.status = '1' AND p.date_available <= NOW() ORDER BY p.product_id ASC";
+		$sql = str_replace('ap.currency_code,', 'ap.currency_code, ap.unit, ap.package_quantity,', $sql);
 		$rows = $this->db->query($sql)->rows;
 		$fallback_manufacturer = 'OPG Ružić';
 
@@ -1212,6 +1258,7 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		foreach ($products as $product) {
 			if (empty($product['anchor_price_id'])
 				|| $product['verification_status'] !== 'confirmed'
+				|| !AnchorPriceUnit::isValid(isset($product['unit']) ? $product['unit'] : '', isset($product['package_quantity']) ? $product['package_quantity'] : 0)
 				|| trim((string)$product['product_name']) === ''
 				|| trim((string)$product['model']) === ''
 				|| trim((string)$product['manufacturer']) === ''
@@ -1220,7 +1267,7 @@ class ModelExtensionModuleAnchorPrice extends Model {
 			}
 		}
 		if ($total > 0) {
-			throw new Exception($total . ' aktivnih proizvoda nema potvrđenu sidrenu cijenu, naziv ili šifru, ili sadrži neispravan GTIN barkod. Objava je zaustavljena.');
+			throw new Exception($total . ' aktivnih proizvoda nema potvrđenu sidrenu cijenu, jedinicu kg/l, količinu pakiranja, naziv ili šifru, ili sadrži neispravan GTIN barkod. Objava je zaustavljena.');
 		}
 	}
 
@@ -1309,6 +1356,9 @@ class ModelExtensionModuleAnchorPrice extends Model {
 			'sku' => 'sku',
 			'manufacturer' => 'manufacturer',
 			'unit' => 'unit',
+			'packageQuantity' => 'package_quantity',
+			'unitPrice' => 'unit_price',
+			'anchorUnitPrice' => 'anchor_unit_price',
 			'regularPrice' => 'regular_price',
 			'currentPrice' => 'current_price',
 			'specialPrice' => 'special_price',
@@ -1338,14 +1388,35 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		return $value !== '' ? $value : 'nepoznata-adresa';
 	}
 
-	private function publicationLocation($location_code) {
+	public function getPublicationSettings() {
 		$catalog_url = defined('HTTPS_CATALOG') && HTTPS_CATALOG ? HTTPS_CATALOG : (defined('HTTP_CATALOG') ? HTTP_CATALOG : 'webshop');
 		$host = parse_url($catalog_url, PHP_URL_HOST);
-		$address = $this->publicationSlug($host ? $host : $catalog_url);
+		$address = trim((string)$this->config->get('module_anchor_price_publication_address'));
+		if ($address === '') {
+			$address = preg_replace('~<br\s*/?>~i', ' ', (string)$this->config->get('config_address'));
+			$address = trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($address), ENT_QUOTES, 'UTF-8')));
+		}
+		if ($address === '') {
+			$address = $host ? $host : $catalog_url;
+		}
+		$type = trim((string)$this->config->get('module_anchor_price_publication_type'));
+		$code = trim((string)$this->config->get('module_anchor_price_publication_code'));
 		return array(
-			'type' => 'cjenik',
-			'address' => substr($address, 0, 120)
+			'type' => $type !== '' ? $type : 'webshop',
+			'address' => $address,
+			'code' => $code !== '' ? $code : 'WEB'
 		);
+	}
+
+	private function publicationLocation($location_code) {
+		$settings = $this->getPublicationSettings();
+		foreach (array('type' => 24, 'address' => 120, 'code' => 16) as $field => $limit) {
+			$settings[$field] = substr(AnchorPriceUnit::filenamePart($settings[$field]), 0, $limit);
+			if ($settings[$field] === '') {
+				throw new Exception('Naziv cjenika zahtijeva oblik prodaje, adresu i oznaku objekta.');
+			}
+		}
+		return $settings;
 	}
 
 	private function publicationAddressLine($address) {

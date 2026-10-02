@@ -1,4 +1,5 @@
 <?php
+require_once DIR_SYSTEM . 'library/anchor_price_unit.php';
 class ModelExtensionModuleAnchorPrice extends Model {
 	const ARCHIVE_DAYS = 30;
 	const PUBLICATION_LOCATION_CODE = 'WEB';
@@ -71,12 +72,18 @@ class ModelExtensionModuleAnchorPrice extends Model {
 			$date = date('j M Y', $timestamp);
 			$text = 'Price on ' . $date . ': ' . $price;
 		}
+		$unit_price = '';
+		if (isset($record['unit'], $record['package_quantity']) && AnchorPriceUnit::isValid($record['unit'], $record['package_quantity'])) {
+			$unit_price = $this->currency->format(AnchorPriceUnit::calculate($record['gross_price'], $record['package_quantity']), $currency_code) . '/' . $record['unit'];
+			$text .= ' (' . $unit_price . ')';
+		}
 
 		return array(
 			'anchor_price'       => $price,
 			'anchor_price_value' => $price,
 			'anchor_price_date'  => $date,
 			'anchor_price_text'  => $text,
+			'anchor_unit_price'  => $unit_price,
 			'anchor_price_rule'  => $record['rule_code'],
 			'anchor_price_status'=> $record['verification_status']
 		);
@@ -154,7 +161,8 @@ class ModelExtensionModuleAnchorPrice extends Model {
 			$tax_context = '{}';
 		}
 
-		$verification_status = $source === 'import_add_event' ? 'confirmed' : 'pending';
+		// Selling measure and historical/first-listing price need explicit review.
+		$verification_status = 'pending';
 		$reference_date = $now->format('Y-m-d');
 		$this->db->query('START TRANSACTION');
 		try {
@@ -316,7 +324,7 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		$sequence_query = $this->db->query("SELECT COALESCE(MAX(sequence_no), 0) + 1 AS next_sequence FROM `" . DB_PREFIX . "anchor_price_publication` WHERE store_id = '" . $store_id . "' AND location_code = '" . $this->db->escape($location_code) . "'");
 		$sequence_no = (int)$sequence_query->row['next_sequence'];
 		$location = $this->publicationLocation($location_code);
-		$base_filename = 'cjenik_' . $location['address'] . '_' . str_pad($sequence_no, 6, '0', STR_PAD_LEFT) . '_' . $now->format('Ymd_His');
+		$base_filename = $location['type'] . '_' . $location['address'] . '_' . $location['code'] . '_' . str_pad($sequence_no, 6, '0', STR_PAD_LEFT) . '_' . $now->format('Ymd_His');
 		$filename = $base_filename . '.csv';
 		$xml_filename = $base_filename . '.xml';
 		$relative_path = 'anchor_price/' . $filename;
@@ -347,7 +355,7 @@ class ModelExtensionModuleAnchorPrice extends Model {
 			@unlink($temp_path);
 			return $this->failPublication($publication_id, 'Pogreška pri zapisu oznake kodiranja CSV datoteke.');
 		}
-		$headers = array('Prodajni kanal', 'ID proizvoda', 'Naziv proizvoda', 'Šifra/model', 'SKU', 'Marka/proizvođač', 'Jedinica mjere', 'Cijena po jedinici (EUR)', 'Redovna maloprodajna cijena (EUR)', 'Aktualna maloprodajna cijena (EUR)', 'Poseban oblik prodaje', 'Naziv posebnog oblika prodaje', 'Aktualna akcijska cijena (EUR)', 'Sidrena cijena (EUR)', 'Datum sidrene cijene', 'Barkod', 'Dostupnost', 'Količina', 'Status zalihe', 'Valuta');
+		$headers = array('Prodajni kanal', 'ID proizvoda', 'Naziv proizvoda', 'Šifra/model', 'SKU', 'Marka/proizvođač', 'Jedinica mjere', 'Količina pakiranja', 'Cijena po jedinici (EUR)', 'Redovna maloprodajna cijena (EUR)', 'Aktualna maloprodajna cijena (EUR)', 'Poseban oblik prodaje', 'Naziv posebnog oblika prodaje', 'Aktualna akcijska cijena (EUR)', 'Sidrena cijena (EUR)', 'Sidrena cijena po jedinici (EUR)', 'Datum sidrene cijene', 'Barkod', 'Dostupnost', 'Količina', 'Status zalihe', 'Valuta');
 		if (!$this->writeCsvRow($handle, $headers)) {
 			fclose($handle);
 			@unlink($temp_path);
@@ -356,12 +364,6 @@ class ModelExtensionModuleAnchorPrice extends Model {
 
 		$product_count = 0;
 		$currency_code = $this->config->get('config_currency');
-		$default_unit = trim((string)$this->config->get('module_anchor_price_default_unit'));
-
-		if ($default_unit === '') {
-			$default_unit = 'kom';
-		}
-
 		$tax = $this->getPublicTax();
 
 		foreach ($products as $product) {
@@ -383,14 +385,16 @@ class ModelExtensionModuleAnchorPrice extends Model {
 				$this->csvText($product['model']),
 				$this->csvText($product['sku']),
 				$this->csvText($product['manufacturer']),
-				$default_unit,
-				$this->decimal($selling_gross),
+				$product['unit'],
+				str_replace('.', ',', rtrim(rtrim(number_format((float)$product['package_quantity'], 6, '.', ''), '0'), '.')),
+				$this->decimal(AnchorPriceUnit::calculate($selling_gross, $product['package_quantity'])),
 				$this->decimal($regular_gross),
 				$this->decimal($selling_gross),
 				$has_sale_price ? 'DA' : 'NE',
 				$has_special ? 'Akcija' : ($has_discount ? 'Popust' : ''),
 				$has_sale_price ? $this->decimal($selling_gross) : '',
 				$this->decimal($product['anchor_gross_price']),
+				$this->decimal(AnchorPriceUnit::calculate($product['anchor_gross_price'], $product['package_quantity'])),
 				$product['reference_date'],
 				$barcode,
 				$is_available ? 'Dostupno' : 'Nije dostupno',
@@ -411,7 +415,10 @@ class ModelExtensionModuleAnchorPrice extends Model {
 				'model' => $this->csvText($product['model']),
 				'sku' => $this->csvText($product['sku']),
 				'manufacturer' => $this->csvText($product['manufacturer']),
-				'unit' => $default_unit,
+				'unit' => $product['unit'],
+				'package_quantity' => rtrim(rtrim(number_format((float)$product['package_quantity'], 6, '.', ''), '0'), '.'),
+				'unit_price' => number_format(AnchorPriceUnit::calculate($selling_gross, $product['package_quantity']), 2, '.', ''),
+				'anchor_unit_price' => number_format(AnchorPriceUnit::calculate($product['anchor_gross_price'], $product['package_quantity']), 2, '.', ''),
 				'regular_price' => number_format((float)$regular_gross, 2, '.', ''),
 				'current_price' => number_format((float)$selling_gross, 2, '.', ''),
 				'special_price' => $has_sale_price ? number_format((float)$selling_gross, 2, '.', '') : '',
@@ -537,7 +544,11 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		$rows = $this->db->query($sql)->rows;
 		$fallback_manufacturer = 'OPG Ružić';
 
+		$anchor_records = $this->getByProductIds(array_column($rows, 'product_id'), $store_id);
 		foreach ($rows as &$row) {
+			$anchor_record = isset($anchor_records[(int)$row['product_id']]) ? $anchor_records[(int)$row['product_id']] : array();
+			$row['unit'] = isset($anchor_record['unit']) ? $anchor_record['unit'] : '';
+			$row['package_quantity'] = isset($anchor_record['package_quantity']) ? $anchor_record['package_quantity'] : 0;
 			if (trim((string)$row['manufacturer']) === '') {
 				$row['manufacturer'] = $fallback_manufacturer;
 			}
@@ -555,12 +566,14 @@ class ModelExtensionModuleAnchorPrice extends Model {
 				|| trim((string)$product['name']) === ''
 				|| trim((string)$product['model']) === ''
 				|| trim((string)$product['manufacturer']) === ''
+				|| !isset($product['unit'], $product['package_quantity'])
+				|| !AnchorPriceUnit::isValid($product['unit'], $product['package_quantity'])
 				|| $this->hasInvalidPublicationBarcode($product)) {
 				$total++;
 			}
 		}
 		if ($total > 0) {
-			throw new Exception($total . ' aktivnih proizvoda nema potvrđenu sidrenu cijenu, naziv ili šifru, ili sadrži neispravan GTIN barkod. Objava je zaustavljena.');
+			throw new Exception($total . ' aktivnih proizvoda nema potvrđenu sidrenu cijenu, naziv, šifru, jedinicu kg/l ili količinu pakiranja, ili sadrži neispravan GTIN barkod. Objava je zaustavljena.');
 		}
 	}
 
@@ -803,33 +816,30 @@ class ModelExtensionModuleAnchorPrice extends Model {
 	}
 
 	private function slugify($value) {
-		$value = html_entity_decode((string)$value, ENT_QUOTES, 'UTF-8');
-
-		if (function_exists('iconv')) {
-			$converted = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value);
-
-			if ($converted !== false) {
-				$value = $converted;
-			}
-		}
-
-		$value = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $value));
-
-		return trim($value, '-');
+		return AnchorPriceUnit::filenamePart($value);
 	}
 
 	private function publicationLocation($location_code) {
-		$type = 'cjenik';
+		$type = trim((string)$this->config->get('module_anchor_price_publication_type'));
 		$base_url = defined('HTTPS_SERVER') ? HTTPS_SERVER : (defined('HTTP_SERVER') ? HTTP_SERVER : '');
-		$address = parse_url($base_url, PHP_URL_HOST);
+		$address = trim((string)$this->config->get('module_anchor_price_publication_address'));
+		$code = trim((string)$this->config->get('module_anchor_price_publication_code'));
+		if ($type === '') { $type = 'webshop'; }
+		if ($address === '') {
+			$address = preg_replace('~<br\s*/?>~i', ' ', (string)$this->config->get('config_address'));
+			$address = trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($address), ENT_QUOTES, 'UTF-8')));
+			if (trim($address) === '') { $address = parse_url($base_url, PHP_URL_HOST); }
+		}
+		if ($code === '') { $code = $location_code; }
 
-		$type = $this->slugify($type);
-		$address = $this->slugify($address);
-
-		return array(
-			'type' => $type !== '' ? substr($type, 0, 40) : 'prodajni-objekt',
-			'address' => $address !== '' ? substr($address, 0, 120) : 'nepoznata-adresa'
-		);
+		$location = array('type' => $type, 'address' => $address, 'code' => $code);
+		foreach (array('type' => 24, 'address' => 120, 'code' => 16) as $field => $limit) {
+			$location[$field] = substr(AnchorPriceUnit::filenamePart($location[$field]), 0, $limit);
+			if ($location[$field] === '') {
+				throw new Exception('Naziv cjenika zahtijeva oblik prodaje, adresu i oznaku objekta.');
+			}
+		}
+		return $location;
 	}
 
 	private function publicationAddressLine($address) {
@@ -877,6 +887,9 @@ class ModelExtensionModuleAnchorPrice extends Model {
 			'sku' => 'sku',
 			'manufacturer' => 'manufacturer',
 			'unit' => 'unit',
+			'packageQuantity' => 'package_quantity',
+			'unitPrice' => 'unit_price',
+			'anchorUnitPrice' => 'anchor_unit_price',
 			'regularPrice' => 'regular_price',
 			'currentPrice' => 'current_price',
 			'specialPrice' => 'special_price',

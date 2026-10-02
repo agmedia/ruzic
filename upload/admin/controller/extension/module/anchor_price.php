@@ -1,4 +1,5 @@
 <?php
+require_once DIR_SYSTEM . 'library/anchor_price_unit.php';
 class ControllerExtensionModuleAnchorPrice extends Controller {
 	private $error = array();
 
@@ -42,6 +43,9 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 			$results = $this->model_extension_module_anchor_price->getAnchorPrices($filter_data);
 
 			foreach ($results as $result) {
+				$unit = isset($result['unit']) ? $result['unit'] : '';
+				$quantity = isset($result['package_quantity']) ? $result['package_quantity'] : 0;
+				$has_measure = AnchorPriceUnit::isValid($unit, $quantity);
 				$data['anchors'][] = array(
 					'anchor_price_id' => (int)$result['anchor_price_id'],
 					'product_id' => (int)$result['product_id'],
@@ -51,6 +55,10 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 					'manufacturer' => $result['manufacturer'],
 					'price' => number_format((float)$result['price'], 2, ',', '.'),
 					'gross_price' => number_format((float)$result['gross_price'], 2, ',', '.'),
+					'unit' => $unit,
+					'package_quantity' => $has_measure ? rtrim(rtrim(number_format((float)$quantity, 6, ',', ''), '0'), ',') : '',
+					'unit_price' => $has_measure ? number_format(AnchorPriceUnit::calculate($result['current_gross_price'], $quantity), 2, ',', '.') : '',
+					'anchor_unit_price' => $has_measure ? number_format(AnchorPriceUnit::calculate($result['gross_price'], $quantity), 2, ',', '.') : '',
 					'currency_code' => $result['currency_code'],
 					'reference_date' => $result['reference_date'],
 					'verification_status' => $result['verification_status'],
@@ -102,8 +110,11 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 		$data['settings_action'] = $this->url->link('extension/module/anchor_price/settings', 'user_token=' . $this->session->data['user_token'], true);
 		$data['cancel'] = $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=module', true);
 		$data['user_token'] = $this->session->data['user_token'];
-		$data['default_unit'] = trim((string)$this->config->get('module_anchor_price_default_unit')) !== '' ? $this->config->get('module_anchor_price_default_unit') : 'kom';
 		$data['reference_date_setting'] = $this->model_extension_module_anchor_price->getReferenceDate();
+		$publication_settings = $this->model_extension_module_anchor_price->getPublicationSettings();
+		foreach (array('type', 'address', 'code') as $field) {
+			$data['publication_' . $field] = $publication_settings[$field];
+		}
 		$data['cron_key'] = (string)$this->config->get('module_anchor_price_cron_key');
 		$catalog_url = defined('HTTPS_CATALOG') ? HTTPS_CATALOG : HTTP_CATALOG;
 		$data['cron_url'] = rtrim($catalog_url, '/') . '/index.php?route=extension/module/anchor_price/cron';
@@ -165,6 +176,8 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 			$input = array(
 				'price' => $this->normaliseNumber($this->request->post['price']),
 				'gross_price' => $this->normaliseNumber($this->request->post['gross_price']),
+				'unit' => strtolower(trim($this->request->post['unit'])),
+				'package_quantity' => $this->normaliseNumber($this->request->post['package_quantity']),
 				'reference_date' => trim($this->request->post['reference_date']),
 				'verification_status' => trim($this->request->post['verification_status'])
 			);
@@ -190,6 +203,12 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 		$data['anchor'] = $anchor;
 		$data['price'] = isset($this->request->post['price']) ? $this->request->post['price'] : $anchor['price'];
 		$data['gross_price'] = isset($this->request->post['gross_price']) ? $this->request->post['gross_price'] : $anchor['gross_price'];
+		$data['unit'] = isset($this->request->post['unit']) ? $this->request->post['unit'] : (isset($anchor['unit']) ? $anchor['unit'] : '');
+		$data['package_quantity'] = isset($this->request->post['package_quantity']) ? $this->request->post['package_quantity'] : (isset($anchor['package_quantity']) ? $anchor['package_quantity'] : '');
+		$data['product_date_warning'] = '';
+		if (isset($anchor['product_date_added']) && substr($anchor['product_date_added'], 0, 10) > $this->model_extension_module_anchor_price->getReferenceDate()) {
+			$data['product_date_warning'] = sprintf($this->language->get('warning_product_added'), substr($anchor['product_date_added'], 0, 10));
+		}
 		$data['reference_date'] = isset($this->request->post['reference_date']) ? $this->request->post['reference_date'] : $anchor['reference_date'];
 		$data['verification_status'] = isset($this->request->post['verification_status']) ? $this->request->post['verification_status'] : $anchor['verification_status'];
 		$data['reason'] = isset($this->request->post['reason']) ? $this->request->post['reason'] : '';
@@ -216,6 +235,8 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 		$data['error_warning'] = isset($this->error['warning']) ? $this->error['warning'] : '';
 		$data['error_price'] = isset($this->error['price']) ? $this->error['price'] : '';
 		$data['error_gross_price'] = isset($this->error['gross_price']) ? $this->error['gross_price'] : '';
+		$data['error_unit'] = isset($this->error['unit']) ? $this->error['unit'] : '';
+		$data['error_package_quantity'] = isset($this->error['package_quantity']) ? $this->error['package_quantity'] : '';
 		$data['error_reference_date'] = isset($this->error['reference_date']) ? $this->error['reference_date'] : '';
 		$data['error_status'] = isset($this->error['status']) ? $this->error['status'] : '';
 		$data['error_reason'] = isset($this->error['reason']) ? $this->error['reason'] : '';
@@ -298,23 +319,31 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 
 	public function settings() {
 		$this->load->language('extension/module/anchor_price');
-		$unit = isset($this->request->post['default_unit']) ? trim($this->request->post['default_unit']) : '';
 		$reference_date = isset($this->request->post['reference_date_setting']) ? trim($this->request->post['reference_date_setting']) : '';
+		$publication_type = isset($this->request->post['publication_type']) ? trim($this->request->post['publication_type']) : '';
+		$publication_address = isset($this->request->post['publication_address']) ? trim($this->request->post['publication_address']) : '';
+		$publication_code = isset($this->request->post['publication_code']) ? trim($this->request->post['publication_code']) : '';
 		$today = (new DateTime('now', new DateTimeZone('Europe/Zagreb')))->format('Y-m-d');
 
 		if (!$this->config->get('module_anchor_price_status')) {
 			$this->session->data['error'] = $this->language->get('error_not_installed');
 		} elseif ($this->request->server['REQUEST_METHOD'] !== 'POST' || !$this->user->hasPermission('modify', 'extension/module/anchor_price')) {
 			$this->session->data['error'] = $this->language->get('error_permission');
-		} elseif (utf8_strlen($unit) < 1 || utf8_strlen($unit) > 16) {
-			$this->session->data['error'] = $this->language->get('error_default_unit');
+		} elseif (!preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,23}$/D', $publication_type)
+			|| !preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,15}$/D', $publication_code)
+			|| utf8_strlen($publication_address) < 1 || utf8_strlen($publication_address) > 120
+			|| preg_match('/[<>\x00-\x1F\x7F]/', $publication_address)
+			|| AnchorPriceUnit::filenamePart($publication_address) === '') {
+			$this->session->data['error'] = $this->language->get('error_publication_settings');
 		} elseif (!$this->validDate($reference_date) || $reference_date > $today) {
 			$this->session->data['error'] = $this->language->get('error_reference_date_setting');
 		} else {
 			$this->load->model('setting/setting');
 			$settings = $this->model_setting_setting->getSetting('module_anchor_price', 0);
-			$settings['module_anchor_price_default_unit'] = $unit;
 			$settings['module_anchor_price_reference_date'] = $reference_date;
+			$settings['module_anchor_price_publication_type'] = $publication_type;
+			$settings['module_anchor_price_publication_address'] = $publication_address;
+			$settings['module_anchor_price_publication_code'] = $publication_code;
 			$this->model_setting_setting->editSetting('module_anchor_price', $settings, 0);
 			$this->session->data['success'] = $this->language->get('text_success_settings');
 		}
@@ -393,10 +422,17 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 		$settings = $this->model_setting_setting->getSetting('module_anchor_price', 0);
 		$settings['module_anchor_price_status'] = 1;
 		if (!isset($settings['module_anchor_price_reference_date']) || !$this->validDate($settings['module_anchor_price_reference_date'])) {
-			$settings['module_anchor_price_reference_date'] = (new DateTime('now', new DateTimeZone('Europe/Zagreb')))->format('Y-m-d');
+			$settings['module_anchor_price_reference_date'] = '2025-05-02';
 		}
 		if (!isset($settings['module_anchor_price_default_unit']) || trim($settings['module_anchor_price_default_unit']) === '') {
-			$settings['module_anchor_price_default_unit'] = 'kom';
+			$settings['module_anchor_price_default_unit'] = 'kg';
+		}
+		$publication_defaults = $this->model_extension_module_anchor_price->getPublicationSettings();
+		foreach (array('type', 'address', 'code') as $field) {
+			$key = 'module_anchor_price_publication_' . $field;
+			if (!isset($settings[$key]) || trim($settings[$key]) === '') {
+				$settings[$key] = $publication_defaults[$field];
+			}
 		}
 		if (!isset($settings['module_anchor_price_cron_key']) || trim($settings['module_anchor_price_cron_key']) === '') {
 			$settings['module_anchor_price_cron_key'] = $this->generateCronKey();
@@ -460,6 +496,18 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 		if (!in_array($status, array('confirmed', 'pending', 'disabled'), true)) {
 			$this->error['status'] = $this->language->get('error_status');
 		}
+		$unit = isset($this->request->post['unit']) ? strtolower(trim($this->request->post['unit'])) : '';
+		$quantity = isset($this->request->post['package_quantity']) ? $this->normaliseNumber($this->request->post['package_quantity']) : '';
+		if ($status === 'confirmed' || $unit !== '' || ($quantity !== '' && (float)$quantity != 0)) {
+			if (!in_array($unit, array('kg', 'l'), true)) {
+				$this->error['unit'] = $this->language->get('error_unit');
+			}
+			if (!AnchorPriceUnit::isValid($unit, $quantity)) {
+				$this->error['package_quantity'] = $this->language->get('error_package_quantity');
+			}
+		} elseif ($quantity !== '' && !is_numeric($quantity)) {
+			$this->error['package_quantity'] = $this->language->get('error_package_quantity');
+		}
 
 		$reason = isset($this->request->post['reason']) ? trim($this->request->post['reason']) : '';
 		if (utf8_strlen($reason) < 3 || utf8_strlen($reason) > 255) {
@@ -497,7 +545,7 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 			return '—';
 		}
 		$parts = array();
-		foreach (array('price', 'gross_price', 'reference_date', 'verification_status') as $field) {
+		foreach (array('price', 'gross_price', 'unit', 'package_quantity', 'reference_date', 'verification_status') as $field) {
 			if (isset($snapshot[$field])) {
 				$parts[] = $field . ': ' . $snapshot[$field];
 			}

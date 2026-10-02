@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS `oc_anchor_price` (
   `store_id` INT(11) UNSIGNED NOT NULL DEFAULT 0,
   `price` DECIMAL(15,4) NOT NULL DEFAULT 0.0000,
   `gross_price` DECIMAL(15,4) NOT NULL DEFAULT 0.0000,
+  `unit` VARCHAR(16) NOT NULL DEFAULT '',
+  `package_quantity` DECIMAL(15,6) NOT NULL DEFAULT 0,
   `currency_code` CHAR(3) NOT NULL DEFAULT 'EUR',
   `tax_class_id` INT(11) UNSIGNED NOT NULL DEFAULT 0,
   `tax_context` TEXT NOT NULL,
@@ -121,7 +123,7 @@ INSERT INTO `oc_setting` (`store_id`, `code`, `key`, `value`, `serialized`)
 SELECT 0, 'module_anchor_price', 'module_anchor_price_status', '1', 0 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM `oc_setting` WHERE `store_id` = 0 AND `code` = 'module_anchor_price' AND `key` = 'module_anchor_price_status');
 INSERT INTO `oc_setting` (`store_id`, `code`, `key`, `value`, `serialized`)
-SELECT 0, 'module_anchor_price', 'module_anchor_price_reference_date', DATE_FORMAT(CURDATE(), '%Y-%m-%d'), 0 FROM DUAL
+SELECT 0, 'module_anchor_price', 'module_anchor_price_reference_date', '2025-05-02', 0 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM `oc_setting` WHERE `store_id` = 0 AND `code` = 'module_anchor_price' AND `key` = 'module_anchor_price_reference_date');
 INSERT INTO `oc_setting` (`store_id`, `code`, `key`, `value`, `serialized`)
 SELECT 0, 'module_anchor_price', 'module_anchor_price_default_unit', 'kom', 0 FROM DUAL

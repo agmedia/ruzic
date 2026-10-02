@@ -13,7 +13,11 @@ Deinstalacija modula ne briše sidrene cijene, revizijski trag ni arhivu cjenika
 
 ## Bazni datum i prikaz
 
-Bazni referentni datum nije hardkodiran. Nova instalacija koristi datum instalacije u vremenskoj zoni Europe/Zagreb, a datum se može promijeniti u postavkama modula. Postojeći potvrđeni povijesni snapshoti se ne prepisuju. Potvrđena sidrena cijena prikazuje se na proizvodu, listama kategorija/pretrage/akcija, Basel karticama, wishlisti, košarici i checkoutu, uključujući mobilni prikaz.
+Za prehrambene proizvode OPG-a zadani bazni datum je **2. 5. 2025.** Datum se može promijeniti u postavkama modula. Postojeći povijesni snapshoti se ne prepisuju automatski: današnji iznos nije dokaz cijene na raniji datum. Unesite stvarnu redovnu cijenu na referentni datum i razlog potvrde kroz admin ili CSV. Datum kreiranja proizvoda u OpenCartu nije konačan dokaz datuma prvog stavljanja u prodaju.
+
+Svaki zapis ima jedinicu **kg** ili **l** i količinu prodajnog pakiranja. Neto/bruto sidrena cijena ostaje cijena cijelog pakiranja; jedinična cijena izračunava se dijeljenjem bruto cijene količinom pakiranja. Ne koristi se težina dostave iz OpenCarta. Npr. 11 EUR za 5 kg daje 2,20 EUR/kg, a 10 EUR za 3 l daje 3,33 EUR/l. Potvrđena sidrena cijena i njezina jedinična cijena prikazuju se na proizvodu i postojećim listama/karticama, uključujući mobilni prikaz. Nepotpuni podaci o jedinici/količini blokiraju novu objavu cjenika.
+
+Za postojeću instalaciju pokrenite [nadogradnju za jedinične cijene](../sql/2026_10_02_anchor_price_units.sql) u phpMyAdminu prije povlačenja novog koda. Paket dodaje polja i poznate količine šest pakiranja te postavlja bazni datum 2. 5. 2025. Vlasnik je 2. 10. 2026. potvrdio da su postojeći iznosi svih šest proizvoda bili isti na 2. 5. 2025.; paket zato ispravlja datume samo tih početnih potvrđenih zapisa, uz provjeru očekivanih iznosa i revizijski trag. Ne prepisuje same iznose, drugačije referentne datume, nepotvrđene zapise niti arhivu. Kasnije se cijene i mjere mogu uređivati kroz Katalog > Sidrene cijene, uz razlog promjene; potvrđeni bazni datum ostaje sačuvan. Potom objavite novi CSV/XML par. Ponovno izvršavanje SQL-a ne prepisuje ručno uređene mjere niti ponavlja revizijski zapis.
 
 ## Masovni CSV uvoz
 
@@ -25,18 +29,22 @@ Podržani su `;` i `,` razdjelnik te UTF-8 BOM. Obvezni stupci:
 - `anchor_price` ili `gross_price` (bruto sidrena cijena);
 - `reference_date` u obliku `YYYY-MM-DD`.
 
-Opcionalni stupci su `net_price`, `status` (`confirmed`, `pending`, `disabled`) i `reason`. Ako je zadano više identifikatora, svi moraju upućivati na isti jednoznačni proizvod. Aktivni proizvod mora imati status `confirmed`.
+Stupci `unit` (`kg` ili `l`) i `package_quantity` (količina pakiranja, npr. `5` ili `0,75`) potrebni su za potvrđene zapise; kod ažuriranja mogu se izostaviti ako postojeći zapis već ima valjanu mjeru. Opcionalni stupci su `net_price`, `status` (`confirmed`, `pending`, `disabled`) i `reason`. Ako je zadano više identifikatora, svi moraju upućivati na isti jednoznačni proizvod. Aktivni proizvod mora imati status `confirmed`.
 
 Primjer:
 
 ```csv
-sku;anchor_price;reference_date;status;reason
-RZ-001;12,90;2026-09-30;confirmed;Početni provjereni unos
+sku;anchor_price;reference_date;unit;package_quantity;status;reason
+RZ-001;12,90;2025-05-02;kg;5;confirmed;Cijena provjerena prema povijesnom cjeniku
 ```
 
 ## CSV/XML objava i javni URL-ovi
 
-Svaka objava proizvodi atomski par CSV + XML datoteka s istim skupom proizvoda i SHA-256 kontrolnim zbrojevima. Sadrže ID, naziv, model/SKU, proizvođača, redovnu i aktualnu cijenu, sidrenu cijenu i datum, barkod, raspoloživost, količinu, status zalihe i valutu. XML koristi `brand="OPGRUZIC"` i `location="WEB"`.
+Svaka objava proizvodi atomski par CSV + XML datoteka s istim skupom proizvoda i SHA-256 kontrolnim zbrojevima. Sadrže ID, naziv, model/SKU, proizvođača, jedinicu i količinu pakiranja, aktualnu i sidrenu cijenu po jedinici, redovnu i aktualnu cijenu pakiranja, sidrenu cijenu i datum, barkod, raspoloživost, količinu zalihe, status zalihe i valutu. XML koristi `unit`, `packageQuantity`, `unitPrice`, `anchorUnitPrice`, `brand="OPGRUZIC"` i `location="WEB"`. Aktualna jedinična cijena uključuje trenutačnu akciju/popust; sidrena cijena dolazi iz potvrđenog povijesnog zapisa.
+
+U postavkama modula uređuju se oblik objekta (`webshop`), adresa i oznaka (`WEB`). Konzervativno se kao zadana adresa koristi poslovna adresa iz postavki trgovine; domena je rezervni podatak samo kad poslovna adresa nije unesena. Naziv novih datoteka je `webshop_ADRESA_web_000004_20261002_070000.csv` / `.xml`. ASCII normalizacija uklanja znakove nesigurne za nazive datoteka. Broj pohrane raste po prodajnom mjestu, datum/vrijeme su u Europe/Zagreb zoni. Stare arhivske datoteke ne preimenuju se i ne mijenjaju se njihovi kontrolni zbrojevi.
+
+Službeni izvori: [NN 75/2025, točka VI (prehrana, 2. 5. 2025.)](https://narodne-novine.nn.hr/clanci/sluzbeni/2025_05_75_979.html), [NN 101/2026-1212, točka IV (zadržavanje starog datuma)](https://narodne-novine.nn.hr/clanci/sluzbeni/2026_09_101_1212.html), [NN 101/2026-1213, točke III/VI (sadržaj i naziv datoteke)](https://narodne-novine.nn.hr/clanci/sluzbeni/2026_09_101_1213.html). Izmjene [NN 110/2026-1309](https://narodne-novine.nn.hr/clanci/sluzbeni/2026_09_110_1309.html) i [1310](https://narodne-novine.nn.hr/clanci/sluzbeni/2026_09_110_1310.html) odgađaju početak novih odluka do 17. 11. 2026.; ne mijenjaju referentni datum za prehranu ni elemente cjenika. Propis ne zadaje jedini točan format vremenske oznake; `Ymd_His` je odabrani strojno čitljivi format.
 
 Stabilni javni URL-ovi uvijek vraćaju najnoviju valjanu objavu:
 
