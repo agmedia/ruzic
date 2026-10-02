@@ -53,6 +53,14 @@ Stabilni javni URL-ovi uvijek vraćaju najnoviju valjanu objavu:
 
 Javna stranica `index.php?route=information/price_list` nudi oba formata za svaku objavu tijekom 30 dana. Starije datoteke automatski se brišu i zapis dobiva status `expired`.
 
+## Ispravak već objavljenih cjenika
+
+Nakon nadogradnje za mjere, u phpMyAdminu pokrenite [SQL za ispravke arhive](../sql/2026_10_02_anchor_price_archive_corrections.sql). Povucite novi kod i otvorite **Katalog > Sidrene cijene > Ispravi postojeće cjenike**. Gumb pravi zaseban CSV/XML par za svaku izvornu objavu dostupnu u 30-dnevnoj arhivi. Ponovni klik ne umnožava već napravljene ispravke. Nije potreban terminal niti izmjena cron zadatka.
+
+Izvorni CSV/XML i kontrolni zbrojevi ostaju netaknuti. Ispravljene kopije zadržavaju izvorne aktualne/redovne/akcijske/sidrene iznose, barkodove, dostupnost i zalihe. Dodaju/ispravljaju jedinicu i količinu pakiranja te iz tih arhivskih iznosa računaju €/kg ili €/l. Povijesni datum mijenja se samo uz potvrđeni iznos koji odgovara arhivskom zapisu. Mjere koje već postoje u arhivi imaju prednost pred današnjim mjerama; za stare zapise bez mjere koriste se potvrđeni podaci modula. Ako se CSV i XML ne slažu, nedostaje potvrda ili je kontrolni zbroj pogrešan, ispravak se zaustavlja, bez prepisivanja izvornika.
+
+Naziv kopije ima novi broj pohrane i stvarno vrijeme ispravka. CSV sadrži podatke o izvornoj objavi i ispravku; XML čuva izvorni `generatedAt` i dodaje `sourcePublicationId`, `sourcePublishedAt`, `correctedAt`. Arhiva jasno označava „Ispravak objave #…”. Kopije se čuvaju 30 dana od ispravka. Ispravak starog dana neće zamijeniti noviju dnevnu objavu na stabilnom URL-u najnovijeg cjenika. Ispravci nisu zamjena za redovnu dnevnu objavu.
+
 ## cPanel Cron Jobs
 
 Admin modul prikazuje obični cron URL, tajni ključ i gotovi **cPanel cron URL s ključem**. U cPanel Cron Jobs GUI postavite dnevni poziv prije 08:00 po Europe/Zagreb vremenu, primjerice:

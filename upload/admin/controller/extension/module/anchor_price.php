@@ -69,6 +69,8 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 
 			$data['missing_count'] = $this->model_extension_module_anchor_price->getMissingProductCount(true);
 			foreach ($this->model_extension_module_anchor_price->getPublications(20) as $publication) {
+				$corrects_publication_id = !empty($publication['corrects_publication_id']) ? (int)$publication['corrects_publication_id'] : 0;
+				$source_published_at = !empty($publication['source_published_at']) ? $publication['source_published_at'] : '';
 				$data['publications'][] = array(
 					'publication_id' => (int)$publication['publication_id'],
 					'location_code' => $publication['location_code'],
@@ -78,6 +80,9 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 					'status' => $publication['status'],
 					'product_count' => (int)$publication['product_count'],
 					'published_at' => $publication['published_at'],
+					'corrects_publication_id' => $corrects_publication_id,
+					'source_published_at' => $source_published_at,
+					'correction_note' => $corrects_publication_id && $source_published_at ? sprintf($this->language->get('text_archive_correction'), $corrects_publication_id, $source_published_at) : '',
 						'download_csv' => $publication['status'] === 'published' ? $this->url->link('extension/module/anchor_price/download', 'user_token=' . $this->session->data['user_token'] . '&publication_id=' . (int)$publication['publication_id'] . '&format=csv', true) : '',
 						'download_xml' => $publication['status'] === 'published' ? $this->url->link('extension/module/anchor_price/download', 'user_token=' . $this->session->data['user_token'] . '&publication_id=' . (int)$publication['publication_id'] . '&format=xml', true) : ''
 				);
@@ -106,6 +111,7 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 		$data['filter_action'] = $this->url->link('extension/module/anchor_price', 'user_token=' . $this->session->data['user_token'], true);
 		$data['sync_action'] = $this->url->link('extension/module/anchor_price/sync', 'user_token=' . $this->session->data['user_token'], true);
 		$data['publish_action'] = $this->url->link('extension/module/anchor_price/publish', 'user_token=' . $this->session->data['user_token'], true);
+		$data['repair_archive_action'] = $this->url->link('extension/module/anchor_price/repairArchive', 'user_token=' . $this->session->data['user_token'], true);
 		$data['import_action'] = $this->url->link('extension/module/anchor_price/import', 'user_token=' . $this->session->data['user_token'], true);
 		$data['settings_action'] = $this->url->link('extension/module/anchor_price/settings', 'user_token=' . $this->session->data['user_token'], true);
 		$data['cancel'] = $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=module', true);
@@ -310,6 +316,24 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 					$files[] = $publication['filename'] . ' + ' . $publication['xml_filename'];
 				}
 				$this->session->data['success'] = sprintf($this->language->get('text_success_publish'), implode(', ', $files));
+			} catch (Exception $exception) {
+				$this->session->data['error'] = $exception->getMessage();
+			}
+		}
+		$this->response->redirect($this->url->link('extension/module/anchor_price', 'user_token=' . $this->session->data['user_token'], true));
+	}
+
+	public function repairArchive() {
+		$this->load->language('extension/module/anchor_price');
+		if (!$this->config->get('module_anchor_price_status')) {
+			$this->session->data['error'] = $this->language->get('error_not_installed');
+		} elseif ($this->request->server['REQUEST_METHOD'] !== 'POST' || !$this->user->hasPermission('modify', 'extension/module/anchor_price')) {
+			$this->session->data['error'] = $this->language->get('error_permission');
+		} else {
+			try {
+				$this->load->model('extension/module/anchor_price');
+				$result = $this->model_extension_module_anchor_price->repairArchivedPublications($this->userId());
+				$this->session->data['success'] = sprintf($this->language->get('text_success_repair_archive'), (int)$result['created'], (int)$result['existing']);
 			} catch (Exception $exception) {
 				$this->session->data['error'] = $exception->getMessage();
 			}

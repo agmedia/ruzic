@@ -154,10 +154,15 @@
 
     <div class="panel panel-default">
       <div class="panel-heading"><h3 class="panel-title"><i class="fa fa-archive"></i> {{ text_publications }}</h3></div>
-      <div class="panel-body"><div class="table-responsive"><table class="table table-bordered table-hover">
+      <div class="panel-body">
+        <p>{{ help_repair_archive }}</p>
+        <form action="{{ repair_archive_action }}" method="post" style="margin-bottom:15px">
+          <button type="submit" class="btn btn-warning"><i class="fa fa-history"></i> {{ button_repair_archive }}</button>
+        </form>
+        <div class="table-responsive"><table class="table table-bordered table-hover">
 	        <thead><tr><td>{{ column_sequence }}</td><td>{{ column_filename }}</td><td>{{ column_status }}</td><td class="text-right">{{ column_products }}</td><td>{{ column_published }}</td><td class="text-right">{{ column_action }}</td></tr></thead>
 	        <tbody>{% if publications %}{% for publication in publications %}<tr>
-		          <td>{{ publication.sequence_no }}</td><td>{{ publication.filename|escape }}{% if publication.xml_filename %}<br>{{ publication.xml_filename|escape }}{% endif %}</td><td>{{ publication.status|escape }}</td><td class="text-right">{{ publication.product_count }}</td><td>{{ publication.published_at|escape }}</td><td class="text-right">{% if publication.download_csv %}<a href="{{ publication.download_csv }}" title="CSV" class="btn btn-primary btn-sm">CSV</a> <a href="{{ publication.download_xml }}" title="XML" class="btn btn-default btn-sm">XML</a>{% endif %}</td>
+		          <td>{{ publication.sequence_no }}</td><td>{{ publication.filename|escape }}{% if publication.xml_filename %}<br>{{ publication.xml_filename|escape }}{% endif %}{% if publication.correction_note %}<br><small class="text-muted"><i class="fa fa-history" aria-hidden="true"></i> {{ publication.correction_note|escape }}</small>{% endif %}</td><td>{{ publication.status|escape }}</td><td class="text-right">{{ publication.product_count }}</td><td>{{ publication.published_at|escape }}</td><td class="text-right">{% if publication.download_csv %}<a href="{{ publication.download_csv }}" title="CSV" class="btn btn-primary btn-sm">CSV</a> <a href="{{ publication.download_xml }}" title="XML" class="btn btn-default btn-sm">XML</a>{% endif %}</td>
 	        </tr>{% endfor %}{% else %}<tr><td colspan="6" class="text-center">{{ text_no_results }}</td></tr>{% endif %}</tbody>
       </table></div></div>
     </div>

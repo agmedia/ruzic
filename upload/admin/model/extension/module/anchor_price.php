@@ -8,6 +8,7 @@ class ModelExtensionModuleAnchorPrice extends Model {
 
 	private $catalog_language_id;
 	private $measure_columns_exist;
+	private $archive_correction_columns_exist;
 
 	public function install() {
 		$this->db->query("CREATE TABLE IF NOT EXISTS `" . DB_PREFIX . "anchor_price` (
@@ -78,6 +79,12 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		$this->ensurePublicationColumn('xml_filename', "VARCHAR(255) NOT NULL DEFAULT '' AFTER `relative_path`");
 		$this->ensurePublicationColumn('xml_relative_path', "VARCHAR(255) NOT NULL DEFAULT '' AFTER `xml_filename`");
 		$this->ensurePublicationColumn('xml_checksum_sha256', "CHAR(64) NOT NULL DEFAULT '' AFTER `checksum_sha256`");
+		$this->ensurePublicationColumn('corrects_publication_id', "INT UNSIGNED NULL DEFAULT NULL AFTER `publication_id`");
+		$this->ensurePublicationColumn('source_published_at', "DATETIME NULL DEFAULT NULL AFTER `published_at`");
+		$correction_index = $this->db->query("SHOW INDEX FROM `" . DB_PREFIX . "anchor_price_publication` WHERE Key_name = 'store_correction'");
+		if (!$correction_index->num_rows) {
+			$this->db->query("ALTER TABLE `" . DB_PREFIX . "anchor_price_publication` ADD UNIQUE KEY `store_correction` (`store_id`, `corrects_publication_id`)");
+		}
 		$this->ensureAnchorColumn('unit', "VARCHAR(16) NOT NULL DEFAULT '' AFTER `gross_price`");
 		$this->ensureAnchorColumn('package_quantity', "DECIMAL(15,6) NOT NULL DEFAULT '0.000000' AFTER `unit`");
 
@@ -864,6 +871,87 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		}
 	}
 
+	public function repairArchivedPublications($created_by = 0) {
+		require_once DIR_SYSTEM . 'library/anchor_price_archive.php';
+		if (!$this->archiveCorrectionColumnsExist() || !$this->measureColumnsExist()) {
+			throw new Exception('Najprije pokrenite SQL nadogradnje za jedinice mjere i ispravke arhive.');
+		}
+		$lock_name = 'anchor_price_publication_' . self::STORE_ID;
+		$this->acquirePublicationLock($lock_name);
+		$result = array('created' => 0, 'existing' => 0);
+		try {
+			$measures = $dates = array();
+			$anchors = $this->db->query("SELECT * FROM `" . DB_PREFIX . "anchor_price` WHERE store_id = '" . self::STORE_ID . "' AND verification_status = 'confirmed'")->rows;
+			foreach ($anchors as $anchor) {
+				$id = (int)$anchor['product_id'];
+				$measures[$id] = array('unit' => $anchor['unit'], 'package_quantity' => $anchor['package_quantity']);
+				$dates[$id] = array('reference_date' => $anchor['reference_date'], 'gross_price' => $anchor['gross_price']);
+			}
+			$sources = $this->db->query("SELECT * FROM `" . DB_PREFIX . "anchor_price_publication` WHERE store_id = '" . self::STORE_ID . "' AND location_code = '" . self::PUBLICATION_LOCATION_CODE . "' AND status = 'published' AND corrects_publication_id IS NULL AND published_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) ORDER BY publication_id ASC")->rows;
+			foreach ($sources as $source) {
+				$source_id = (int)$source['publication_id'];
+				$existing = $this->db->query("SELECT * FROM `" . DB_PREFIX . "anchor_price_publication` WHERE store_id = '" . self::STORE_ID . "' AND corrects_publication_id = '" . $source_id . "' LIMIT 1")->row;
+				if ($existing) {
+					if ($existing['status'] !== 'published' || !$this->publicationFilesAreValid($existing)) {
+						throw new Exception('Postojeći ispravak objave #' . $source_id . ' nije valjan. Izvorne datoteke nisu promijenjene.');
+					}
+					$result['existing']++;
+					continue;
+				}
+				if (!$this->publicationFilesAreValid($source)) {
+					throw new Exception('Izvorna objava #' . $source_id . ' ne prolazi provjeru datoteka. Ispravak je zaustavljen.');
+				}
+				$now = new DateTime('now', new DateTimeZone('Europe/Zagreb'));
+				$correction = AnchorPriceArchive::correct(file_get_contents($this->getPublicationPath($source, 'csv')), file_get_contents($this->getPublicationPath($source, 'xml')), $measures, $dates, array('source_publication_id' => $source_id, 'source_published_at' => $source['published_at'], 'corrected_at' => $now->format(DateTime::ATOM)));
+				if ((int)$source['product_count'] !== $correction['product_count']) {
+					throw new Exception('Broj artikala izvorne objave #' . $source_id . ' nije usklađen.');
+				}
+				$batch_key = $this->createBatchKey();
+				$reservation = $this->reservePublication(self::STORE_ID, self::PUBLICATION_LOCATION_CODE, (int)$created_by, $now, $batch_key);
+				$id = (int)$reservation['publication_id'];
+				$temporary_files = array();
+				try {
+					$publication = $this->getPublication($id);
+					$checksums = array();
+					foreach (array('csv', 'xml') as $format) {
+						$filename = $format === 'xml' ? $reservation['xml_filename'] : $reservation['filename'];
+						$path = rtrim(DIR_DOWNLOAD, '/\\') . DIRECTORY_SEPARATOR . 'anchor_price' . DIRECTORY_SEPARATOR . basename($filename);
+						$temp = tempnam(dirname($path), '.anchor-correction-');
+						if ($temp === false) { throw new Exception('Nije moguće pripremiti ispravak.'); }
+						$temporary_files[] = $temp;
+						if (file_put_contents($temp, $correction[$format]) !== strlen($correction[$format]) || !rename($temp, $path)) {
+							throw new Exception('Nije moguće zapisati ispravljeni ' . strtoupper($format) . '.');
+						}
+						@chmod($path, 0640);
+						$checksums[$format] = hash_file('sha256', $path);
+						if ($checksums[$format] === false) { throw new Exception('Nije moguće provjeriti ispravak.'); }
+					}
+					$this->db->query("UPDATE `" . DB_PREFIX . "anchor_price_publication` SET status = 'staged', product_count = '" . (int)$correction['product_count'] . "', checksum_sha256 = '" . $this->db->escape($checksums['csv']) . "', xml_checksum_sha256 = '" . $this->db->escape($checksums['xml']) . "', corrects_publication_id = '" . $source_id . "', source_published_at = '" . $this->db->escape($source['published_at']) . "' WHERE publication_id = '" . $id . "'");
+					$this->publishPublication(self::STORE_ID, $this->getPublication($id), $now, $batch_key);
+					$result['created']++;
+				} catch (Exception $exception) {
+					$this->invalidatePublication($id, 'Ispravak nije dovršen: ' . $exception->getMessage());
+					// Release the unique source link for an explicit retry; originals remain untouched.
+					$this->db->query("UPDATE `" . DB_PREFIX . "anchor_price_publication` SET corrects_publication_id = NULL WHERE publication_id = '" . $id . "' AND status = 'failed'");
+					throw $exception;
+				} finally {
+					foreach ($temporary_files as $temp) { if (is_file($temp)) { @unlink($temp); } }
+				}
+			}
+			return $result;
+		} finally {
+			$this->releasePublicationLock($lock_name);
+		}
+	}
+
+	private function archiveCorrectionColumnsExist() {
+		if ($this->archive_correction_columns_exist === null) {
+			$columns = $this->db->query("SHOW COLUMNS FROM `" . DB_PREFIX . "anchor_price_publication` WHERE Field IN ('corrects_publication_id', 'source_published_at')");
+			$this->archive_correction_columns_exist = $columns->num_rows === 2;
+		}
+		return $this->archive_correction_columns_exist;
+	}
+
 	public function generatePublicationCsv($store_id = 0, $created_by = 0, $location_code = 'WEB', $force = false) {
 		$store_id = (int)$store_id;
 		$location_code = strtoupper(trim($location_code));
@@ -1169,7 +1257,8 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		$start->setTime(0, 0, 0);
 		$end = clone $start;
 		$end->modify('+1 day');
-		$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "anchor_price_publication` WHERE store_id = '" . (int)$store_id . "' AND location_code = '" . $this->db->escape($location_code) . "' AND status = 'published' AND published_at >= '" . $this->db->escape($start->format('Y-m-d H:i:s')) . "' AND published_at < '" . $this->db->escape($end->format('Y-m-d H:i:s')) . "' ORDER BY publication_id DESC LIMIT 1");
+		$correction_filter = $this->archiveCorrectionColumnsExist() ? ' AND corrects_publication_id IS NULL' : '';
+		$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "anchor_price_publication` WHERE store_id = '" . (int)$store_id . "' AND location_code = '" . $this->db->escape($location_code) . "' AND status = 'published'" . $correction_filter . " AND published_at >= '" . $this->db->escape($start->format('Y-m-d H:i:s')) . "' AND published_at < '" . $this->db->escape($end->format('Y-m-d H:i:s')) . "' ORDER BY publication_id DESC LIMIT 1");
 
 		if (!$query->num_rows) {
 			return array();
@@ -1471,7 +1560,8 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		$start->setTime(0, 0, 0);
 		$end = clone $start;
 		$end->modify('+1 day');
-		$query = $this->db->query("SELECT DISTINCT location_code FROM `" . DB_PREFIX . "anchor_price_publication` WHERE store_id = '" . self::STORE_ID . "' AND status = 'published' AND published_at >= '" . $this->db->escape($start->format('Y-m-d H:i:s')) . "' AND published_at < '" . $this->db->escape($end->format('Y-m-d H:i:s')) . "'");
+		$correction_filter = $this->archiveCorrectionColumnsExist() ? ' AND corrects_publication_id IS NULL' : '';
+		$query = $this->db->query("SELECT DISTINCT location_code FROM `" . DB_PREFIX . "anchor_price_publication` WHERE store_id = '" . self::STORE_ID . "' AND status = 'published'" . $correction_filter . " AND published_at >= '" . $this->db->escape($start->format('Y-m-d H:i:s')) . "' AND published_at < '" . $this->db->escape($end->format('Y-m-d H:i:s')) . "'");
 		$published = array();
 		foreach ($query->rows as $row) {
 			$published[] = $row['location_code'];

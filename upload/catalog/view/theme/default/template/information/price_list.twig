@@ -23,7 +23,7 @@
           <thead><tr><th>{{ column_location }}</th><th>{{ column_published }}</th><th>{{ column_products }}</th><th>{{ column_file }}</th></tr></thead>
           <tbody>
             {% for publication in publications %}
-	            <tr><td>{{ publication.location_name|escape }}</td><td>{{ publication.published|escape }}</td><td>{{ publication.product_count }}</td><td><a class="btn btn-primary btn-sm" href="{{ publication.download_csv }}" rel="nofollow">CSV</a> <a class="btn btn-default btn-sm" href="{{ publication.download_xml }}" rel="nofollow">XML</a><br><small>{{ publication.filename|escape }}<br>{{ publication.xml_filename|escape }}</small></td></tr>
+	            <tr><td>{{ publication.location_name|escape }}</td><td>{{ publication.published|escape }}</td><td>{{ publication.product_count }}</td><td><a class="btn btn-primary btn-sm" href="{{ publication.download_csv }}" rel="nofollow">CSV</a> <a class="btn btn-default btn-sm" href="{{ publication.download_xml }}" rel="nofollow">XML</a><br><small>{{ publication.filename|escape }}<br>{{ publication.xml_filename|escape }}</small>{% if publication.correction_note %}<br><small class="text-muted"><i class="fa fa-history" aria-hidden="true"></i> {{ publication.correction_note|escape }}</small>{% endif %}</td></tr>
             {% endfor %}
           </tbody>
         </table>

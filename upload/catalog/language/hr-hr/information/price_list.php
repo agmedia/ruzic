@@ -4,6 +4,7 @@ $_['text_home']          = 'Početna';
 $_['text_intro']         = 'Dnevni digitalni cjenik web trgovine dostupan je u CSV i XML formatu. Objave prethodnih 30 dana ostaju dostupne u arhivi.';
 $_['text_empty']         = 'Trenutačno nema objavljenih cjenika.';
 $_['text_location']      = 'OPG Ružić web trgovina';
+$_['text_archive_correction'] = 'Ispravak objave #%s; izvorno objavljeno %s';
 $_['column_location']    = 'Cjenik';
 $_['column_published']   = 'Vrijeme objave';
 $_['column_products']    = 'Broj artikala';

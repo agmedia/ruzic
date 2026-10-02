@@ -9,6 +9,7 @@ class ModelExtensionModuleAnchorPrice extends Model {
 	private $publication_language_id;
 	private $public_tax;
 	private $default_customer_group_id;
+	private $archive_correction_columns_exist;
 
 	public function tableExists() {
 		if ($this->table_exists !== null) {
@@ -277,7 +278,8 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		$start->setTime(0, 0, 0);
 		$end = clone $start;
 		$end->modify('+1 day');
-		$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "anchor_price_publication` WHERE store_id = '" . (int)$store_id . "' AND location_code = '" . $this->db->escape($location_code) . "' AND status = 'published' AND published_at >= '" . $this->db->escape($start->format('Y-m-d H:i:s')) . "' AND published_at < '" . $this->db->escape($end->format('Y-m-d H:i:s')) . "' ORDER BY publication_id DESC LIMIT 1");
+		$correction_filter = $this->archiveCorrectionColumnsExist() ? ' AND corrects_publication_id IS NULL' : '';
+		$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "anchor_price_publication` WHERE store_id = '" . (int)$store_id . "' AND location_code = '" . $this->db->escape($location_code) . "' AND status = 'published'" . $correction_filter . " AND published_at >= '" . $this->db->escape($start->format('Y-m-d H:i:s')) . "' AND published_at < '" . $this->db->escape($end->format('Y-m-d H:i:s')) . "' ORDER BY publication_id DESC LIMIT 1");
 
 		if (!$query->num_rows) {
 			return array();
@@ -630,8 +632,15 @@ class ModelExtensionModuleAnchorPrice extends Model {
 
 	public function getLatestPublication($format = 'csv') {
 		$format = strtolower((string)$format) === 'xml' ? 'xml' : 'csv';
-
-		foreach ($this->getPublications() as $publication) {
+		$publications = $this->getPublications();
+		// A correction of an older snapshot must not become today's price list.
+		usort($publications, function ($left, $right) {
+			$left_time = !empty($left['source_published_at']) ? $left['source_published_at'] : $left['published_at'];
+			$right_time = !empty($right['source_published_at']) ? $right['source_published_at'] : $right['published_at'];
+			$comparison = strcmp($right_time, $left_time);
+			return $comparison !== 0 ? $comparison : (int)$right['publication_id'] - (int)$left['publication_id'];
+		});
+		foreach ($publications as $publication) {
 			if ($this->publicationFileIsValid($publication, false, $format)) {
 				return $publication;
 			}
@@ -719,6 +728,14 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		$query = $this->db->query("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" . $this->db->escape(DB_DATABASE) . "' AND TABLE_NAME = '" . $this->db->escape(DB_PREFIX . "anchor_price_publication") . "' LIMIT 1");
 
 		return (bool)$query->num_rows;
+	}
+
+	private function archiveCorrectionColumnsExist() {
+		if ($this->archive_correction_columns_exist === null) {
+			$columns = $this->db->query("SHOW COLUMNS FROM `" . DB_PREFIX . "anchor_price_publication` WHERE Field IN ('corrects_publication_id', 'source_published_at')");
+			$this->archive_correction_columns_exist = $columns->num_rows === 2;
+		}
+		return $this->archive_correction_columns_exist;
 	}
 
 	private function getPublicationLanguageId() {
