@@ -461,10 +461,8 @@ class ModelExtensionModuleAnchorPrice extends Model {
 			throw new Exception('Referentni datum mora biti između baznog datuma i današnjeg datuma.');
 		}
 		// date_added can reflect a migration rather than the first sale.
-		// Historical dates are supplied and justified explicitly by the administrator.
-		if ($before['verification_status'] === 'confirmed' && strpos($before['rule_code'], 'baseline_') === 0 && $reference_date !== $before['reference_date']) {
-			throw new Exception('A confirmed baseline anchor must keep its audited reference date.');
-		}
+		// Corrections, including confirmed dates, are justified by the required reason
+		// and recorded together with the previous date in the transaction below.
 		$rule_code = $reference_date === $baseline_date ? 'baseline_configured' : 'first_listing';
 		$unit = isset($data['unit']) ? strtolower(trim((string)$data['unit'])) : '';
 		$package_quantity = isset($data['package_quantity']) ? $data['package_quantity'] : 0;

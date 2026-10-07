@@ -211,8 +211,10 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 		$data['gross_price'] = isset($this->request->post['gross_price']) ? $this->request->post['gross_price'] : $anchor['gross_price'];
 		$data['unit'] = isset($this->request->post['unit']) ? $this->request->post['unit'] : (isset($anchor['unit']) ? $anchor['unit'] : '');
 		$data['package_quantity'] = isset($this->request->post['package_quantity']) ? $this->request->post['package_quantity'] : (isset($anchor['package_quantity']) ? $anchor['package_quantity'] : '');
+		$data['reference_date_min'] = $this->model_extension_module_anchor_price->getReferenceDate();
+		$data['reference_date_max'] = (new DateTime('now', new DateTimeZone('Europe/Zagreb')))->format('Y-m-d');
 		$data['product_date_warning'] = '';
-		if (isset($anchor['product_date_added']) && substr($anchor['product_date_added'], 0, 10) > $this->model_extension_module_anchor_price->getReferenceDate()) {
+		if (isset($anchor['product_date_added']) && substr($anchor['product_date_added'], 0, 10) > $data['reference_date_min']) {
 			$data['product_date_warning'] = sprintf($this->language->get('warning_product_added'), substr($anchor['product_date_added'], 0, 10));
 		}
 		$data['reference_date'] = isset($this->request->post['reference_date']) ? $this->request->post['reference_date'] : $anchor['reference_date'];
@@ -514,6 +516,12 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 		$date = isset($this->request->post['reference_date']) ? trim($this->request->post['reference_date']) : '';
 		if (!$this->validDate($date)) {
 			$this->error['reference_date'] = $this->language->get('error_reference_date');
+		} else {
+			$baseline_date = $this->model_extension_module_anchor_price->getReferenceDate();
+			$today = (new DateTime('now', new DateTimeZone('Europe/Zagreb')))->format('Y-m-d');
+			if ($date < $baseline_date || $date > $today) {
+				$this->error['reference_date'] = sprintf($this->language->get('error_reference_date_range'), $baseline_date, $today);
+			}
 		}
 
 		$status = isset($this->request->post['verification_status']) ? $this->request->post['verification_status'] : '';

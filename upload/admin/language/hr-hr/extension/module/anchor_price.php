@@ -93,6 +93,7 @@ $_['button_import'] = 'Provjeri / uvezi CSV';
 // Pomoć
 $_['help_reason'] = 'Obvezno. Razlog se trajno čuva u revizijskom tragu.';
 $_['help_gross_price'] = 'Sidrena cijena cijelog pakiranja s porezom na referentni datum (za bazne prehrambene artikle 2. 5. 2025.). Možete je naknadno ispraviti uz obvezan razlog, ali ne prepisivati današnjom cijenom.';
+$_['help_reference_date'] = 'Datum možete ispraviti i za potvrđeni zapis uz obvezan razlog promjene. Za prehrambene proizvode bazni datum je 2. 5. 2025.; za kasnije uvedene proizvode koristi se datum prve prodaje. Cijena mora odgovarati odabranom povijesnom datumu. Stari i novi datum čuvaju se u revizijskom tragu; već objavljeni cjenici ne mijenjaju se.';
 $_['help_package_quantity'] = 'Neto količina u odabranoj jedinici, npr. 5 za paket od 5 kg jabuka ili 3 za 3 l soka. Jedinična cijena računa se dijeljenjem cijene pakiranja tom količinom; nije dostavna težina.';
 $_['help_publication_filename'] = 'Naziv datoteke: oblik_adresa_oznaka_brojpohrane_datum_vrijeme.csv/xml. Zadano: webshop, adresa objekta i WEB. Oblik i oznaka koriste slova, brojke, crticu ili podvlaku; adresa se pretvara u siguran naziv.';
 $_['help_repair_archive'] = 'Kreira nove CSV/XML ispravke postojećih cjenika s datumom 2. 5. 2025., jediničnim cijenama po kg/l i usklađenim nazivima datoteka. Cijene i zalihe uzimaju se iz izvorne objave, ne iz današnjeg stanja. Izvornici se ne mijenjaju; ponovni klik ne stvara duple ispravke.';
@@ -113,6 +114,7 @@ $_['error_unit'] = 'Odaberite kg ili l.';
 $_['error_package_quantity'] = 'Unesite pozitivnu količinu u pakiranju (najviše 6 decimalnih mjesta).';
 $_['error_publication_settings'] = 'Unesite oblik (1–24 slova/brojke/crtica/podvlaka), adresu (1–120 znakova bez HTML-a) i oznaku (1–16 slova/brojke/crtica/podvlaka).';
 $_['error_reference_date'] = 'Unesite ispravan datum u obliku GGGG-MM-DD.';
+$_['error_reference_date_range'] = 'Referentni datum mora biti između %s i %s.';
 $_['error_status'] = 'Odaberite ispravan status provjere.';
 $_['error_reason'] = 'Razlog mora sadržavati između 3 i 255 znakova.';
 $_['error_default_unit'] = 'Zadana jedinica mora sadržavati između 1 i 16 znakova.';

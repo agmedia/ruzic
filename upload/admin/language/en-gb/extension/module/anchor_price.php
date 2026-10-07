@@ -93,6 +93,7 @@ $_['button_import'] = 'Validate / import CSV';
 // Help
 $_['help_reason'] = 'Required. The reason is retained permanently in the audit trail.';
 $_['help_gross_price'] = 'Whole-package anchor price including tax on its reference date (2 May 2025 for baseline food products). It can be corrected later with a mandatory audit reason; do not overwrite it with today’s price.';
+$_['help_reference_date'] = 'You can correct the date of a confirmed record with a mandatory change reason. The food-product baseline is 2 May 2025; products introduced later use their first sale date. The price must match the selected historical date. The old and new dates remain in the audit trail; published price lists are not changed.';
 $_['help_package_quantity'] = 'Net quantity in the selected unit, e.g. 5 for a 5 kg apple package or 3 for 3 l of juice. Unit price is package price divided by this quantity, not shipping weight.';
 $_['help_publication_filename'] = 'File name: format_address_code_storagenumber_date_time.csv/xml. Defaults: webshop, outlet address and WEB. Format/code use letters, digits, hyphens or underscores; the address is converted to a safe file name.';
 $_['help_repair_archive'] = 'Creates new CSV/XML corrections of existing price lists with the 2 May 2025 baseline, kg/l unit prices and compliant filenames. Prices and stock are taken from the original publication, not today’s data. Originals are unchanged; running again does not duplicate corrections.';
@@ -113,6 +114,7 @@ $_['error_unit'] = 'Choose kg or l.';
 $_['error_package_quantity'] = 'Enter a positive package quantity (at most 6 decimal places).';
 $_['error_publication_settings'] = 'Enter format (1–24 letters/digits/hyphens/underscores), address (1–120 characters without HTML) and code (1–16 letters/digits/hyphens/underscores).';
 $_['error_reference_date'] = 'Enter a valid date in YYYY-MM-DD format.';
+$_['error_reference_date_range'] = 'The reference date must be between %s and %s.';
 $_['error_status'] = 'Select a valid verification status.';
 $_['error_reason'] = 'The reason must contain between 3 and 255 characters.';
 $_['error_default_unit'] = 'The default unit must contain between 1 and 16 characters.';
