@@ -76,6 +76,10 @@
 
               <li><a href="{{ product_purchased }}" class="btn btn-info"><i class="fa fa-bar-chart" aria-hidden="true"></i> Purchased Product Report</a></li>
 
+              {% if sales_export %}
+              <li><a href="{{ sales_export }}" class="btn btn-primary"><i class="fa fa-download" aria-hidden="true"></i> {{ button_sales_export }}</a></li>
+              {% endif %}
+
           </ul>
       </div>
 

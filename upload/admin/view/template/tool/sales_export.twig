@@ -1,0 +1,34 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header"><div class="container-fluid">
+    <h1>{{ heading_title }}</h1>
+    <ul class="breadcrumb">{% for breadcrumb in breadcrumbs %}<li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>{% endfor %}</ul>
+  </div></div>
+  <div class="container-fluid">
+    <div class="panel panel-default">
+      <div class="panel-heading"><h3 class="panel-title"><i class="fa fa-download"></i> {{ text_export }}</h3></div>
+      <div class="panel-body" id="sales-export">
+        <p>{{ text_scope }}</p>
+        <p><code>order, order_product, order_option, order_total, order_history, customer, address, product</code></p>
+        <p>{{ text_instructions }}</p>
+        <p>{{ text_format }}</p>
+        <div class="alert alert-info">{{ text_live }}</div>
+        <p>{{ text_sensitive }}</p>
+        <div id="export-error" class="alert alert-danger" role="alert" style="display:none"></div>
+        <p id="export-status" role="status" aria-live="polite">{{ text_loading }}</p>
+        <p id="export-progress"></p>
+        <p id="export-created"></p>
+        <div class="table-responsive" id="export-counts" style="display:none">
+          <table class="table table-bordered"><thead><tr><th>{{ text_table }}</th><th>{{ text_rows }}</th><th>{{ button_download }}</th></tr></thead><tbody></tbody></table>
+        </div>
+        <button type="button" id="export-start" class="btn btn-primary" disabled><i class="fa fa-play"></i> {{ button_start }}</button>
+        <button type="button" id="export-resume" class="btn btn-primary" style="display:none"><i class="fa fa-play"></i> {{ button_resume }}</button>
+        <button type="button" id="export-pause" class="btn btn-default" style="display:none"><i class="fa fa-pause"></i> {{ button_pause }}</button>
+        <button type="button" id="export-delete" class="btn btn-danger" style="display:none"><i class="fa fa-trash"></i> {{ button_delete }}</button>
+        <noscript><p class="alert alert-danger">{{ text_javascript }}</p></noscript>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="application/json" id="sales-export-config">{{ export_config|raw }}</script>
+{{ footer }}

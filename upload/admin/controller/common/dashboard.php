@@ -7,6 +7,11 @@ class ControllerCommonDashboard extends Controller {
 
 		$data['user_token'] = $this->session->data['user_token'];
 
+		$data['sales_export'] = '';
+		if ($this->user->hasPermission('access', 'tool/backup') && $this->user->hasPermission('modify', 'tool/backup')) {
+			$data['sales_export'] = $this->url->link('tool/backup/sales', 'user_token=' . $this->session->data['user_token'], true);
+		}
+
 		$data['breadcrumbs'] = array();
 
         $data['shipping_manager'] = $this->url->link('extension/module/shipping_collector',
