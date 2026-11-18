@@ -8361,6 +8361,27 @@ input.otherdropdown {
 .icon-vynil:before {content: "\e92d";}
 .icon-truck:before {content: "\e92e";}
 .icon-world:before {content: "\e92f";}
+.single-product .price-wrapper > .row {
+	display: flex;
+	flex-wrap: wrap;
+}
+.single-product .price-wrapper .col-xs-5 {
+	width: auto;
+}
+.single-product .price-wrapper .col-xs-7 {
+	flex: 1 1 210px;
+}
+.single-product .price-wrapper .row .price {
+	font-size: 16px;
+}
+.single-product .price-wrapper .row .price > span:not(.price-tax) {
+	display: inline-block;
+	white-space: nowrap;
+}
+.single-product .price-wrapper .row .current-unit-price {
+	font-size: 0.875em;
+}
+
 /* Audited anchor price shown consistently on product cards and summaries. */
 .anchor-price {
 	display: block;
