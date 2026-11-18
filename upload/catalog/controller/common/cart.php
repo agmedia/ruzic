@@ -103,6 +103,7 @@ class ControllerCommonCart extends Controller {
 				'option'    => $option_data,
 				'recurring' => ($product['recurring'] ? $product['recurring']['name'] : ''),
 				'quantity'  => $product['quantity'],
+				'current_package_price' => $price !== false ? $unit_price : null,
 				'price'     => $price,
 				'total'     => $total,
 				'href'      => $this->url->link('product/product', 'product_id=' . $product['product_id'])

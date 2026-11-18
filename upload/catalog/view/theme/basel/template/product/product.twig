@@ -130,9 +130,9 @@
     {% if price %}
       <ul class="list-unstyled price">
         {% if not special %}
-        <li><span class="live-price">{{ price }}<span></li>
+        <li><span class="live-price">{{ price }}</span>{% if current_unit_price %} <span class="live-unit-price" data-product-id="{{ product_id }}">({{ current_unit_price|escape }})</span>{% endif %}</li>
         {% else %}
-        <li><span class="price-old">{{ price }} </span><span class="live-price-new">{{ special }}</span> </li>
+        <li><span class="price-old">{{ price }} </span><span class="live-price-new">{{ special }}</span>{% if current_unit_price %} <span class="live-unit-price" data-product-id="{{ product_id }}">({{ current_unit_price|escape }})</span>{% endif %} </li>
 
         <span id="special_countdown"></span>
         {% endif %}
@@ -147,7 +147,7 @@
         {% if discounts %}
         <p class="discount">
         {% for discount in discounts %}
-        <span>{{ discount.quantity }}{{ text_discount }}<i class="price">{{ discount.price }}</i></span>
+        <span>{{ discount.quantity }}{{ text_discount }}<i class="price">{{ discount.price }}{% if discount.current_unit_price %} <span class="current-unit-price">({{ discount.current_unit_price|escape }})</span>{% endif %}</i></span>
         {% endfor %}
         </p>
         {% endif %}

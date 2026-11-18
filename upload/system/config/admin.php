@@ -33,6 +33,9 @@ $_['action_default'] = 'common/dashboard';
 
 // Action Events
 $_['action_event'] = array(
+	'model/catalog/product/deleteProduct/after' => array(
+		'extension/module/anchor_price/captureProduct'
+	),
 	'controller/*/before' => array(
 		'event/language/before'
 	),

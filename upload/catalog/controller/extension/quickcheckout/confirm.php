@@ -471,6 +471,7 @@ class ControllerExtensionQuickCheckoutConfirm extends Controller {
 					'recurring'  => $recurring,
 					'quantity'   => $product['quantity'],
 					'subtract'   => $product['subtract'],
+					'current_package_price' => $this->tax->calculate($product['price'], $product['tax_class_id'], $this->config->get('config_tax')),
 					'price'      => $price,
 					'total'      => $total,
 					'href'       => $this->url->link('product/product', 'product_id=' . $product['product_id']),

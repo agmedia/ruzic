@@ -135,12 +135,12 @@
           <ul class="list-unstyled">
             {% if not special %}
             <li>
-              <h2>{{ price }}</h2>
+              <h2>{{ price }}{% if current_unit_price %} <span class="current-unit-price">({{ current_unit_price|escape }})</span>{% endif %}</h2>
             </li>
             {% else %}
             <li><span style="text-decoration: line-through;">{{ price }}</span></li>
             <li>
-              <h2>{{ special }}</h2>
+              <h2>{{ special }}{% if current_unit_price %} <span class="current-unit-price">({{ current_unit_price|escape }})</span>{% endif %}</h2>
             </li>
             {% endif %}
             {% if tax %}
@@ -155,7 +155,7 @@
               <hr>
             </li>
             {% for discount in discounts %}
-            <li>{{ discount.quantity }}{{ text_discount }}{{ discount.price }}</li>
+            <li>{{ discount.quantity }}{{ text_discount }}{{ discount.price }}{% if discount.current_unit_price %} <span class="current-unit-price">({{ discount.current_unit_price|escape }})</span>{% endif %}</li>
             {% endfor %}
             {% endif %}
           </ul>
@@ -321,8 +321,8 @@
               {% endif %}
               {% if product.price %}
               <p class="price"> {% if not product.special %}
-                {{ product.price }}
-                {% else %} <span class="price-new">{{ product.special }}</span> <span class="price-old">{{ product.price }}</span> {% endif %}
+                {{ product.price }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %}
+                {% else %} <span class="price-new">{{ product.special }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %}</span> <span class="price-old">{{ product.price }}</span> {% endif %}
                 {% if product.tax %} <span class="price-tax">{{ text_tax }} {{ product.tax }}</span> {% endif %} </p>
               {% endif %} </div>
 			  {% if product.price and product.anchor_price_text %}<div class="anchor-price anchor-price-card">{{ product.anchor_price_text|escape }}</div>{% endif %}

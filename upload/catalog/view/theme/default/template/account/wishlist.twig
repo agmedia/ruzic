@@ -43,8 +43,8 @@
             <td class="text-right">{{ product.stock }}</td>
             <td class="text-right">{% if product.price %}
               <div class="price"> {% if not product.special %}
-                {{ product.price }}
-                {% else %} <b>{{ product.special }}</b> <s>{{ product.price }}</s> {% endif %} </div>
+                {{ product.price }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %}
+                {% else %} <b>{{ product.special }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %}</b> <s>{{ product.price }}</s> {% endif %} </div>
 			  {% if product.anchor_price_text %}<div class="anchor-price">{{ product.anchor_price_text|escape }}</div>{% endif %}
               {% endif %}</td>
             <td class="text-right"><button type="button" onclick="cart.add('{{ product.product_id }}');" data-toggle="tooltip" title="{{ button_cart }}" class="btn btn-primary"><i class="fa fa-shopping-cart"></i></button>

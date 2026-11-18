@@ -48,21 +48,13 @@
 	            <div class="col-sm-3"><input type="date" name="reference_date_setting" value="{{ reference_date_setting|escape }}" id="input-reference-date-setting" class="form-control" /></div>
 	          </div>
           <div class="form-group required">
-            <label class="col-sm-2 control-label" for="input-publication-type">{{ entry_publication_type }}</label>
-            <div class="col-sm-3"><input type="text" name="publication_type" value="{{ publication_type|escape }}" id="input-publication-type" maxlength="24" class="form-control" /></div>
-          </div>
-          <div class="form-group required">
-            <label class="col-sm-2 control-label" for="input-publication-address">{{ entry_publication_address }}</label>
-            <div class="col-sm-7"><input type="text" name="publication_address" value="{{ publication_address|escape }}" id="input-publication-address" maxlength="120" class="form-control" /><p class="help-block">{{ help_publication_filename }}</p></div>
-          </div>
-          <div class="form-group required">
-            <label class="col-sm-2 control-label" for="input-publication-code">{{ entry_publication_code }}</label>
-            <div class="col-sm-3"><input type="text" name="publication_code" value="{{ publication_code|escape }}" id="input-publication-code" maxlength="16" class="form-control" /></div>
+            <label class="col-sm-2 control-label" for="input-publication-oib">{{ entry_publication_oib }}</label>
+            <div class="col-sm-7"><input type="text" name="publication_oib" value="{{ publication_oib|escape }}" id="input-publication-oib" inputmode="numeric" pattern="[0-9]{11}" maxlength="11" required class="form-control" /><p class="help-block">{{ help_publication_filename }}</p></div>
             <div class="col-sm-2"><button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> {{ button_settings }}</button></div>
           </div>
           <div class="form-group">
             <label class="col-sm-2 control-label" for="input-cron-url">{{ entry_cron_url }}</label>
-            <div class="col-sm-10"><input type="text" readonly="readonly" value="{{ cron_url|escape }}" id="input-cron-url" class="form-control" /><p class="help-block">{{ text_cron_help }}</p></div>
+            <div class="col-sm-10"><input type="text" readonly="readonly" value="{{ cron_url|escape }}" id="input-cron-url" class="form-control" /><p class="help-block">{{ text_cron_help }}</p><p><strong>{{ text_last_cron }}</strong><br>{{ last_cron|escape }}</p></div>
           </div>
 	          <div class="form-group">
 	            <label class="col-sm-2 control-label" for="input-cron-key">{{ entry_cron_key }}</label>

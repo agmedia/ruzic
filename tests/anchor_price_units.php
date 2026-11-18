@@ -21,6 +21,7 @@ if (!mkdir($temporary_directory, 0700)) {
 	throw new RuntimeException('Cannot create isolated test directory.');
 }
 define('DIR_DOWNLOAD', $temporary_directory . '/');
+define('DIR_LOGS', DIR_DOWNLOAD);
 register_shutdown_function(function () use ($temporary_directory) {
 	// Only remove files from this test's uniquely named directory.
 	$publication_directory = $temporary_directory . '/anchor_price';
@@ -32,10 +33,13 @@ register_shutdown_function(function () use ($temporary_directory) {
 		}
 		rmdir($publication_directory);
 	}
+	foreach (glob(DIR_LOGS . 'price_list_*.log') as $path) { unlink($path); }
 	rmdir($temporary_directory);
 });
 
 require DIR_SYSTEM . 'engine/model.php';
+require DIR_SYSTEM . 'engine/controller.php';
+require DIR_SYSTEM . 'library/response.php';
 require DIR_SYSTEM . 'engine/registry.php';
 require DIR_SYSTEM . 'library/config.php';
 require DIR_SYSTEM . 'library/anchor_price_unit.php';
@@ -52,35 +56,66 @@ class AnchorUnitTestTax {
 	}
 }
 
-/** Stores publication SQL in memory only; unexpected queries fail the test. */
+// Exercise the publisher's joins, updates, transactions, and retention queries in memory.
 class AnchorUnitTestDb {
-	public $publication = array('publication_id' => 1);
-	public function escape($value) {
-		return addslashes((string)$value);
+	public $pdo;
+	private $affected;
+
+	public function __construct() {
+		$this->pdo = new PDO('sqlite::memory:');
+		$this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		$this->pdo->sqliteCreateFunction('NOW', function () {
+			return (new DateTime('now', new DateTimeZone('Europe/Zagreb')))->format('Y-m-d H:i:s');
+		});
+		$this->pdo->exec("CREATE TABLE test_anchor_price_publication (publication_id INTEGER PRIMARY KEY AUTOINCREMENT, store_id INTEGER, batch_key, location_code, sequence_no INTEGER, filename, relative_path, xml_filename, xml_relative_path, status, product_count INTEGER, checksum_sha256, xml_checksum_sha256, created_by, date_added, published_at, corrects_publication_id INTEGER, source_published_at, error_message, UNIQUE(store_id, location_code, sequence_no));
+			CREATE TABLE test_product (product_id INTEGER PRIMARY KEY, model, sku, manufacturer_id INTEGER, upc, jan, isbn, ean, tax_class_id INTEGER, price NUMERIC, status INTEGER, date_available, date_added);
+			CREATE TABLE test_product_description (product_id INTEGER, language_id INTEGER, name);
+			CREATE TABLE test_product_to_store (product_id INTEGER, store_id INTEGER);
+			CREATE TABLE test_manufacturer (manufacturer_id INTEGER, name);
+			CREATE TABLE test_product_discount (product_id INTEGER, customer_group_id INTEGER, quantity INTEGER, price NUMERIC, date_start, date_end, priority INTEGER);
+			CREATE TABLE test_product_special (product_id INTEGER, customer_group_id INTEGER, price NUMERIC, date_start, date_end, priority INTEGER);
+			CREATE TABLE test_anchor_price (anchor_price_id INTEGER, product_id INTEGER, store_id INTEGER, verification_status, gross_price NUMERIC, unit, package_quantity NUMERIC, reference_date DEFAULT '2025-05-02', rule_code DEFAULT 'baseline_configured');
+			CREATE TABLE test_setting (setting_id INTEGER PRIMARY KEY, store_id INTEGER, key, value);
+			CREATE TABLE test_language (language_id INTEGER, code);
+			INSERT INTO test_setting VALUES (1,0,'config_language','hr-hr'),(2,0,'config_customer_group_id','1');
+			INSERT INTO test_language VALUES (1,'hr-hr');
+			INSERT INTO test_manufacturer VALUES (1,'Marka & Co.');");
+		foreach (productFixtures() as $p) {
+			$id = $p['product_id'];
+			$this->pdo->prepare("INSERT INTO test_product VALUES (?,?,?,1,'','','','',0,?,1,'2025-01-01','2025-01-01')")->execute(array($id, $p['model'], $p['sku'], $p['price']));
+			$this->pdo->prepare('INSERT INTO test_product_description VALUES (?,1,?)')->execute(array($id, $p['name']));
+			$this->pdo->prepare('INSERT INTO test_product_to_store VALUES (?,0)')->execute(array($id));
+			$this->pdo->prepare("INSERT INTO test_anchor_price (anchor_price_id,product_id,store_id,verification_status,gross_price,unit,package_quantity) VALUES (?,?,0,'confirmed',?,?,?)")->execute(array($id, $id, $p['gross_price'], $p['unit'], $p['package_quantity']));
+		}
+		$this->pdo->exec("INSERT INTO test_product_special VALUES (775,1,9.5,'0000-00-00','0000-00-00',1);
+			INSERT INTO test_product_discount VALUES (804,1,1,4,'0000-00-00','0000-00-00',1);
+			UPDATE test_product SET upc='001234567890',ean='4006381333931' WHERE product_id=775");
 	}
-	public function getLastId() {
-		return 1;
-	}
+
+	public function escape($value) { return str_replace("'", "''", (string)$value); }
+	public function getLastId() { return $this->pdo->lastInsertId(); }
+	public function countAffected() { return $this->affected; }
+
 	public function query($sql) {
-		if (strpos($sql, 'INFORMATION_SCHEMA.TABLES') !== false) {
-			return $this->result(array(array('TABLE_NAME' => 'test_anchor_price_publication')));
-		}
-		if (strpos($sql, 'COALESCE(MAX(sequence_no)') !== false) {
-			return $this->result(array(array('next_sequence' => 1, 'sequence_no' => 1)));
-		}
-		if (preg_match('/^(INSERT INTO|UPDATE) `test_anchor_price_publication` SET /', $sql)) {
-			preg_match_all("/([a-z_]+) = '((?:\\\\.|[^'])*)'/", preg_split('/ WHERE /', $sql, 2)[0], $matches, PREG_SET_ORDER);
-			foreach ($matches as $match) {
-				$this->publication[$match[1]] = stripslashes($match[2]);
+		if (strpos($sql, 'INFORMATION_SCHEMA.TABLES') !== false || strpos($sql, 'GET_LOCK(') !== false) {
+			$rows = array(array('acquired' => 1));
+		} elseif (strpos($sql, 'RELEASE_LOCK(') !== false) {
+			$rows = array();
+		} elseif (strpos($sql, 'SHOW COLUMNS') === 0) {
+			$rows = array(array('Field' => 'corrects_publication_id'), array('Field' => 'source_published_at'));
+		} else {
+			if (preg_match('/^INSERT INTO (`\w+`) SET (.*)$/', $sql, $matches)) {
+				$columns = $values = array();
+				foreach (explode(', ', $matches[2]) as $assignment) {
+					list($columns[], $values[]) = explode(' = ', $assignment, 2);
+				}
+				$sql = 'INSERT INTO ' . $matches[1] . ' (' . implode(',', $columns) . ') VALUES (' . implode(',', $values) . ')';
 			}
-			return $this->result(array());
+			if ($sql === 'START TRANSACTION') { $sql = 'BEGIN'; }
+			$stmt = $this->pdo->query($sql);
+			$this->affected = $stmt->rowCount();
+			$rows = $stmt->columnCount() ? $stmt->fetchAll(PDO::FETCH_ASSOC) : array();
 		}
-		if (strpos($sql, 'SELECT * FROM `test_anchor_price_publication`') === 0) {
-			return $this->result(array($this->publication));
-		}
-		throw new RuntimeException('Unexpected fixture SQL: ' . $sql);
-	}
-	private function result($rows) {
 		return (object)array('rows' => $rows, 'row' => $rows ? $rows[0] : array(), 'num_rows' => count($rows));
 	}
 }
@@ -96,12 +131,6 @@ function check($condition, $message) {
 
 function near($actual, $expected, $message) {
 	check(abs((float)$actual - (float)$expected) < 0.000001, $message);
-}
-
-function invokePrivate($model, $name, $arguments) {
-	$method = new ReflectionMethod($model, $name);
-	$method->setAccessible(true);
-	return $method->invokeArgs($model, $arguments);
 }
 
 function expectInvalid($callback, $message) {
@@ -141,13 +170,11 @@ function productFixtures() {
 	return $products;
 }
 
-function publicationFixture($mode) {
+function publicationFixture() {
 	$config = new Config();
 	foreach (array(
 		'config_store_id' => 0, 'config_currency' => 'EUR', 'config_language' => 'hr-hr',
-		'module_anchor_price_publication_type' => 'webshop',
-		'module_anchor_price_publication_address' => 'Ulica jabuka 1',
-		'module_anchor_price_publication_code' => 'WEB'
+		'module_anchor_price_status' => 1, 'config_customer_group_id' => 1
 	) as $key => $value) {
 		$config->set($key, $value);
 	}
@@ -157,95 +184,124 @@ function publicationFixture($mode) {
 	$registry->set('currency', new AnchorUnitTestCurrency());
 	$registry->set('tax', new AnchorUnitTestTax());
 	$registry->set('db', new AnchorUnitTestDb());
+	$registry->set('log', new class { public function write($message) {} });
 	$model = new ModelExtensionModuleAnchorPrice($registry);
-	if ($mode === 'catalog') {
-		$property = new ReflectionProperty($model, 'public_tax');
-		$property->setAccessible(true);
-		$property->setValue($model, new AnchorUnitTestTax());
-	}
-	return $model;
+	$property = new ReflectionProperty($model, 'public_tax');
+	if (PHP_VERSION_ID < 80100) { $property->setAccessible(true); }
+	$property->setValue($model, new AnchorUnitTestTax());
+	$registry->set('model_extension_module_anchor_price', $model);
+	$registry->set('load', new class { public function model($route) {} });
+	$registry->set('response', new Response());
+	$registry->set('request', (object)array('server' => array(), 'get' => array()));
+	return array($model, $registry);
 }
 
-function generatedRows($model, $mode) {
-	$model->config->set('module_anchor_price_publication_address', '');
-	$default_locations = array();
-	foreach (array(
-		'actual_newline' => "Bana Jelačića 74\r\nKlokočevik, 35212 Garčin",
-		'mixedcase_html' => 'Bana Jelačića 74<BR />Klokočevik, 35212 Garčin'
-	) as $format => $address) {
-		$model->config->set('config_address', $address);
-		$default_locations[$format] = invokePrivate($model, 'publicationLocation', array('WEB'));
-		check($default_locations[$format]['address'] === 'bana-jelacica-74-klokocevik-35212-garcin', $mode . ' actual default address transliterates Croatian accents: ' . $format);
-	}
-	$model->config->set('module_anchor_price_publication_address', 'Ulica jabuka 1');
-	$products = productFixtures();
-	invokePrivate($model, 'assertPublicationProducts', array($products));
-	check(true, $mode . ' complete measured fixtures can be published');
-	foreach (array('', 'kom') as $bad_unit) {
-		$invalid = $products;
-		$invalid[0]['unit'] = $bad_unit;
-		try {
-			invokePrivate($model, 'assertPublicationProducts', array($invalid));
-			check(false, $mode . ' refuses publication with missing or unsupported measure');
-		} catch (Exception $exception) {
-			check(strpos($exception->getMessage(), 'Objava je zaustavljena') !== false, $mode . ' stops invalid measure before file generation');
-		}
-	}
-	$invalid = $products;
-	$invalid[0]['package_quantity'] = 0;
-	try {
-		invokePrivate($model, 'assertPublicationProducts', array($invalid));
-		check(false, $mode . ' refuses publication with zero package quantity');
-	} catch (Exception $exception) {
-		check(strpos($exception->getMessage(), 'Objava je zaustavljena') !== false, $mode . ' stops zero quantity before dividing');
-	}
-	// Distinct sale and anchor prices expose accidental reuse of the wrong figure.
-	$products[0]['special'] = $products[0]['special_price'] = 9.5;
-	$products[1]['discount'] = $products[1]['discount_price'] = 4;
-	$now = new DateTime('2026-10-02 07:00:00', new DateTimeZone('Europe/Zagreb'));
-	$arguments = $mode === 'catalog'
-		? array('WEB', $products, $now, str_repeat('a', 32))
-		: array(0, 7, 'WEB', $products, $now, str_repeat('a', 32));
-	$result = invokePrivate($model, 'generateLocationPublication', $arguments);
-	$publication = $mode === 'catalog' ? $result['publication'] : $result;
-	check(!empty($publication['filename']), $mode . ' creates CSV metadata');
-	check($publication['filename'] === 'webshop_ulica-jabuka-1_web_000001_20261002_070000.csv', $mode . ' filename contains all required elements');
-	check($publication['xml_filename'] === str_replace('.csv', '.xml', $publication['filename']), $mode . ' CSV/XML share naming elements');
+function generatedRows($model, $registry, $mode) {
+	$controller = new ControllerExtensionModuleAnchorPrice($registry);
+	$db = $model->db->pdo;
+	$run = function () use ($model, $mode) {
+		if ($mode === 'admin') { return $model->generateDailyPublications()[0]; }
+		$result = $model->generatePublication();
+		if (!$result['success']) { throw new RuntimeException($result['error']); }
+		$web = $result['locations']['WEB'];
+		return $web['publication'] + array('existing' => $web['existing']);
+	};
+	check(PriceListFormat::filename('96162140350', 50, new DateTime('2026-11-18 07:00:59', new DateTimeZone('Europe/Zagreb'))) === '96162140350_ZA_SVA_PRODAJNA_MJESTA_ROBA_000050_20261118_0700', 'statutory filename order and minute precision');
+	$publication = $run();
+	$id = $publication['publication_id'];
+	check(PriceListFormat::isCurrentFormat($publication['filename']), 'new filename uses OIB and goods scope');
 	$csv = fopen(DIR_DOWNLOAD . $publication['relative_path'], 'rb');
-	fseek($csv, 3); // UTF-8 byte-order mark.
-	$headers = fgetcsv($csv, 0, ';', '"', '\\');
-	check(count($headers) === 22, $mode . ' CSV contains expected 22 fields');
-	$rows = array();
-	while (($row = fgetcsv($csv, 0, ';', '"', '\\')) !== false) {
-		check(count($row) === count($headers), $mode . ' CSV row field count matches header');
-		$rows[] = array_combine($headers, $row);
-	}
-	fclose($csv);
+	check(fread($csv, 3) === "\xEF\xBB\xBF", 'UTF-8 BOM');
+	$headers = fgetcsv($csv, 0, ';', '"', '');
+	check($headers === array('Naziv robe','Šifra robe','Marka robe','Neto količina','Jedinica mjere','Maloprodajna cijena (EUR) i oznaka posebnog oblika prodaje','Cijena za jedinicu mjere (EUR)','Barkod','EAN barkod','Bazna cijena (EUR)'), 'exact CSV field order');
 	$xml = simplexml_load_file(DIR_DOWNLOAD . $publication['xml_relative_path']);
-	check($xml !== false && count($xml->product) === 6, $mode . ' XML has six products');
-	check(count($rows) === 6, $mode . ' CSV has six products');
-	foreach ($products as $index => $product) {
-		$current = $index === 0 ? 9.5 : ($index === 1 ? 4 : $product['price']);
-		$expected_current = number_format($current / $product['package_quantity'], 2, '.', '');
-		$expected_anchor = number_format($product['expected_unit_price'], 2, '.', '');
-		$node = $xml->product[$index];
-		check((string)$node->unit === $product['unit'], $mode . ' XML uses product-specific kg/l');
-		check((string)$node->packageQuantity === (string)$product['package_quantity'], $mode . ' XML package quantity');
-		check((string)$node->unitPrice === $expected_current, $mode . ' XML current unit price');
-		check((string)$node->anchorUnitPrice === $expected_anchor, $mode . ' XML anchor unit price');
-		check((string)$node->anchorDate === '2025-05-02', $mode . ' XML retains historical reference date');
-		check((string)$node->stockStatus === 'Dostupno', $mode . ' in-stock product never carries stale unavailable label');
-		check($rows[$index]['Jedinica mjere'] === $product['unit'], $mode . ' CSV unit matches XML');
-		check(str_replace(',', '.', $rows[$index]['Cijena po jedinici (EUR)']) === $expected_current, $mode . ' CSV current unit price matches XML');
-		check(str_replace(',', '.', $rows[$index]['Sidrena cijena po jedinici (EUR)']) === $expected_anchor, $mode . ' CSV anchor unit price matches XML');
+	check((string)$xml['brand'] === 'Voćarstvo Ružić d.o.o.' && (string)$xml['oib'] === '96162140350', 'XML names the merchant');
+	$rows = array();
+	foreach ($xml->product as $node) {
+		$row = fgetcsv($csv, 0, ';', '"', '');
+		$keys = array();
+		foreach ($node->children() as $key => $value) { $keys[] = $key; }
+		check($keys === array('name','code','brand','netQuantity','unit','retailPrice','unitPrice','barcode','ean','basePrice'), 'XML has exactly the ten public fields');
+		check($row === array((string)$node->name, (string)$node->code, (string)$node->brand, str_replace('.', ',', $node->netQuantity), (string)$node->unit, str_replace('.', ',', $node->retailPrice) . ' (' . $node->retailPrice['sale'] . ')', str_replace('.', ',', $node->unitPrice), (string)$node->barcode, (string)$node->ean, str_replace('.', ',', $node->basePrice)), 'CSV and XML describe identical amounts and sale status');
+		$rows[$row[1]] = $row;
 	}
-	return array('default_location' => $default_locations, 'headers' => $headers, 'rows' => $rows, 'xml' => (string)$xml->asXML());
+	check(count($rows) === 6 && !fgetcsv($csv, 0, ';', '"', ''), 'both files contain all six packages');
+	fclose($csv);
+	check($rows['OPG-775'][5] === '9,50 (akcija)' && $rows['OPG-775'][6] === '1,90' && $rows['OPG-775'][9] === '11,00', 'special, unit and base prices');
+	check($rows['OPG-775'][7] === '001234567890' && $rows['OPG-775'][8] === '4006381333931', 'independent barcode fields retain leading zeros');
+	check($rows['OPG-804'][5] === '4,00 (popust)', 'quantity-one discount');
+	check($run()['existing'], 'unchanged cron or save is a no-op');
+	if ($mode === 'catalog') {
+		$view = 'product/category';
+		$data = array('products' => array(
+			array('product_id' => 775, 'price' => '11,00 EUR', 'special' => '9,50 EUR'),
+			array('product_id' => 775, 'price' => '8,00 EUR', 'current_package_price' => 8),
+			array('product_id' => 775, 'price' => false)
+		));
+		$controller->beforeView($view, $data);
+		check($data['products'][0]['current_unit_price'] === '1,90 EUR/kg', 'storefront resolves session price');
+		check($data['products'][1]['current_unit_price'] === '1,60 EUR/kg', 'cart option or tier price overrides the catalogue price');
+		check(!isset($data['products'][2]['current_unit_price']), 'no visible unit price when prices are hidden');
+		$model->config->set('module_anchor_price_cron_key', 'fixture');
+		$controller->cron();
+		check(!json_decode($controller->response->getOutput(), true)['success'] && !is_file(DIR_LOGS . 'price_list_cron.log'), 'unauthenticated request cannot mark cron healthy');
+		$controller->request->server['HTTP_X_ANCHOR_PRICE_KEY'] = 'fixture';
+		$controller->cron();
+		check(json_decode($controller->response->getOutput(), true)['success'] && strpos(file_get_contents(DIR_LOGS . 'price_list_cron.log'), 'Bez izmjena') !== false, 'authenticated cron records its result');
+	}
+
+	// Age the complete pair, including the XML publication timestamp.
+	$xml_path = DIR_DOWNLOAD . $publication['xml_relative_path'];
+	$old_xml = str_replace((string)$xml['generatedAt'], '2025-01-01T07:00:00+01:00', file_get_contents($xml_path));
+	file_put_contents($xml_path, $old_xml);
+	$checksum = hash_file('sha256', $xml_path);
+	$db->exec("UPDATE test_anchor_price_publication SET published_at='2025-01-01 07:00:00', xml_checksum_sha256='" . $checksum . "'");
+	check($run()['existing'], 'no daily republication, even after a long idle period');
+	if ($mode === 'catalog') { check($model->getLatestPublication()['publication_id'] == $id, 'long-lived current publication stays public'); }
+	$db->exec("UPDATE test_product SET status=0 WHERE product_id=775");
+	$replacement = $run();
+	check(!$replacement['existing'] && $replacement['product_count'] == 5, 'deactivation replaces the list immediately');
+	if ($mode === 'catalog') { check((bool)$model->getPublication($id), 'old list still downloadable immediately after replacement'); }
+	$db->exec("UPDATE test_product SET status=1 WHERE product_id=775");
+	$db->exec("UPDATE test_anchor_price SET verification_status='pending' WHERE product_id=775");
+	try {
+		$run();
+		check(false, 'pending product blocks incomplete publication');
+	} catch (Exception $exception) {
+		check(strpos($exception->getMessage(), '#775') !== false, 'blocked publication identifies the product');
+	}
+	check((int)$db->query("SELECT COUNT(*) FROM test_anchor_price_publication WHERE status='published'")->fetchColumn() === 2, 'failed preflight preserves published pairs');
+	$db->exec("UPDATE test_anchor_price SET verification_status='confirmed' WHERE product_id=775");
+	check($run()['product_count'] == 6, 'confirmation publishes the activated product');
+	$db->exec("UPDATE test_anchor_price SET gross_price=13 WHERE product_id=775");
+	check(!$run()['existing'], 'base price change publishes on the same day');
+	$db->exec("UPDATE test_product_special SET date_end='2020-01-01'");
+	check(!$run()['existing'], 'scheduled sale expiry detected by reconciliation');
+	$db->exec("UPDATE test_product SET price=20 WHERE product_id=775");
+	$previous_sequence = $db->query('SELECT MAX(sequence_no) FROM test_anchor_price_publication')->fetchColumn();
+	if ($mode === 'admin') {
+		$controller->captureQuickEdit('extension/module/product_quick_edit/quickEditProduct', array(775,'price',20), 20);
+	} else {
+		$controller->captureProduct('module/oc_model/editProduct', array(775));
+	}
+	check($db->query('SELECT MAX(sequence_no) FROM test_anchor_price_publication')->fetchColumn() == $previous_sequence + 1 && $run()['existing'], 'edit event publishes before the next cron call');
+	$db->exec("UPDATE test_anchor_price_publication SET published_at='2025-02-01 07:00:00' WHERE publication_id=" . (int)$replacement['publication_id']);
+	$run();
+	check($db->query('SELECT status FROM test_anchor_price_publication WHERE publication_id=' . (int)$id)->fetchColumn() === 'expired', 'expires after replacement is older than fifteen days');
+	if ($mode === 'catalog') { check(!$model->getPublication($id), 'expired list cannot be downloaded by ID'); }
+	$model->config->set('module_anchor_price_oib','01234567890');
+	check(strpos($run()['filename'], '01234567890_') === 0, 'saved OIB changes file identity');
+	$db->exec('UPDATE test_product SET status=0');
+	check($run()['product_count'] == 0 && $run()['existing'], 'last deactivation publishes a reusable empty list');
+	if ($mode === 'catalog') { check($model->getLatestPublication()['product_count'] == 0, 'empty list remains current'); }
+	return array('headers' => $headers, 'rows' => $rows);
 }
 
 try {
 	$mode = isset($argv[1]) && $argv[1] === '--admin' ? 'admin' : 'catalog';
 	require dirname(__DIR__) . '/upload/' . $mode . '/model/extension/module/anchor_price.php';
-	$model = publicationFixture($mode);
+	require dirname(__DIR__) . '/upload/' . $mode . '/controller/extension/module/anchor_price.php';
+	list($model, $registry) = publicationFixture();
 	if ($mode === 'catalog') {
 		foreach (productFixtures() as $product) {
 			check(AnchorPriceUnit::isValid($product['unit'], $product['package_quantity']), 'each known package has valid measure');
@@ -289,12 +345,12 @@ try {
 		$zero = productFixtures()[0];
 		$zero['package_quantity'] = 0;
 		check($model->getDisplayData($zero)['anchor_unit_price'] === '', 'zero measure does not divide in storefront');
-		$product = array('product_id' => 1, 'name' => 'A & B <fruit>', 'unit' => 'l', 'package_quantity' => '0.75', 'unit_price' => '4.00', 'anchor_unit_price' => '4.80', 'current_price' => '3.00', 'anchor_price' => '3.60', 'anchor_date' => '2025-05-02');
-		$xml = simplexml_load_string(invokePrivate($model, 'xmlProduct', array($product)));
-		check((string)$xml->name === $product['name'], 'XML escapes product text');
-		check((string)$xml->unitPrice === '4.00' && (string)$xml->anchorUnitPrice === '4.80', 'XML keeps current and historical unit prices separate');
+		$offer = productFixtures()[0];
+		check($model->getDisplayData($offer, 9.50)['current_unit_price'] === '1,90 EUR/kg', 'current package price is independent of base price');
+		$offer['verification_status'] = 'pending';
+		check($model->getDisplayData($offer, 9.50) === array('current_unit_price' => '1,90 EUR/kg'), 'known measure still supports current price while base price awaits confirmation');
 	}
-	$data = generatedRows($model, $mode);
+	$data = generatedRows($model, $registry, $mode);
 	if ($mode === 'admin') {
 		echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL;
 	} else {
@@ -305,10 +361,8 @@ try {
 		check($status === 0, 'admin publication fixture passes: ' . implode("\n", $output));
 		$admin = json_decode(implode("\n", $output), true);
 		check(is_array($admin), 'admin test returns comparison data');
-		check($data['default_location'] === $admin['default_location'], 'admin and daily-cron catalog use identical accented default address');
 		check($data['headers'] === $admin['headers'], 'admin and daily-cron catalog CSV headers/order match exactly');
 		check($data['rows'] === $admin['rows'], 'admin and daily-cron catalog CSV product data match exactly');
-		check($data['xml'] === $admin['xml'], 'admin and daily-cron catalog XML match exactly');
 		echo 'PASS: ' . $checks . ' isolated anchor unit/publication checks (plus admin child checks).' . PHP_EOL;
 	}
 } catch (Throwable $exception) {

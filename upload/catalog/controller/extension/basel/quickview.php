@@ -120,9 +120,12 @@ class ControllerExtensionBaselQuickview extends Controller {
 			$data['discounts'] = array();
 
 			foreach ($discounts as $discount) {
+				$package_price = $this->tax->calculate($discount['price'], $product_info['tax_class_id'], $this->config->get('config_tax'));
 				$data['discounts'][] = array(
+					'product_id' => $product_info['product_id'],
+					'current_package_price' => $package_price,
 					'quantity' => $discount['quantity'],
-					'price'    => $this->currency->format($this->tax->calculate($discount['price'], $product_info['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency'])
+					'price'    => $this->currency->format($package_price, $this->session->data['currency'])
 				);
 			}
 		

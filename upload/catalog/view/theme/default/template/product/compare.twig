@@ -43,8 +43,8 @@
             {% for product in products %}
             <td>{% if product.price %}
               {% if not product.special %}
-              {{ product.price }}
-              {% else %} <strike>{{ product.price }}</strike> {{ product.special }}
+              {{ product.price }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %}
+              {% else %} <strike>{{ product.price }}</strike> {{ product.special }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %}
               {% endif %}
               {% if product.anchor_price_text %}<div class="anchor-price">{{ product.anchor_price_text|escape }}</div>{% endif %}
               {% endif %}</td>

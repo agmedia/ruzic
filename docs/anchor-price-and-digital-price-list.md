@@ -1,23 +1,23 @@
-# Sidrene cijene i digitalni cjenik (OpenCart 3)
+# Bazne cijene i digitalni cjenik (OpenCart 3)
 
 ## Instalacija bez terminala
 
 1. Deployajte sadržaj repozitorija kroz uobičajeni Git/cPanel postupak.
 2. U OpenCart administraciji otvorite **Proširenja > Proširenja > Moduli**.
-3. Instalirajte **OPG Ružić – Sidrene cijene**. Instalacija je idempotentna: kreira/nadogradi tablice, postavke i evente, generira tajni cron ključ te radi početne snapshot zapise koristeći OpenCart porezni kalkulator.
-4. Otvorite **Katalog > Sidrene cijene**, pregledajte bazni datum i zapise koji čekaju potvrdu.
+3. Instalirajte **Voćarstvo Ružić d.o.o. – Bazne cijene**. Instalacija je idempotentna: kreira/nadogradi tablice, postavke i evente, generira tajni cron ključ te radi početne snapshot zapise koristeći OpenCart porezni kalkulator.
+4. Otvorite **Katalog > Bazne cijene**, pregledajte bazni datum i zapise koji čekaju potvrdu.
 
 Ako instalacija kroz OpenCart nije moguća, u phpMyAdminu se može jednom pokrenuti [jedinstveni SQL paket](../sql/2026_09_30_anchor_price_opgruzic.sql). Paket očekuje produkcijski prefiks `oc_`. SQL fallback namjerno označava nove snapshote kao `pending`, jer phpMyAdmin nema OpenCart porezni kontekst; prije objave ih treba potvrditi ili zamijeniti provjerenim CSV uvozom. Nakon SQL fallbacka po potrebi dodijelite grupi administratora `access` i `modify` pravo za `extension/module/anchor_price`.
 
-Deinstalacija modula ne briše sidrene cijene, revizijski trag ni arhivu cjenika, ali do ponovne instalacije isključuje javni prikaz i preuzimanje cjenika.
+Deinstalacija modula ne briše bazne cijene, revizijski trag ni arhivu cjenika, ali do ponovne instalacije isključuje javni prikaz i preuzimanje cjenika.
 
 ## Bazni datum i prikaz
 
-Za prehrambene proizvode OPG-a zadani bazni datum je **2. 5. 2025.** Bazni datum za nove zapise može se promijeniti u postavkama modula. Datum pojedinog postojećeg zapisa, uključujući već potvrđenu sidrenu cijenu, može se promijeniti kroz **Katalog > Sidrene cijene > Uredi > Referentni datum**, uz obvezan razlog promjene. Dopušten je valjan datum između postavljenog baznog datuma i današnjeg datuma u zoni Europe/Zagreb. U povijesti se čuvaju stari i novi datum, korisnik i razlog. Postojeći povijesni snapshoti se ne prepisuju automatski: današnji iznos nije dokaz cijene na raniji datum. Unesite stvarnu redovnu cijenu na referentni datum i razlog potvrde kroz admin ili CSV. Datum kreiranja proizvoda u OpenCartu nije konačan dokaz datuma prvog stavljanja u prodaju. Tehnička mogućnost izmjene ne mijenja pravila o propisanom referentnom datumu.
+Za prehrambene proizvode trgovca zadani bazni datum je **2. 5. 2025.** Bazni datum za nove zapise može se promijeniti u postavkama modula. Datum pojedinog postojećeg zapisa, uključujući već potvrđenu baznu cijenu, može se promijeniti kroz **Katalog > Bazne cijene > Uredi > Referentni datum**, uz obvezan razlog promjene. Dopušten je valjan datum između postavljenog baznog datuma i današnjeg datuma u zoni Europe/Zagreb. U povijesti se čuvaju stari i novi datum, korisnik i razlog. Postojeći povijesni snapshoti se ne prepisuju automatski: današnji iznos nije dokaz cijene na raniji datum. Potvrdite povijesnu cijenu kroz admin ili CSV. Ako je prehrambeni proizvod na referentni dan bio na sniženju, primijenite najnižu cijenu u 30 dana prije početka te prodaje prema članku 3. Pravilnika o isticanju bazne cijene. Datum kreiranja proizvoda u OpenCartu nije konačan dokaz datuma prvog stavljanja u prodaju. Tehnička mogućnost izmjene ne mijenja pravila o propisanom referentnom datumu.
 
-Svaki zapis ima jedinicu **kg** ili **l** i količinu prodajnog pakiranja. Neto/bruto sidrena cijena ostaje cijena cijelog pakiranja; jedinična cijena izračunava se dijeljenjem bruto cijene količinom pakiranja. Ne koristi se težina dostave iz OpenCarta. Npr. 11 EUR za 5 kg daje 2,20 EUR/kg, a 10 EUR za 3 l daje 3,33 EUR/l. Potvrđena sidrena cijena i njezina jedinična cijena prikazuju se na proizvodu i postojećim listama/karticama, uključujući mobilni prikaz. Nepotpuni podaci o jedinici/količini blokiraju novu objavu cjenika.
+Svaki zapis ima jedinicu **kg** ili **l** i količinu prodajnog pakiranja. Neto/bruto bazna cijena ostaje cijena cijelog pakiranja; jedinična cijena izračunava se dijeljenjem bruto cijene količinom pakiranja. Ne koristi se težina dostave iz OpenCarta. Npr. 11 EUR za 5 kg daje 2,20 EUR/kg, a 10 EUR za 3 l daje 3,33 EUR/l. Potvrđena bazna cijena i njezina jedinična cijena prikazuju se na proizvodu i postojećim listama/karticama, uključujući mobilni prikaz. Nepotpuni podaci o jedinici/količini blokiraju novu objavu cjenika.
 
-Za postojeću instalaciju pokrenite [nadogradnju za jedinične cijene](../sql/2026_10_02_anchor_price_units.sql) u phpMyAdminu prije povlačenja novog koda. Paket dodaje polja i poznate količine šest pakiranja te postavlja bazni datum 2. 5. 2025. Vlasnik je 2. 10. 2026. potvrdio da su postojeći iznosi svih šest proizvoda bili isti na 2. 5. 2025.; paket zato ispravlja datume samo tih početnih potvrđenih zapisa, uz provjeru očekivanih iznosa i revizijski trag. Ne prepisuje same iznose, drugačije referentne datume, nepotvrđene zapise niti arhivu. Kasnije se cijene, mjere i referentni datum mogu uređivati kroz Katalog > Sidrene cijene, uz razlog promjene; prethodne vrijednosti ostaju u povijesti promjena. Potom objavite novi CSV/XML par. Ponovno izvršavanje SQL-a ne prepisuje ručno uređene mjere niti ponavlja revizijski zapis. Omogućavanje uređivanja datuma ne zahtijeva dodatni SQL niti samo po sebi mijenja postojeće podatke ili objavljene cjenike.
+Za postojeću instalaciju pokrenite [nadogradnju za jedinične cijene](../sql/2026_10_02_anchor_price_units.sql) u phpMyAdminu prije povlačenja novog koda. Paket dodaje polja i poznate količine šest pakiranja te postavlja bazni datum 2. 5. 2025. Vlasnik je 2. 10. 2026. potvrdio da su postojeći iznosi svih šest proizvoda bili isti na 2. 5. 2025.; paket zato ispravlja datume samo tih početnih potvrđenih zapisa, uz provjeru očekivanih iznosa i revizijski trag. Ne prepisuje same iznose, drugačije referentne datume, nepotvrđene zapise niti arhivu. Kasnije se cijene, mjere i referentni datum mogu uređivati kroz Katalog > Bazne cijene, uz razlog promjene; prethodne vrijednosti ostaju u povijesti promjena. Potom objavite novi CSV/XML par. Ponovno izvršavanje SQL-a ne prepisuje ručno uređene mjere niti ponavlja revizijski zapis. Omogućavanje uređivanja datuma ne zahtijeva dodatni SQL niti samo po sebi mijenja postojeće podatke ili objavljene cjenike.
 
 ## Masovni CSV uvoz
 
@@ -26,7 +26,7 @@ U administraciji odaberite CSV do 5 MB i najviše 10.000 podatkovnih redaka. Prv
 Podržani su `;` i `,` razdjelnik te UTF-8 BOM. Obvezni stupci:
 
 - jedan ili više identifikatora: `product_id`, `model`, `sku`, `ean` (podržani su i `barcode` / `barkod`);
-- `anchor_price` ili `gross_price` (bruto sidrena cijena);
+- `anchor_price` ili `gross_price` (bruto bazna cijena);
 - `reference_date` u obliku `YYYY-MM-DD`.
 
 Stupci `unit` (`kg` ili `l`) i `package_quantity` (količina pakiranja, npr. `5` ili `0,75`) potrebni su za potvrđene zapise; kod ažuriranja mogu se izostaviti ako postojeći zapis već ima valjanu mjeru. Opcionalni stupci su `net_price`, `status` (`confirmed`, `pending`, `disabled`) i `reason`. Ako je zadano više identifikatora, svi moraju upućivati na isti jednoznačni proizvod. Aktivni proizvod mora imati status `confirmed`.
@@ -38,39 +38,31 @@ sku;anchor_price;reference_date;unit;package_quantity;status;reason
 RZ-001;12,90;2025-05-02;kg;5;confirmed;Cijena provjerena prema povijesnom cjeniku
 ```
 
-## CSV/XML objava i javni URL-ovi
+## Objava i preuzimanje
 
-Svaka objava proizvodi atomski par CSV + XML datoteka s istim skupom proizvoda i SHA-256 kontrolnim zbrojevima. Sadrže ID, naziv, model/SKU, proizvođača, jedinicu i količinu pakiranja, aktualnu i sidrenu cijenu po jedinici, redovnu i aktualnu cijenu pakiranja, sidrenu cijenu i datum, barkod, raspoloživost, količinu zalihe, status zalihe i valutu. XML koristi `unit`, `packageQuantity`, `unitPrice`, `anchorUnitPrice`, `brand="OPGRUZIC"` i `location="WEB"`. Aktualna jedinična cijena uključuje trenutačnu akciju/popust; sidrena cijena dolazi iz potvrđenog povijesnog zapisa.
+Trgovac je **Voćarstvo Ružić d.o.o.**, OIB **96162140350**. Jedan cjenik vrijedi za sva prodajna mjesta. U postavkama modula može se urediti OIB. Za izdanje br. 50 objavljeno 18. 11. 2026. u 07:00 po zagrebačkom vremenu naziv je `96162140350_ZA_SVA_PRODAJNA_MJESTA_ROBA_000050_20261118_0700.csv`. XML nosi isti naziv s nastavkom `.xml`. Redni broj nastavlja postojeći niz.
 
-U postavkama modula uređuju se oblik objekta (`webshop`), adresa i oznaka (`WEB`). Konzervativno se kao zadana adresa koristi poslovna adresa iz postavki trgovine; domena je rezervni podatak samo kad poslovna adresa nije unesena. Naziv novih datoteka je `webshop_ADRESA_web_000004_20261002_070000.csv` / `.xml`. ASCII normalizacija uklanja znakove nesigurne za nazive datoteka. Broj pohrane raste po prodajnom mjestu, datum/vrijeme su u Europe/Zagreb zoni. Stare arhivske datoteke ne preimenuju se i ne mijenjaju se njihovi kontrolni zbrojevi.
+CSV koristi UTF-8 i točku-zarez. CSV i XML imaju deset polja istim redom: naziv, šifra, marka, neto količina, jedinica mjere, maloprodajna cijena s oznakom posebnog oblika prodaje, cijena po jedinici, barkod, EAN barkod i bazna cijena. Iznosi su u eurima. U CSV-u npr. `9,50 (akcija)` označuje akcijsku cijenu, a `12,00 (ne)` redovnu prodaju. XML nosi brojčanu cijenu i atribut `sale`. Količina pakiranja služi izračunu €/kg ili €/l. Aktualna jedinična cijena prikazuje se uz prodajnu cijenu, a povijesna u retku bazne cijene.
 
-Službeni izvori: [NN 75/2025, točka VI (prehrana, 2. 5. 2025.)](https://narodne-novine.nn.hr/clanci/sluzbeni/2025_05_75_979.html), [NN 101/2026-1212, točka IV (zadržavanje starog datuma)](https://narodne-novine.nn.hr/clanci/sluzbeni/2026_09_101_1212.html), [NN 101/2026-1213, točke III/VI (sadržaj i naziv datoteke)](https://narodne-novine.nn.hr/clanci/sluzbeni/2026_09_101_1213.html). Izmjene [NN 110/2026-1309](https://narodne-novine.nn.hr/clanci/sluzbeni/2026_09_110_1309.html) i [1310](https://narodne-novine.nn.hr/clanci/sluzbeni/2026_09_110_1310.html) odgađaju početak novih odluka do 17. 11. 2026.; ne mijenjaju referentni datum za prehranu ni elemente cjenika. Propis ne zadaje jedini točan format vremenske oznake; `Ymd_His` je odabrani strojno čitljivi format.
-
-Stabilni javni URL-ovi uvijek vraćaju najnoviju valjanu objavu:
+Javna stranica je `index.php?route=information/price_list`. Stalne adrese za važeći cjenik su:
 
 - `index.php?route=information/price_list/download&format=csv`
 - `index.php?route=information/price_list/download&format=xml`
 
-Javna stranica `index.php?route=information/price_list` nudi oba formata za svaku objavu tijekom 30 dana. Starije datoteke automatski se brišu i zapis dobiva status `expired`.
+Važeći par dostupan je do zamjene, a prethodni još 15 dana nakon zamjene. Javno preuzimanje starih objava čita povijesne iznose i prikazuje deset javnih polja pod nazivom s OIB-om, izvornim brojem pohrane i vremenom objave. Izvorne datoteke s kontrolnim zbrojevima dostupne su kroz administraciju. Gumb za ispravak starih mjera radi s prethodnim formatom i čuva vezu s izvornom objavom.
 
-## Ispravak već objavljenih cjenika
+## Nadogradnja postojeće instalacije
 
-Nakon nadogradnje za mjere, u phpMyAdminu pokrenite [SQL za ispravke arhive](../sql/2026_10_02_anchor_price_archive_corrections.sql). Povucite novi kod i otvorite **Katalog > Sidrene cijene > Ispravi postojeće cjenike**. Gumb pravi zaseban CSV/XML par za svaku izvornu objavu dostupnu u 30-dnevnoj arhivi. Ponovni klik ne umnožava već napravljene ispravke. Nije potreban terminal niti izmjena cron zadatka.
+1. Postavite izmjene koda na hosting. U **Proširenja > Modifikacije** osvježite OCMOD, zatim očistite predmemoriju Twig predložaka u administraciji.
+2. Otvorite **Katalog > Bazne cijene**, provjerite OIB, potvrdite povijesnu cijenu i količinu pakiranja aktivnih artikala te kliknite **Objavi CSV i XML cjenik** za prvo izdanje u novom formatu. Postojećoj instalaciji koja već objavljuje jedinične cijene nije potrebna nova SQL migracija.
+3. U cPanel Cron Jobs postavite postojeći zaštićeni URL na raspored `* * * * *`. Time se svake minute provjeravaju zakazani početak i kraj akcije, datum dostupnosti i promjene napravljene izvan OpenCarta. Ključ i gotov URL nalaze se u postavkama. Primjer naredbe:
 
-Izvorni CSV/XML i kontrolni zbrojevi ostaju netaknuti. Ispravljene kopije zadržavaju izvorne aktualne/redovne/akcijske/sidrene iznose, barkodove, dostupnost i zalihe. Dodaju/ispravljaju jedinicu i količinu pakiranja te iz tih arhivskih iznosa računaju €/kg ili €/l. Povijesni datum mijenja se samo uz potvrđeni iznos koji odgovara arhivskom zapisu. Mjere koje već postoje u arhivi imaju prednost pred današnjim mjerama; za stare zapise bez mjere koriste se potvrđeni podaci modula. Ako se CSV i XML ne slažu, nedostaje potvrda ili je kontrolni zbroj pogrešan, ispravak se zaustavlja, bez prepisivanja izvornika.
+   ```sh
+   curl -fsS "PUNI_CRON_URL_IZ_ADMINISTRACIJE" >/dev/null
+   ```
 
-Naziv kopije ima novi broj pohrane i stvarno vrijeme ispravka. CSV sadrži podatke o izvornoj objavi i ispravku; XML čuva izvorni `generatedAt` i dodaje `sourcePublicationId`, `sourcePublishedAt`, `correctedAt`. Javni popis prikazuje jedan redak po izvornoj objavi: kad postoji ispravak, nudi samo njegove CSV/XML datoteke. Stupac „Vrijeme objave” i redoslijed koriste izvorno vrijeme, a stvarno vrijeme ispravka prikazuje se odvojeno u napomeni „Ispravljeno …”. Dvije različite izvorne objave istog dana ostaju zasebne. Datoteke, kontrolni zbrojevi i pohranjeni datumi ne prepisuju se. Kopije se čuvaju 30 dana od ispravka. Ispravak starog dana neće zamijeniti noviju dnevnu objavu na stabilnom URL-u najnovijeg cjenika. Ispravci nisu zamjena za redovnu dnevnu objavu.
+Spremanje artikla, brza izmjena, brisanje, potvrda bazne cijene i dovršeni uvoz pokreću provjeru odmah. Nova verzija nastaje ako su promijenjeni podaci javnog cjenika. Zadnji poziv crona i razlog neuspjele objave vide se u modulu. Ako artiklu nedostaje potvrđena bazna cijena ili mjera, poruka sadrži njegov ID i naziv. Nakon ispravka modul ponavlja objavu. Prethodni cjenik dostupan je dok oba nova formata ne prođu provjeru.
 
-Za izričito zatraženo uklanjanje triju produkcijskih izvornika 1–3, koje zamjenjuju ispravci 4–6, postoji [ciljani SQL](../sql/2026_10_02_anchor_price_hide_originals.sql). Postavlja `superseded` samo kad je odgovarajući ispravak objavljen i izvorno vrijeme se slaže. Izvornik tada nije u javnom pregledu niti dostupan putem javnog preuzimanja, ali datoteke i revizijski zapis ostaju sačuvani kao povratna kopija. SQL nije potreban za samo grupiranje popisa i ne primjenjuje se na druge objave. Sačuvane povratne kopije ne ulaze u automatsko brisanje objavljenih cjenika nakon 30 dana.
+Članak 3. stavak 5. propisuje objavu najkasnije do 11:00 na dan izmjene. Promjene koje trgovac može planirati treba provesti prije tog roka. Naknadno unesena promjena objavljuje se sa stvarnim vremenom objave.
 
-## cPanel Cron Jobs
-
-Admin modul prikazuje obični cron URL, tajni ključ i gotovi **cPanel cron URL s ključem**. U cPanel Cron Jobs GUI postavite dnevni poziv prije 08:00 po Europe/Zagreb vremenu, primjerice:
-
-```text
-curl -fsS "PUNI_URL_IZ_ADMINA" >/dev/null
-```
-
-Ako hosting ne nudi `curl`, može se koristiti `wget -qO- "PUNI_URL_IZ_ADMINA" >/dev/null`. URL s ključem je tajna. Integracije koje mogu slati zaglavlja trebaju koristiti osnovni URL i `X-Anchor-Price-Key` zaglavlje.
-
-Objava se može ručno pokrenuti i gumbom **Objavi CSV i XML cjenik**. Objavu blokira bilo koji aktivni proizvod bez potvrđene sidrene cijene ili obveznih podataka.
+[Pravilnik o načinu objave cjenika proizvoda, NN 132/2026](https://narodne-novine.nn.hr/clanci/sluzbeni/2026_11_132_1584.html) · [Pravilnik o isticanju bazne cijene proizvoda, NN 132/2026](https://narodne-novine.nn.hr/clanci/sluzbeni/2026_11_132_1583.html)

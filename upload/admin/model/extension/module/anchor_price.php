@@ -1,6 +1,8 @@
 <?php
-require_once DIR_SYSTEM . 'library/anchor_price_unit.php';
+require_once DIR_SYSTEM . 'library/anchor_price_publication.php';
 class ModelExtensionModuleAnchorPrice extends Model {
+	use AnchorPricePublication;
+
 	const STORE_ID = 0;
 	const CURRENCY_CODE = 'EUR';
 	const PUBLICATION_LOCATION_CODE = 'WEB';
@@ -192,6 +194,10 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		return $this->syncProducts((int)$created_by, 'install', false);
 	}
 
+	private function syncPublicationProducts($created_by) {
+		$this->syncMissingProducts($created_by);
+	}
+
 	public function syncMissingProducts($created_by = 0) {
 		// Drafts are intentionally skipped. Their snapshot is created on first publication.
 		return $this->syncProducts((int)$created_by, 'sync', true);
@@ -381,14 +387,10 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		}
 
 		$rows = $this->db->query($sql)->rows;
-		$fallback_manufacturer = 'OPG Ružić';
 
 		foreach ($rows as &$row) {
 			$price = $row['special_price'] !== null ? (float)$row['special_price'] : ($row['discount_price'] !== null && (float)$row['discount_price'] > 0 ? (float)$row['discount_price'] : (float)$row['current_price']);
 			$row['current_gross_price'] = $this->tax->calculate($price, (int)$row['current_tax_class_id'], true);
-			if (trim((string)$row['manufacturer']) === '') {
-				$row['manufacturer'] = $fallback_manufacturer;
-			}
 		}
 		unset($row);
 
@@ -470,7 +472,7 @@ class ModelExtensionModuleAnchorPrice extends Model {
 			throw new Exception('Unesite jedinicu kg ili l i pozitivnu količinu u pakiranju.');
 		}
 		if (!$this->measureColumnsExist()) {
-			throw new Exception('Najprije primijenite nadogradnju baze za jedinice mjere sidrenih cijena.');
+			throw new Exception('Najprije primijenite nadogradnju baze za jedinice mjere baznih cijena.');
 		}
 
 		$reason = trim($reason);
@@ -604,7 +606,7 @@ class ModelExtensionModuleAnchorPrice extends Model {
 
 			$gross_price = $this->normaliseImportNumber(isset($row['gross_price']) ? $row['gross_price'] : '');
 			if ($gross_price === false || $gross_price < 0) {
-				$result['errors'][] = 'Redak ' . $line . ': sidrena/bruto cijena nije ispravan nenegativan broj.';
+				$result['errors'][] = 'Redak ' . $line . ': bazna/bruto cijena nije ispravan nenegativan broj.';
 				continue;
 			}
 			$net_price = isset($row['net_price']) && $row['net_price'] !== '' ? $this->normaliseImportNumber($row['net_price']) : null;
@@ -638,7 +640,7 @@ class ModelExtensionModuleAnchorPrice extends Model {
 				continue;
 			}
 			if (!$this->measureColumnsExist()) {
-				$result['errors'][] = 'Najprije primijenite nadogradnju baze za jedinice mjere sidrenih cijena.';
+				$result['errors'][] = 'Najprije primijenite nadogradnju baze za jedinice mjere baznih cijena.';
 				break;
 			}
 
@@ -742,11 +744,11 @@ class ModelExtensionModuleAnchorPrice extends Model {
 			'id' => 'product_id', 'id_proizvoda' => 'product_id', 'product_id' => 'product_id',
 			'model' => 'model', 'sifra' => 'model', 'sifra_model' => 'model',
 			'sku' => 'sku', 'ean' => 'ean', 'barcode' => 'ean', 'barkod' => 'ean',
-			'anchor_price' => 'gross_price', 'gross_price' => 'gross_price', 'sidrena_cijena' => 'gross_price', 'sidrena_cijena_eur' => 'gross_price', 'bruto_cijena' => 'gross_price',
+			'anchor_price' => 'gross_price', 'gross_price' => 'gross_price', 'bazna_cijena' => 'gross_price', 'bazna_cijena_eur' => 'gross_price', 'sidrena_cijena' => 'gross_price', 'sidrena_cijena_eur' => 'gross_price', 'bruto_cijena' => 'gross_price',
 			'net_price' => 'net_price', 'neto_cijena' => 'net_price',
 			'unit' => 'unit', 'jedinica' => 'unit', 'jedinica_mjere' => 'unit',
 			'package_quantity' => 'package_quantity', 'kolicina_u_pakiranju' => 'package_quantity', 'kolicina_pakiranja' => 'package_quantity',
-			'reference_date' => 'reference_date', 'referentni_datum' => 'reference_date', 'datum_sidrene_cijene' => 'reference_date',
+			'reference_date' => 'reference_date', 'referentni_datum' => 'reference_date', 'datum_bazne_cijene' => 'reference_date', 'datum_sidrene_cijene' => 'reference_date',
 			'status' => 'verification_status', 'verification_status' => 'verification_status', 'status_provjere' => 'verification_status',
 			'reason' => 'reason', 'razlog' => 'reason'
 		);
@@ -820,53 +822,8 @@ class ModelExtensionModuleAnchorPrice extends Model {
 	}
 
 	public function generateDailyPublications($store_id = 0, $created_by = 0, $force = false) {
-		$store_id = (int)$store_id;
-		if ($store_id !== self::STORE_ID) {
-			throw new Exception('Only store 0 is supported by this publication.');
-		}
-
-		$lock_name = 'anchor_price_publication_' . $store_id;
-		$this->acquirePublicationLock($lock_name);
-
-		try {
-			$this->discardUnpublishedPublications($store_id);
-			$this->syncMissingProducts((int)$created_by);
-			$products = $this->getPublicationProducts($store_id);
-			$this->assertPublicationProducts($products);
-			if (!$products) {
-				throw new Exception('The price list has no confirmed active products.');
-			}
-			$now = new DateTime('now', new DateTimeZone('Europe/Zagreb'));
-			$location_code = self::PUBLICATION_LOCATION_CODE;
-
-			if (!$force) {
-				$existing = $this->getTodayPublication($store_id, $location_code, $now);
-				if ($existing && $this->publishedBatchIsValid($store_id, $existing['batch_key'])) {
-					$this->archiveExpiredPublications();
-					$this->releasePublicationLock($lock_name);
-					return array($this->publicationResult($existing, true));
-				}
-			}
-
-			$batch_key = $this->createBatchKey();
-
-			try {
-				$publication = $this->generateLocationPublication($store_id, (int)$created_by, $location_code, $products, $now, $batch_key);
-				$publication = $this->publishPublication($store_id, $publication, $now, $batch_key);
-			} catch (Exception $publication_exception) {
-				if (!empty($publication['publication_id'])) {
-					$this->invalidatePublication($publication['publication_id'], 'Daily price-list publication was not completed.');
-				}
-				throw $publication_exception;
-			}
-
-			$this->archiveExpiredPublications();
-			$this->releasePublicationLock($lock_name);
-			return array($publication);
-		} catch (Exception $exception) {
-			$this->releasePublicationLock($lock_name);
-			throw $exception;
-		}
+		if ((int)$store_id !== self::STORE_ID) { throw new InvalidArgumentException('Unsupported store.'); }
+		return array($this->publishCurrent(self::STORE_ID, $created_by, $force));
 	}
 
 	public function repairArchivedPublications($created_by = 0) {
@@ -885,8 +842,9 @@ class ModelExtensionModuleAnchorPrice extends Model {
 				$measures[$id] = array('unit' => $anchor['unit'], 'package_quantity' => $anchor['package_quantity']);
 				$dates[$id] = array('reference_date' => $anchor['reference_date'], 'gross_price' => $anchor['gross_price']);
 			}
-			$sources = $this->db->query("SELECT * FROM `" . DB_PREFIX . "anchor_price_publication` WHERE store_id = '" . self::STORE_ID . "' AND location_code = '" . self::PUBLICATION_LOCATION_CODE . "' AND status = 'published' AND corrects_publication_id IS NULL AND published_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) ORDER BY publication_id ASC")->rows;
+			$sources = $this->db->query("SELECT * FROM `" . DB_PREFIX . "anchor_price_publication` WHERE store_id = '" . self::STORE_ID . "' AND location_code = '" . self::PUBLICATION_LOCATION_CODE . "' AND status = 'published' AND corrects_publication_id IS NULL AND publication_id >= " . $this->retainedFromId(self::STORE_ID, new DateTime('now', new DateTimeZone('Europe/Zagreb'))) . " ORDER BY publication_id ASC")->rows;
 			foreach ($sources as $source) {
+				if (PriceListFormat::isCurrentFormat($source['filename'])) { continue; }
 				$source_id = (int)$source['publication_id'];
 				$existing = $this->db->query("SELECT * FROM `" . DB_PREFIX . "anchor_price_publication` WHERE store_id = '" . self::STORE_ID . "' AND corrects_publication_id = '" . $source_id . "' LIMIT 1")->row;
 				if ($existing) {
@@ -904,36 +862,27 @@ class ModelExtensionModuleAnchorPrice extends Model {
 				if ((int)$source['product_count'] !== $correction['product_count']) {
 					throw new Exception('Broj artikala izvorne objave #' . $source_id . ' nije usklađen.');
 				}
+				$stream = fopen('php://temp', 'w+b');
+				try {
+					fwrite($stream, $correction['csv']);
+					$rows = PriceListFormat::legacyRows($stream);
+				} finally {
+					fclose($stream);
+				}
+				$correction['csv'] = PriceListFormat::csv($rows);
+				$correction['xml'] = PriceListFormat::xml($rows, $this->config->get('module_anchor_price_oib'), new DateTime($source['published_at'], new DateTimeZone('Europe/Zagreb')));
 				$batch_key = $this->createBatchKey();
 				$reservation = $this->reservePublication(self::STORE_ID, self::PUBLICATION_LOCATION_CODE, (int)$created_by, $now, $batch_key);
 				$id = (int)$reservation['publication_id'];
-				$temporary_files = array();
 				try {
-					$publication = $this->getPublication($id);
-					$checksums = array();
-					foreach (array('csv', 'xml') as $format) {
-						$filename = $format === 'xml' ? $reservation['xml_filename'] : $reservation['filename'];
-						$path = rtrim(DIR_DOWNLOAD, '/\\') . DIRECTORY_SEPARATOR . 'anchor_price' . DIRECTORY_SEPARATOR . basename($filename);
-						$temp = tempnam(dirname($path), '.anchor-correction-');
-						if ($temp === false) { throw new Exception('Nije moguće pripremiti ispravak.'); }
-						$temporary_files[] = $temp;
-						if (file_put_contents($temp, $correction[$format]) !== strlen($correction[$format]) || !rename($temp, $path)) {
-							throw new Exception('Nije moguće zapisati ispravljeni ' . strtoupper($format) . '.');
-						}
-						@chmod($path, 0640);
-						$checksums[$format] = hash_file('sha256', $path);
-						if ($checksums[$format] === false) { throw new Exception('Nije moguće provjeriti ispravak.'); }
-					}
-					$this->db->query("UPDATE `" . DB_PREFIX . "anchor_price_publication` SET status = 'staged', product_count = '" . (int)$correction['product_count'] . "', checksum_sha256 = '" . $this->db->escape($checksums['csv']) . "', xml_checksum_sha256 = '" . $this->db->escape($checksums['xml']) . "', corrects_publication_id = '" . $source_id . "', source_published_at = '" . $this->db->escape($source['published_at']) . "' WHERE publication_id = '" . $id . "'");
-					$this->publishPublication(self::STORE_ID, $this->getPublication($id), $now, $batch_key);
+					$this->stageFiles($reservation, $correction['csv'], $correction['xml'], $correction['product_count']);
+					$this->db->query("UPDATE `" . DB_PREFIX . "anchor_price_publication` SET corrects_publication_id = '" . $source_id . "', source_published_at = '" . $this->db->escape($source['published_at']) . "' WHERE publication_id = '" . $id . "'");
+					$this->publishPublication(self::STORE_ID, $reservation, $now, $batch_key);
 					$result['created']++;
 				} catch (Exception $exception) {
 					$this->invalidatePublication($id, 'Ispravak nije dovršen: ' . $exception->getMessage());
-					// Release the unique source link for an explicit retry; originals remain untouched.
 					$this->db->query("UPDATE `" . DB_PREFIX . "anchor_price_publication` SET corrects_publication_id = NULL WHERE publication_id = '" . $id . "' AND status = 'failed'");
 					throw $exception;
-				} finally {
-					foreach ($temporary_files as $temp) { if (is_file($temp)) { @unlink($temp); } }
 				}
 			}
 			return $result;
@@ -967,608 +916,10 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		throw new Exception('Requested sales-location publication was not generated.');
 	}
 
-	private function generateLocationPublication($store_id, $created_by, $location_code, array $products, DateTime $now, $batch_key) {
-		$reservation = $this->reservePublication($store_id, $location_code, (int)$created_by, $now, $batch_key);
-		$publication_id = $reservation['publication_id'];
-		$filename = $reservation['filename'];
-		$xml_filename = $reservation['xml_filename'];
-		$relative_path = 'anchor_price/' . $filename;
-		$xml_relative_path = 'anchor_price/' . $xml_filename;
-		$directory = rtrim(DIR_DOWNLOAD, '/\\') . DIRECTORY_SEPARATOR . 'anchor_price';
-		$final_path = $directory . DIRECTORY_SEPARATOR . $filename;
-		$xml_final_path = $directory . DIRECTORY_SEPARATOR . $xml_filename;
-		$temp_path = '';
-		$xml_temp_path = '';
-		$handle = null;
-		$xml_handle = null;
-		$published_files = array();
-		$xml_products = array();
-
-		try {
-			if (!is_dir($directory) && !mkdir($directory, 0750, true) && !is_dir($directory)) {
-				throw new Exception('Unable to create the anchor-price publication directory.');
-			}
-
-			$temp_path = tempnam($directory, '.anchor-price-');
-			if ($temp_path === false) {
-				throw new Exception('Unable to create a temporary publication file.');
-			}
-
-			$handle = fopen($temp_path, 'wb');
-			if ($handle === false) {
-				throw new Exception('Unable to open the temporary publication file.');
-			}
-
-			if (fwrite($handle, "\xEF\xBB\xBF") === false) {
-				fclose($handle);
-				throw new Exception('Unable to write the CSV byte-order mark.');
-			}
-
-			$this->writeCsvRow($handle, array(
-				'Prodajni kanal',
-				'ID proizvoda',
-				'Naziv proizvoda',
-				'Šifra/model',
-				'SKU',
-				'Marka/proizvođač',
-				'Jedinica mjere',
-				'Količina pakiranja',
-				'Cijena po jedinici (EUR)',
-				'Redovna maloprodajna cijena (EUR)',
-				'Aktualna maloprodajna cijena (EUR)',
-				'Poseban oblik prodaje',
-				'Naziv posebnog oblika prodaje',
-				'Aktualna akcijska cijena (EUR)',
-				'Sidrena cijena (EUR)',
-				'Sidrena cijena po jedinici (EUR)',
-				'Datum sidrene cijene',
-				'Barkod',
-				'Dostupnost',
-				'Količina',
-				'Status zalihe',
-				'Valuta'
-			));
-
-			foreach ($products as $product) {
-				$regular_gross = round((float)$this->tax->calculate((float)$product['regular_price'], (int)$product['tax_class_id'], true), 4);
-				$has_discount = $product['discount_price'] !== null && $product['discount_price'] !== '' && (float)$product['discount_price'] > 0;
-				$base_gross = $has_discount ? round((float)$this->tax->calculate((float)$product['discount_price'], (int)$product['tax_class_id'], true), 4) : $regular_gross;
-				$has_special = $product['special_price'] !== null && $product['special_price'] !== '';
-				$special_gross = $has_special ? round((float)$this->tax->calculate((float)$product['special_price'], (int)$product['tax_class_id'], true), 4) : null;
-				$has_sale_price = $has_special || $has_discount;
-				$selling_gross = $has_special ? $special_gross : $base_gross;
-				$unit = $product['unit'];
-				$package_quantity = (float)$product['package_quantity'];
-				$unit_price = AnchorPriceUnit::calculate($selling_gross, $package_quantity);
-				$anchor_unit_price = AnchorPriceUnit::calculate($product['anchor_gross_price'], $package_quantity);
-
-				$barcode = $this->validPublicationBarcode($product);
-
-				$is_available = (int)$product['quantity'] > 0;
-				$availability = $is_available ? 'Dostupno' : 'Nije dostupno';
-				$stock_status = $is_available ? 'Dostupno' : $this->csvText($product['stock_status']);
-				$this->writeCsvRow($handle, array(
-					'Web trgovina',
-					(int)$product['product_id'],
-					$this->csvText($product['product_name']),
-					$this->csvText($product['model']),
-					$this->csvText($product['sku']),
-					$this->csvText($product['manufacturer']),
-					$unit,
-					rtrim(rtrim(number_format($package_quantity, 6, ',', ''), '0'), ','),
-					$this->csvMoney($unit_price),
-					$this->csvMoney($regular_gross),
-					$this->csvMoney($selling_gross),
-					$has_sale_price ? 'DA' : 'NE',
-					$has_special ? 'Akcija' : ($has_discount ? 'Popust' : ''),
-					$has_sale_price ? $this->csvMoney($selling_gross) : '',
-					$this->csvMoney($product['anchor_gross_price']),
-					$this->csvMoney($anchor_unit_price),
-					$product['reference_date'],
-					$barcode,
-					$availability,
-					(int)$product['quantity'],
-					$stock_status,
-					$product['currency_code'] ? $product['currency_code'] : self::CURRENCY_CODE
-				));
-				$xml_products[] = array(
-					'product_id' => (int)$product['product_id'],
-					'name' => $this->csvText($product['product_name']),
-					'model' => $this->csvText($product['model']),
-					'sku' => $this->csvText($product['sku']),
-					'manufacturer' => $this->csvText($product['manufacturer']),
-					'unit' => $unit,
-					'package_quantity' => rtrim(rtrim(number_format($package_quantity, 6, '.', ''), '0'), '.'),
-					'unit_price' => number_format($unit_price, 2, '.', ''),
-					'anchor_unit_price' => number_format($anchor_unit_price, 2, '.', ''),
-					'regular_price' => number_format($regular_gross, 2, '.', ''),
-					'current_price' => number_format($selling_gross, 2, '.', ''),
-					'special_price' => $has_sale_price ? number_format($selling_gross, 2, '.', '') : '',
-					'anchor_price' => number_format((float)$product['anchor_gross_price'], 2, '.', ''),
-					'anchor_date' => $product['reference_date'],
-					'barcode' => $barcode,
-					'available' => $is_available ? 'true' : 'false',
-					'quantity' => (int)$product['quantity'],
-					'stock_status' => $stock_status,
-					'currency' => $product['currency_code'] ? $product['currency_code'] : self::CURRENCY_CODE
-				);
-			}
-
-			if (!fflush($handle)) {
-				fclose($handle);
-				throw new Exception('Unable to flush the publication file.');
-			}
-			if (function_exists('fsync')) {
-				@fsync($handle);
-			}
-			fclose($handle);
-			$handle = null;
-
-			$xml_temp_path = tempnam($directory, '.anchor-price-xml-');
-			if ($xml_temp_path === false) {
-				throw new Exception('Unable to create a temporary XML publication file.');
-			}
-			$xml_handle = fopen($xml_temp_path, 'wb');
-			if ($xml_handle === false) {
-				throw new Exception('Unable to open the temporary XML publication file.');
-			}
-			if (fwrite($xml_handle, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<priceList brand=\"OPGRUZIC\" location=\"WEB\" generatedAt=\"" . $this->xmlEscape($now->format(DateTime::ATOM)) . "\" currency=\"EUR\">\n") === false) {
-				throw new Exception('Unable to write the XML publication header.');
-			}
-			foreach ($xml_products as $xml_product) {
-				if (fwrite($xml_handle, $this->xmlProduct($xml_product)) === false) {
-					throw new Exception('Unable to write an XML product record.');
-				}
-			}
-			if (fwrite($xml_handle, "</priceList>\n") === false || !fflush($xml_handle)) {
-				throw new Exception('Unable to finish the XML publication file.');
-			}
-			if (function_exists('fsync')) {
-				@fsync($xml_handle);
-			}
-			fclose($xml_handle);
-			$xml_handle = null;
-
-			if (!rename($temp_path, $final_path)) {
-				throw new Exception('Unable to atomically publish the CSV file.');
-			}
-			$temp_path = '';
-			$published_files[] = $final_path;
-			if (!rename($xml_temp_path, $xml_final_path)) {
-				throw new Exception('Unable to atomically publish the XML file.');
-			}
-			$xml_temp_path = '';
-			$published_files[] = $xml_final_path;
-			@chmod($final_path, 0640);
-			@chmod($xml_final_path, 0640);
-			$checksum = hash_file('sha256', $final_path);
-			$xml_checksum = hash_file('sha256', $xml_final_path);
-			if ($checksum === false || $xml_checksum === false) {
-				throw new Exception('Unable to calculate the publication checksum.');
-			}
-
-			$this->db->query("UPDATE `" . DB_PREFIX . "anchor_price_publication` SET relative_path = '" . $this->db->escape($relative_path) . "', xml_filename = '" . $this->db->escape($xml_filename) . "', xml_relative_path = '" . $this->db->escape($xml_relative_path) . "', status = 'staged', product_count = '" . (int)count($products) . "', checksum_sha256 = '" . $this->db->escape($checksum) . "', xml_checksum_sha256 = '" . $this->db->escape($xml_checksum) . "', error_message = NULL, published_at = NULL WHERE publication_id = '" . (int)$publication_id . "' AND batch_key = '" . $this->db->escape($batch_key) . "'");
-			return array(
-				'publication_id' => $publication_id,
-				'batch_key' => $batch_key,
-				'location_code' => $location_code,
-				'filename' => $filename,
-				'relative_path' => $relative_path,
-				'xml_filename' => $xml_filename,
-				'xml_relative_path' => $xml_relative_path,
-				'product_count' => count($products),
-				'checksum_sha256' => $checksum,
-				'xml_checksum_sha256' => $xml_checksum
-			);
-		} catch (Exception $exception) {
-			if (is_resource($handle)) {
-				@fclose($handle);
-			}
-			if (is_resource($xml_handle)) {
-				@fclose($xml_handle);
-			}
-			if ($temp_path && is_file($temp_path)) {
-				@unlink($temp_path);
-			}
-			if ($xml_temp_path && is_file($xml_temp_path)) {
-				@unlink($xml_temp_path);
-			}
-			foreach ($published_files as $published_file) {
-				if (is_file($published_file)) {
-					@unlink($published_file);
-				}
-			}
-			$this->db->query("UPDATE `" . DB_PREFIX . "anchor_price_publication` SET status = 'failed', error_message = '" . $this->db->escape(substr($exception->getMessage(), 0, 2000)) . "' WHERE publication_id = '" . (int)$publication_id . "'");
-			throw $exception;
-		}
-	}
-
-	private function publishPublication($store_id, array $publication, DateTime $now, $batch_key) {
-		if (empty($publication['publication_id'])) {
-			throw new Exception('Daily price list is not ready for publication.');
-		}
-
-		$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "anchor_price_publication` WHERE store_id = '" . (int)$store_id . "' AND batch_key = '" . $this->db->escape($batch_key) . "' AND location_code = '" . self::PUBLICATION_LOCATION_CODE . "' AND status = 'staged'");
-		if ($query->num_rows !== 1) {
-			throw new Exception('Daily price list is incomplete.');
-		}
-
-		$publication = $query->row;
-		if (!$this->publicationFilesAreValid($publication)) {
-			throw new Exception('Prepared price-list checksum is invalid.');
-		}
-		$publication_id = (int)$publication['publication_id'];
-
-		$this->db->query('START TRANSACTION');
-		try {
-			$this->db->query("UPDATE `" . DB_PREFIX . "anchor_price_publication` SET status = 'published', published_at = '" . $this->db->escape($now->format('Y-m-d H:i:s')) . "' WHERE publication_id = '" . $publication_id . "' AND batch_key = '" . $this->db->escape($batch_key) . "' AND status = 'staged'");
-			if ($this->db->countAffected() !== 1) {
-				throw new Exception('Atomic daily price-list publication failed.');
-			}
-			$this->db->query('COMMIT');
-		} catch (Exception $exception) {
-			$this->db->query('ROLLBACK');
-			throw $exception;
-		}
-
-		return $this->publicationResult($this->getPublication($publication_id), false);
-	}
-
-	private function discardUnpublishedPublications($store_id) {
-		$query = $this->db->query("SELECT publication_id FROM `" . DB_PREFIX . "anchor_price_publication` WHERE store_id = '" . (int)$store_id . "' AND status IN ('generating', 'staged')");
-		foreach ($query->rows as $publication) {
-			$this->invalidatePublication((int)$publication['publication_id'], 'Incomplete publication preparation removed before retry.');
-		}
-	}
-
-	private function createBatchKey() {
-		return md5(uniqid((string)mt_rand(), true));
-	}
-
-	private function reservePublication($store_id, $location_code, $created_by, DateTime $now, $batch_key) {
-		$query = $this->db->query("SELECT COALESCE(MAX(sequence_no), 0) + 1 AS sequence_no FROM `" . DB_PREFIX . "anchor_price_publication` WHERE store_id = '" . (int)$store_id . "' AND location_code = '" . $this->db->escape($location_code) . "'");
-		$sequence_no = (int)$query->row['sequence_no'];
-		$location = $this->publicationLocation($location_code);
-		$base_filename = $location['type'] . '_' . $location['address'] . '_' . $location['code'] . '_' . str_pad($sequence_no, 6, '0', STR_PAD_LEFT) . '_' . $now->format('Ymd_His');
-		$filename = $base_filename . '.csv';
-		$xml_filename = $base_filename . '.xml';
-		$relative_path = 'anchor_price/' . $filename;
-		$xml_relative_path = 'anchor_price/' . $xml_filename;
-		$this->db->query("INSERT INTO `" . DB_PREFIX . "anchor_price_publication` SET store_id = '" . (int)$store_id . "', batch_key = '" . $this->db->escape($batch_key) . "', location_code = '" . $this->db->escape($location_code) . "', sequence_no = '" . $sequence_no . "', filename = '" . $this->db->escape($filename) . "', relative_path = '" . $this->db->escape($relative_path) . "', xml_filename = '" . $this->db->escape($xml_filename) . "', xml_relative_path = '" . $this->db->escape($xml_relative_path) . "', status = 'generating', product_count = '0', checksum_sha256 = '', xml_checksum_sha256 = '', created_by = '" . (int)$created_by . "', date_added = '" . $this->db->escape($now->format('Y-m-d H:i:s')) . "'");
-		$publication_id = (int)$this->db->getLastId();
-		return array('publication_id' => $publication_id, 'filename' => $filename, 'xml_filename' => $xml_filename);
-	}
-
-	private function acquirePublicationLock($lock_name) {
-		$query = $this->db->query("SELECT GET_LOCK('" . $this->db->escape($lock_name) . "', 10) AS acquired");
-		if (empty($query->row['acquired'])) {
-			throw new Exception('Another price-list publication is already in progress.');
-		}
-	}
-
-	private function releasePublicationLock($lock_name) {
-		$this->db->query("SELECT RELEASE_LOCK('" . $this->db->escape($lock_name) . "')");
-	}
-
-	private function getTodayPublication($store_id, $location_code, DateTime $now) {
-		$start = clone $now;
-		$start->setTime(0, 0, 0);
-		$end = clone $start;
-		$end->modify('+1 day');
-		$correction_filter = $this->archiveCorrectionColumnsExist() ? ' AND corrects_publication_id IS NULL' : '';
-		$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "anchor_price_publication` WHERE store_id = '" . (int)$store_id . "' AND location_code = '" . $this->db->escape($location_code) . "' AND status = 'published'" . $correction_filter . " AND published_at >= '" . $this->db->escape($start->format('Y-m-d H:i:s')) . "' AND published_at < '" . $this->db->escape($end->format('Y-m-d H:i:s')) . "' ORDER BY publication_id DESC LIMIT 1");
-
-		if (!$query->num_rows) {
-			return array();
-		}
-
-		$publication = $query->row;
-		if (!$this->publicationFilesAreValid($publication)) {
-			$this->invalidatePublication((int)$publication['publication_id'], 'Existing daily CSV/XML publication is missing or its SHA-256 checksum does not match.');
-			return array();
-		}
-
-		return $publication;
-	}
-
-	private function publishedBatchIsValid($store_id, $batch_key) {
-		$batch_key = strtolower(trim((string)$batch_key));
-		if (!preg_match('/^[a-f0-9]{32}$/', $batch_key)) {
-			return false;
-		}
-
-		$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "anchor_price_publication` WHERE store_id = '" . (int)$store_id . "' AND batch_key = '" . $this->db->escape($batch_key) . "' AND status = 'published'");
-		if ($query->num_rows !== 1) {
-			return false;
-		}
-
-		$publication = $query->row;
-		return $publication['location_code'] === self::PUBLICATION_LOCATION_CODE
-			&& !empty($publication['published_at'])
-			&& (int)$publication['product_count'] > 0
-			&& $this->publicationFilesAreValid($publication);
-	}
-
-	private function publicationResult(array $publication, $existing) {
-		return array(
-			'publication_id' => (int)$publication['publication_id'],
-			'batch_key' => isset($publication['batch_key']) ? $publication['batch_key'] : '',
-			'location_code' => $publication['location_code'],
-			'filename' => $publication['filename'],
-			'relative_path' => $publication['relative_path'],
-			'xml_filename' => isset($publication['xml_filename']) ? $publication['xml_filename'] : '',
-			'xml_relative_path' => isset($publication['xml_relative_path']) ? $publication['xml_relative_path'] : '',
-			'product_count' => (int)$publication['product_count'],
-			'checksum_sha256' => $publication['checksum_sha256'],
-			'xml_checksum_sha256' => isset($publication['xml_checksum_sha256']) ? $publication['xml_checksum_sha256'] : '',
-			'existing' => (bool)$existing
-		);
-	}
-
-	private function invalidatePublication($publication_id, $reason) {
-		$publication = $this->getPublication((int)$publication_id);
-		if ($publication) {
-			foreach (array('csv', 'xml') as $format) {
-				$path = $this->getPublicationPath($publication, $format);
-				if ($path) {
-					@unlink($path);
-				}
-			}
-		}
-
-		$this->db->query("UPDATE `" . DB_PREFIX . "anchor_price_publication` SET status = 'failed', error_message = '" . $this->db->escape(substr($reason, 0, 2000)) . "', published_at = NULL WHERE publication_id = '" . (int)$publication_id . "' AND store_id = '" . self::STORE_ID . "'");
-	}
-
-	private function getPublicationProducts($store_id) {
-		$language_id = $this->getCatalogLanguageId();
-		$customer_group_id = (int)$this->config->get('config_customer_group_id');
-		if (!$this->measureColumnsExist()) {
-			throw new Exception('Najprije primijenite nadogradnju baze za jedinice mjere sidrenih cijena.');
-		}
-		$sql = "SELECT p.product_id, p.model, p.sku, p.upc, p.ean, p.jan, p.isbn, p.quantity, p.stock_status_id, p.tax_class_id, p.manufacturer_id, p.price AS regular_price, pd.name AS product_name, COALESCE(m.name, '') AS manufacturer, COALESCE(ss.name, '') AS stock_status, ap.anchor_price_id, ap.verification_status, ap.gross_price AS anchor_gross_price, ap.reference_date, ap.currency_code, (SELECT pdsc.price FROM `" . DB_PREFIX . "product_discount` pdsc WHERE pdsc.product_id = p.product_id AND pdsc.customer_group_id = '" . $customer_group_id . "' AND pdsc.quantity = '1' AND (pdsc.date_start = '0000-00-00' OR pdsc.date_start < NOW()) AND (pdsc.date_end = '0000-00-00' OR pdsc.date_end > NOW()) ORDER BY pdsc.priority ASC, pdsc.price ASC LIMIT 1) AS discount_price, (SELECT ps.price FROM `" . DB_PREFIX . "product_special` ps WHERE ps.product_id = p.product_id AND ps.customer_group_id = '" . $customer_group_id . "' AND (ps.date_start = '0000-00-00' OR ps.date_start < NOW()) AND (ps.date_end = '0000-00-00' OR ps.date_end > NOW()) ORDER BY ps.priority ASC, ps.price ASC LIMIT 1) AS special_price FROM `" . DB_PREFIX . "product` p INNER JOIN `" . DB_PREFIX . "product_to_store` p2s ON (p2s.product_id = p.product_id AND p2s.store_id = '" . (int)$store_id . "') LEFT JOIN `" . DB_PREFIX . "product_description` pd ON (pd.product_id = p.product_id AND pd.language_id = '" . (int)$language_id . "') LEFT JOIN `" . DB_PREFIX . "anchor_price` ap ON (ap.product_id = p.product_id AND ap.store_id = '" . (int)$store_id . "') LEFT JOIN `" . DB_PREFIX . "manufacturer` m ON (m.manufacturer_id = p.manufacturer_id) LEFT JOIN `" . DB_PREFIX . "stock_status` ss ON (ss.stock_status_id = p.stock_status_id AND ss.language_id = '" . (int)$language_id . "') WHERE p.status = '1' AND p.date_available <= NOW() ORDER BY p.product_id ASC";
-		$sql = str_replace('ap.currency_code,', 'ap.currency_code, ap.unit, ap.package_quantity,', $sql);
-		$rows = $this->db->query($sql)->rows;
-		$fallback_manufacturer = 'OPG Ružić';
-
-		foreach ($rows as &$row) {
-			if (trim((string)$row['manufacturer']) === '') {
-				$row['manufacturer'] = $fallback_manufacturer;
-			}
-		}
-		unset($row);
-
-		return $rows;
-	}
-
-	private function assertPublicationProducts(array $products) {
-		$total = 0;
-		foreach ($products as $product) {
-			if (empty($product['anchor_price_id'])
-				|| $product['verification_status'] !== 'confirmed'
-				|| !AnchorPriceUnit::isValid(isset($product['unit']) ? $product['unit'] : '', isset($product['package_quantity']) ? $product['package_quantity'] : 0)
-				|| trim((string)$product['product_name']) === ''
-				|| trim((string)$product['model']) === ''
-				|| trim((string)$product['manufacturer']) === ''
-				|| $this->hasInvalidPublicationBarcode($product)) {
-				$total++;
-			}
-		}
-		if ($total > 0) {
-			throw new Exception($total . ' aktivnih proizvoda nema potvrđenu sidrenu cijenu, jedinicu kg/l, količinu pakiranja, naziv ili šifru, ili sadrži neispravan GTIN barkod. Objava je zaustavljena.');
-		}
-	}
-
-	private function hasInvalidPublicationBarcode(array $product) {
-		foreach (array('ean', 'upc', 'jan', 'isbn') as $field) {
-			$value = isset($product[$field]) ? trim((string)$product[$field]) : '';
-			if ($value === '') {
-				continue;
-			}
-
-			if (!$this->isValidGtin($value)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	private function validPublicationBarcode(array $product) {
-		foreach (array('ean', 'upc', 'jan', 'isbn') as $field) {
-			$value = isset($product[$field]) ? trim((string)$product[$field]) : '';
-			if ($this->isValidGtin($value)) {
-				return $value;
-			}
-		}
-
-		return '';
-	}
-
-	private function isValidGtin($value) {
-		$length = strlen($value);
-		if (!in_array($length, array(8, 12, 13, 14), true) || !preg_match('/^[0-9]+$/', $value)) {
-			return false;
-		}
-
-		$sum = 0;
-		$weight = 3;
-		for ($index = $length - 2; $index >= 0; $index--) {
-			$sum += ((int)$value[$index]) * $weight;
-			$weight = ($weight === 3) ? 1 : 3;
-		}
-
-		return ((10 - ($sum % 10)) % 10) === (int)$value[$length - 1];
-	}
-
-	private function writeCsvRow($handle, array $row) {
-		foreach ($row as &$value) {
-			if (is_string($value) && preg_match('/^[\s]*[=+\-@]/u', $value)) {
-				$value = "'" . $value;
-			}
-		}
-		unset($value);
-
-		if (defined('PHP_VERSION_ID') && PHP_VERSION_ID >= 50504) {
-			$written = fputcsv($handle, $row, ';', '"', '\\');
-		} else {
-			$written = fputcsv($handle, $row, ';', '"');
-		}
-
-		if ($written === false) {
-			throw new Exception('Unable to write a CSV row.');
-		}
-	}
-
-	private function csvMoney($value) {
-		if ($value === null || $value === '') {
-			return '';
-		}
-		return number_format((float)$value, 2, ',', '');
-	}
-
-	private function csvText($value) {
-		return trim(html_entity_decode((string)$value, ENT_QUOTES, 'UTF-8'));
-	}
-
-	private function xmlEscape($value) {
-		return htmlspecialchars((string)$value, ENT_QUOTES | ENT_XML1, 'UTF-8');
-	}
-
-	private function xmlProduct(array $product) {
-		$xml = "  <product>\n";
-		foreach (array(
-			'productId' => 'product_id',
-			'name' => 'name',
-			'model' => 'model',
-			'sku' => 'sku',
-			'manufacturer' => 'manufacturer',
-			'unit' => 'unit',
-			'packageQuantity' => 'package_quantity',
-			'unitPrice' => 'unit_price',
-			'anchorUnitPrice' => 'anchor_unit_price',
-			'regularPrice' => 'regular_price',
-			'currentPrice' => 'current_price',
-			'specialPrice' => 'special_price',
-			'anchorPrice' => 'anchor_price',
-			'anchorDate' => 'anchor_date',
-			'barcode' => 'barcode',
-			'available' => 'available',
-			'quantity' => 'quantity',
-			'stockStatus' => 'stock_status',
-			'currency' => 'currency'
-		) as $tag => $key) {
-			$xml .= '    <' . $tag . '>' . $this->xmlEscape(isset($product[$key]) ? $product[$key] : '') . '</' . $tag . ">\n";
-		}
-		return $xml . "  </product>\n";
-	}
-
-	private function publicationSlug($value) {
-		$value = trim(html_entity_decode((string)$value, ENT_QUOTES, 'UTF-8'));
-		if (function_exists('iconv')) {
-			$converted = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value);
-			if ($converted !== false) {
-				$value = $converted;
-			}
-		}
-		$value = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $value));
-		$value = trim($value, '-');
-		return $value !== '' ? $value : 'nepoznata-adresa';
-	}
-
-	public function getPublicationSettings() {
-		$catalog_url = defined('HTTPS_CATALOG') && HTTPS_CATALOG ? HTTPS_CATALOG : (defined('HTTP_CATALOG') ? HTTP_CATALOG : 'webshop');
-		$host = parse_url($catalog_url, PHP_URL_HOST);
-		$address = trim((string)$this->config->get('module_anchor_price_publication_address'));
-		if ($address === '') {
-			$address = preg_replace('~<br\s*/?>~i', ' ', (string)$this->config->get('config_address'));
-			$address = trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($address), ENT_QUOTES, 'UTF-8')));
-		}
-		if ($address === '') {
-			$address = $host ? $host : $catalog_url;
-		}
-		$type = trim((string)$this->config->get('module_anchor_price_publication_type'));
-		$code = trim((string)$this->config->get('module_anchor_price_publication_code'));
-		return array(
-			'type' => $type !== '' ? $type : 'webshop',
-			'address' => $address,
-			'code' => $code !== '' ? $code : 'WEB'
-		);
-	}
-
-	private function publicationLocation($location_code) {
-		$settings = $this->getPublicationSettings();
-		foreach (array('type' => 24, 'address' => 120, 'code' => 16) as $field => $limit) {
-			$settings[$field] = substr(AnchorPriceUnit::filenamePart($settings[$field]), 0, $limit);
-			if ($settings[$field] === '') {
-				throw new Exception('Naziv cjenika zahtijeva oblik prodaje, adresu i oznaku objekta.');
-			}
-		}
-		return $settings;
-	}
-
-	private function publicationAddressLine($address) {
-		$address = preg_replace('~<br\s*/?>~i', "\n", (string)$address);
-		$address = html_entity_decode(strip_tags(str_replace(array("\r\n", "\r"), "\n", $address)), ENT_QUOTES, 'UTF-8');
-		$fallback = '';
-
-		foreach (explode("\n", $address) as $line) {
-			$line = trim($line);
-
-			if ($line === '' || preg_match('/\b(oib|iban|mbs|mati[cč]ni|ra[cč]un|banka|swift|vat)\b/iu', $line)) {
-				continue;
-			}
-
-			if ($fallback === '') {
-				$fallback = $line;
-			}
-
-			if (preg_match('/\p{L}/u', $line) && preg_match('/\d/', $line)) {
-				return $line;
-			}
-		}
-
-		return $fallback;
-	}
-
-	public function archiveExpiredPublications() {
-		$cutoff = new DateTime('now', new DateTimeZone('Europe/Zagreb'));
-		$cutoff->modify('-30 days');
-		$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "anchor_price_publication` WHERE store_id = '" . self::STORE_ID . "' AND status = 'published' AND published_at < '" . $this->db->escape($cutoff->format('Y-m-d H:i:s')) . "'");
-
-		foreach ($query->rows as $publication) {
-			foreach (array('csv', 'xml') as $format) {
-				$path = $this->getPublicationPath($publication, $format);
-				if ($path && is_file($path)) {
-					@unlink($path);
-				}
-			}
-			$this->db->query("UPDATE `" . DB_PREFIX . "anchor_price_publication` SET status = 'expired' WHERE publication_id = '" . (int)$publication['publication_id'] . "'");
-		}
-	}
-
 	public function getPublications($limit = 10) {
 		$limit = max(1, min(100, (int)$limit));
 		$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "anchor_price_publication` WHERE store_id = '" . self::STORE_ID . "' AND location_code = '" . self::PUBLICATION_LOCATION_CODE . "' ORDER BY publication_id DESC LIMIT " . $limit);
 		return $query->rows;
-	}
-
-	public function getDailyPublicationState() {
-		$now = new DateTime('now', new DateTimeZone('Europe/Zagreb'));
-		$start = clone $now;
-		$start->setTime(0, 0, 0);
-		$end = clone $start;
-		$end->modify('+1 day');
-		$correction_filter = $this->archiveCorrectionColumnsExist() ? ' AND corrects_publication_id IS NULL' : '';
-		$query = $this->db->query("SELECT DISTINCT location_code FROM `" . DB_PREFIX . "anchor_price_publication` WHERE store_id = '" . self::STORE_ID . "' AND status = 'published'" . $correction_filter . " AND published_at >= '" . $this->db->escape($start->format('Y-m-d H:i:s')) . "' AND published_at < '" . $this->db->escape($end->format('Y-m-d H:i:s')) . "'");
-		$published = array();
-		foreach ($query->rows as $row) {
-			$published[] = $row['location_code'];
-		}
-		return array(
-			'due' => (int)$now->format('Hi') >= 800,
-			'published' => $published,
-			'missing' => array_values(array_diff(array(self::PUBLICATION_LOCATION_CODE), $published))
-		);
 	}
 
 	public function getPublication($publication_id) {

@@ -42,8 +42,8 @@ class ControllerInformationPriceList extends Controller {
 				'location_name' => $this->language->get('text_location'),
 				'published'     => date($this->language->get('datetime_format'), strtotime($publication['display_published_at'])),
 				'product_count' => (int)$publication['product_count'],
-				'filename'      => $publication['filename'],
-				'xml_filename'  => $publication['xml_filename'],
+				'filename'      => PriceListFormat::publicFilename($publication, $this->config->get('module_anchor_price_oib'), 'csv'),
+				'xml_filename'  => PriceListFormat::publicFilename($publication, $this->config->get('module_anchor_price_oib'), 'xml'),
 				'correction_note' => $corrects_publication_id ? sprintf($this->language->get('text_archive_corrected_at'), date($this->language->get('datetime_format'), strtotime($publication['published_at']))) : '',
 				'download_csv'  => $this->url->link('information/price_list/download', 'publication_id=' . (int)$publication['publication_id'] . '&format=csv'),
 				'download_xml'  => $this->url->link('information/price_list/download', 'publication_id=' . (int)$publication['publication_id'] . '&format=xml')
@@ -82,13 +82,31 @@ class ControllerInformationPriceList extends Controller {
 			return $this->notFound();
 		}
 
-		$filename = basename($format === 'xml' ? $publication['xml_filename'] : $publication['filename']);
+		$filename = PriceListFormat::publicFilename($publication, $this->config->get('module_anchor_price_oib'), $format);
+		if (PriceListFormat::isCurrentFormat($publication['filename'])) {
+			$content = file_get_contents($path);
+		} else {
+			$model = $this->model_extension_module_anchor_price;
+			$csv_path = $model->publicationPath($publication, 'csv');
+			if (!$model->publicationFileIsValid($publication, $csv_path, 'csv')) { return $this->notFound(); }
+			$stream = fopen($csv_path, 'rb');
+			try {
+				$rows = PriceListFormat::legacyRows($stream);
+				$time = new DateTime($publication['published_at'], new DateTimeZone('Europe/Zagreb'));
+				$content = $format === 'csv' ? PriceListFormat::csv($rows) : PriceListFormat::xml($rows, $this->config->get('module_anchor_price_oib'), $time);
+			} catch (Exception $exception) {
+				$this->log->write('Arhivski cjenik #' . $publication['publication_id'] . ': ' . $exception->getMessage());
+				return $this->notFound();
+			} finally {
+				fclose($stream);
+			}
+		}
 		$this->response->setCompression(0);
 		$this->response->addHeader('Content-Type: ' . ($format === 'xml' ? 'application/xml' : 'text/csv') . '; charset=utf-8');
 		$this->response->addHeader('Content-Disposition: attachment; filename="' . str_replace('"', '', $filename) . '"');
-		$this->response->addHeader('Content-Length: ' . filesize($path));
+		$this->response->addHeader('Content-Length: ' . strlen($content));
 		$this->response->addHeader('X-Content-Type-Options: nosniff');
-		$this->response->setOutput(file_get_contents($path));
+		$this->response->setOutput($content);
 	}
 
 	private function notFound() {

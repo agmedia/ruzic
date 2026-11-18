@@ -40,10 +40,10 @@
 			{% else %}
 			x&nbsp;{{ product.quantity }} 
 			{% endif %}</td>
-		  <td class="price1 hidden-xs hidden-sm"><small>{{ product.priceeur }}</small> {{ product.price }}
+		  <td class="price1 hidden-xs hidden-sm"><small>{{ product.priceeur }}</small> {{ product.price }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %}
 			{% if product.price and product.anchor_price_text %}<span class="anchor-price">{{ product.anchor_price_text|escape }}</span>{% endif %}
 		  </td>
-          <td class="total text-right"><small>{{ product.totaleur }}</small> {{ product.total }}</td>
+          <td class="total text-right"><small>{{ product.totaleur }}</small> {{ product.total }}<span class="visible-xs visible-sm">{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %}{% if product.anchor_price_text %}<span class="anchor-price">{{ product.anchor_price_text|escape }}</span>{% endif %}</span></td>
         </tr>
         {% endfor %}
         {% for voucher in vouchers %} 

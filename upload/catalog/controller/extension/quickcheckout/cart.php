@@ -174,6 +174,7 @@ class ControllerExtensionQuickCheckoutCart extends Controller {
 				'quantity'  => $product['quantity'],
 				'stock'     => $product['stock'] ? true : !(!$this->config->get('config_stock_checkout') || $this->config->get('config_stock_warning')),
 				'reward'    => ($product['reward'] ? sprintf($this->language->get('text_points'), $product['reward']) : ''),
+				'current_package_price' => $this->tax->calculate($product['price'], $product['tax_class_id'], $this->config->get('config_tax')),
 				'price'     => $price,
                 'priceeur'     => $priceeur,
 				'total'     => $total,

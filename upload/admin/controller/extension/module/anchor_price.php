@@ -1,5 +1,5 @@
 <?php
-require_once DIR_SYSTEM . 'library/anchor_price_unit.php';
+require_once DIR_SYSTEM . 'library/price_list_format.php';
 class ControllerExtensionModuleAnchorPrice extends Controller {
 	private $error = array();
 
@@ -117,23 +117,15 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 		$data['cancel'] = $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=module', true);
 		$data['user_token'] = $this->session->data['user_token'];
 		$data['reference_date_setting'] = $this->model_extension_module_anchor_price->getReferenceDate();
-		$publication_settings = $this->model_extension_module_anchor_price->getPublicationSettings();
-		foreach (array('type', 'address', 'code') as $field) {
-			$data['publication_' . $field] = $publication_settings[$field];
-		}
+		$data['publication_oib'] = $this->config->get('module_anchor_price_oib') ?: PriceListFormat::DEFAULT_OIB;
 		$data['cron_key'] = (string)$this->config->get('module_anchor_price_cron_key');
 		$catalog_url = defined('HTTPS_CATALOG') ? HTTPS_CATALOG : HTTP_CATALOG;
 		$data['cron_url'] = rtrim($catalog_url, '/') . '/index.php?route=extension/module/anchor_price/cron';
 		$data['cron_url_with_key'] = $data['cron_url'] . '&key=' . rawurlencode($data['cron_key']);
 		$data['public_latest_csv'] = rtrim($catalog_url, '/') . '/index.php?route=information/price_list/download&format=csv';
 		$data['public_latest_xml'] = rtrim($catalog_url, '/') . '/index.php?route=information/price_list/download&format=xml';
-		$data['publication_warning'] = '';
-		if ($this->model_extension_module_anchor_price->tablesExist()) {
-			$publication_state = $this->model_extension_module_anchor_price->getDailyPublicationState();
-			if ($publication_state['due'] && $publication_state['missing']) {
-				$data['publication_warning'] = sprintf($this->language->get('warning_publication_due'), implode(', ', $publication_state['missing']));
-			}
-		}
+		$data['last_cron'] = is_file(DIR_LOGS . 'price_list_cron.log') ? file_get_contents(DIR_LOGS . 'price_list_cron.log') : $this->language->get('text_cron_unseen');
+		$data['publication_warning'] = is_file(DIR_LOGS . 'price_list_error.log') ? file_get_contents(DIR_LOGS . 'price_list_error.log') : '';
 
 		$url = $this->filterUrl();
 		$next_order = $order === 'ASC' ? 'DESC' : 'ASC';
@@ -190,6 +182,7 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 
 			try {
 				$this->model_extension_module_anchor_price->updateAnchorPrice($anchor_price_id, $input, trim($this->request->post['reason']), $this->userId());
+				$this->publishChange();
 				$this->session->data['success'] = $this->language->get('text_success_edit');
 				$this->response->redirect($this->url->link('extension/module/anchor_price', 'user_token=' . $this->session->data['user_token'], true));
 				return;
@@ -293,6 +286,7 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 				} elseif ($dry_run) {
 					$this->session->data['success'] = sprintf($this->language->get('text_success_import_dry_run'), $result['rows']);
 				} else {
+					$this->publishChange();
 					$this->session->data['success'] = sprintf($this->language->get('text_success_import'), $result['created'], $result['updated']);
 				}
 			} catch (Exception $exception) {
@@ -346,20 +340,14 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 	public function settings() {
 		$this->load->language('extension/module/anchor_price');
 		$reference_date = isset($this->request->post['reference_date_setting']) ? trim($this->request->post['reference_date_setting']) : '';
-		$publication_type = isset($this->request->post['publication_type']) ? trim($this->request->post['publication_type']) : '';
-		$publication_address = isset($this->request->post['publication_address']) ? trim($this->request->post['publication_address']) : '';
-		$publication_code = isset($this->request->post['publication_code']) ? trim($this->request->post['publication_code']) : '';
+		$oib = isset($this->request->post['publication_oib']) ? trim($this->request->post['publication_oib']) : '';
 		$today = (new DateTime('now', new DateTimeZone('Europe/Zagreb')))->format('Y-m-d');
 
 		if (!$this->config->get('module_anchor_price_status')) {
 			$this->session->data['error'] = $this->language->get('error_not_installed');
 		} elseif ($this->request->server['REQUEST_METHOD'] !== 'POST' || !$this->user->hasPermission('modify', 'extension/module/anchor_price')) {
 			$this->session->data['error'] = $this->language->get('error_permission');
-		} elseif (!preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,23}$/D', $publication_type)
-			|| !preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,15}$/D', $publication_code)
-			|| utf8_strlen($publication_address) < 1 || utf8_strlen($publication_address) > 120
-			|| preg_match('/[<>\x00-\x1F\x7F]/', $publication_address)
-			|| AnchorPriceUnit::filenamePart($publication_address) === '') {
+		} elseif (!preg_match('/^[0-9]{11}$/D', $oib)) {
 			$this->session->data['error'] = $this->language->get('error_publication_settings');
 		} elseif (!$this->validDate($reference_date) || $reference_date > $today) {
 			$this->session->data['error'] = $this->language->get('error_reference_date_setting');
@@ -367,10 +355,10 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 			$this->load->model('setting/setting');
 			$settings = $this->model_setting_setting->getSetting('module_anchor_price', 0);
 			$settings['module_anchor_price_reference_date'] = $reference_date;
-			$settings['module_anchor_price_publication_type'] = $publication_type;
-			$settings['module_anchor_price_publication_address'] = $publication_address;
-			$settings['module_anchor_price_publication_code'] = $publication_code;
+			$settings['module_anchor_price_oib'] = $oib;
 			$this->model_setting_setting->editSetting('module_anchor_price', $settings, 0);
+			$this->config->set('module_anchor_price_oib', $oib);
+			$this->publishChange();
 			$this->session->data['success'] = $this->language->get('text_success_settings');
 		}
 
@@ -423,6 +411,7 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 			$this->load->model('extension/module/anchor_price');
 			if ($this->model_extension_module_anchor_price->tablesExist()) {
 				$this->model_extension_module_anchor_price->capturePublishedProduct($product_id, $source, $this->userId());
+				$this->publishChange();
 			}
 		}
 	}
@@ -432,12 +421,26 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 			return;
 		}
 
-		if (isset($args[0], $args[1]) && $args[1] === 'status') {
+		if (isset($args[0], $args[1])) {
 			$this->load->model('extension/module/anchor_price');
 
 			if ($this->model_extension_module_anchor_price->tablesExist()) {
-				$this->model_extension_module_anchor_price->capturePublishedProduct((int)$args[0], 'quick_edit_event', $this->userId());
+				if ($args[1] === 'status') {
+					$this->model_extension_module_anchor_price->capturePublishedProduct((int)$args[0], 'quick_edit_event', $this->userId());
+				}
+				$this->publishChange();
 			}
+		}
+	}
+
+	private function publishChange() {
+		if (!$this->config->get('module_anchor_price_status')) { return; }
+		try {
+			$this->load->model('extension/module/anchor_price');
+			$this->model_extension_module_anchor_price->generateDailyPublications(0, $this->userId());
+		} catch (Exception $exception) {
+			// The product or base-price edit has already been saved.
+			$this->session->data['error'] = $exception->getMessage();
 		}
 	}
 
@@ -453,12 +456,8 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 		if (!isset($settings['module_anchor_price_default_unit']) || trim($settings['module_anchor_price_default_unit']) === '') {
 			$settings['module_anchor_price_default_unit'] = 'kg';
 		}
-		$publication_defaults = $this->model_extension_module_anchor_price->getPublicationSettings();
-		foreach (array('type', 'address', 'code') as $field) {
-			$key = 'module_anchor_price_publication_' . $field;
-			if (!isset($settings[$key]) || trim($settings[$key]) === '') {
-				$settings[$key] = $publication_defaults[$field];
-			}
+		if (empty($settings['module_anchor_price_oib'])) {
+			$settings['module_anchor_price_oib'] = PriceListFormat::DEFAULT_OIB;
 		}
 		if (!isset($settings['module_anchor_price_cron_key']) || trim($settings['module_anchor_price_cron_key']) === '') {
 			$settings['module_anchor_price_cron_key'] = $this->generateCronKey();

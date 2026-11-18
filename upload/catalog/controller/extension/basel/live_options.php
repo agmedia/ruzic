@@ -111,6 +111,15 @@ class ControllerExtensionBaselLiveOptions extends Controller {
 					$json['new_price']['tax'] = false;
 				}
 				
+				if ($this->data['price'] !== false && $this->config->get('module_anchor_price_status')) {
+					$this->load->model('extension/module/anchor_price');
+					$records = $this->model_extension_module_anchor_price->getByProductIds(array($product_id));
+					if (isset($records[$product_id])) {
+						$package_price = ($this->data['special'] !== false ? $this->data['special'] : $this->data['price']) + $options_makeup;
+						$display = $this->model_extension_module_anchor_price->getDisplayData($records[$product_id], $package_price);
+						$json['new_price']['unit'] = $display['current_unit_price'];
+					}
+				}
 				$json['success'] = true;
 				} else {
 					$json['success'] = false;
@@ -162,6 +171,8 @@ class ControllerExtensionBaselLiveOptions extends Controller {
 					
 					success: function(json) {
 						if (json.success) {
+							var unit = json.new_price.unit;
+							$('{$this->options_container} .live-unit-price[data-product-id="$product_id"]').text(unit ? ' (' + unit + ')' : '');
 							
 							if ($('{$this->options_container} {$this->tax_price_container}').length > 0 && json.new_price.tax) {
 								animation_on_change_price_with_options('{$this->options_container} {$this->tax_price_container}', json.new_price.tax);

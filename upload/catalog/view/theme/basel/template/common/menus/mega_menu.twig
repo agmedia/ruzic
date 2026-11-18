@@ -135,10 +135,10 @@ background-position:{{ row.position }};
 <div class="price">
 {% if submenu.product.special %}
 <span class="price-old">
-{{ submenu.product.price }}</span><span class="price-new">{{ submenu.product.special }}
+{{ submenu.product.price }}</span><span class="price-new">{{ submenu.product.special }}{% if submenu.product.current_unit_price %} <span class="current-unit-price">({{ submenu.product.current_unit_price|escape }})</span>{% endif %}
 </span>
 {% else %}
-{{ submenu.product.price }}
+{{ submenu.product.price }}{% if submenu.product.current_unit_price %} <span class="current-unit-price">({{ submenu.product.current_unit_price|escape }})</span>{% endif %}
 {% endif %}
 </div>
 {% endif %}

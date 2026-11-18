@@ -25,7 +25,7 @@
 			  <span class="label label-info">{{ text_recurring }}</span> <small>{{ product.recurring }}</small>
 			  {% endif %}</td>
 
-			<td class="text-right">{{ product.price }}
+			<td class="text-right">{{ product.price }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %}
 			  {% if product.price and product.anchor_price_text %}<span class="anchor-price">{{ product.anchor_price_text|escape }}</span>{% endif %}
 			</td>
 			<td class="text-right">{{ product.total }}</td>

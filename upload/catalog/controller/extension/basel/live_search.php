@@ -80,13 +80,18 @@ class ControllerExtensionBaselLiveSearch extends Controller {
 
 					
 					$json['total'] = (int)$search_result;
-					$anchor_display = isset($anchor_records[(int)$result['product_id']]) ? $this->model_extension_module_anchor_price->getDisplayData($anchor_records[(int)$result['product_id']]) : array();
+					$anchor_display = array();
+					if ($price && isset($anchor_records[(int)$result['product_id']])) {
+						$package_price = $this->tax->calculate($special ? $result['special'] : $result['price'], $result['tax_class_id'], $this->config->get('config_tax'));
+						$anchor_display = $this->model_extension_module_anchor_price->getDisplayData($anchor_records[(int)$result['product_id']], $package_price);
+					}
 					$json['products'][] = array(
 						'product_id'  => $result['product_id'],
 						'image'       => $image,
 						'name' 		  => $name,
 						'price'       => $price,
 						'special'     => $special,
+						'current_unit_price' => isset($anchor_display['current_unit_price']) ? $anchor_display['current_unit_price'] : '',
 						'anchor_text' => isset($anchor_display['anchor_price_text']) ? $anchor_display['anchor_price_text'] : '',
 						'url'         => $this->url->link('product/product', 'product_id=' . $result['product_id'])
 					);

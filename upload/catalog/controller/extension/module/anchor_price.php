@@ -18,6 +18,7 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 		if ($product_id > 0) {
 			$this->load->model('extension/module/anchor_price');
 			$this->model_extension_module_anchor_price->capturePublishedProduct($product_id, $source);
+			$this->model_extension_module_anchor_price->generatePublication();
 		}
 	}
 
@@ -40,13 +41,7 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 			return;
 		}
 
-		$display = array();
-
-		foreach ($records as $product_id => $record) {
-			$display[$product_id] = $this->model_extension_module_anchor_price->getDisplayData($record);
-		}
-
-		$this->appendDisplayData($data, $display);
+		$this->appendDisplayData($data, $records);
 	}
 
 	public function cron() {
@@ -80,6 +75,13 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 		$this->load->model('extension/module/anchor_price');
 		$result = $this->model_extension_module_anchor_price->generatePublication(false);
 
+		$now = new DateTime('now', new DateTimeZone('Europe/Zagreb'));
+		$status = isset($result['error']) ? $result['error'] : '';
+		if (!empty($result['success'])) {
+			$web = $result['locations']['WEB'];
+			$status = ($web['existing'] ? 'Bez izmjena, cjenik ' : 'Objavljen cjenik ') . '#' . $web['publication']['sequence_no'];
+		}
+		file_put_contents(DIR_LOGS . 'price_list_cron.log', $now->format('d. m. Y. H:i:s') . ' — ' . $status, LOCK_EX);
 		if (empty($result['success'])) {
 			$this->response->addHeader('HTTP/1.1 500 Internal Server Error');
 		}
@@ -114,6 +116,8 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 			'common/cart',
 			'checkout/cart',
 			'checkout/confirm',
+			'extension/payment/pp_express_confirm',
+			'extension/payment/pp_braintree_confirm',
 			'quickcheckout/cart',
 			'quickcheckout/confirm',
 			'extension/quickcheckout/cart',
@@ -142,22 +146,26 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 		}
 	}
 
-	private function appendDisplayData(&$value, $display) {
+	private function appendDisplayData(&$value, $records) {
 		if (!is_array($value)) {
 			return;
 		}
 
 		$product_id = $this->productIdFromViewData($value);
 
-		if ($product_id > 0 && isset($display[$product_id])) {
-			foreach ($display[$product_id] as $key => $field_value) {
+		if (!empty($value['price']) && isset($records[$product_id])) {
+			$package_price = isset($value['current_package_price']) ? $value['current_package_price'] : null;
+			$record = $records[$product_id];
+			if (isset($value['special']) && !$value['special']) { $record['special'] = null; }
+			$display = $this->model_extension_module_anchor_price->getDisplayData($record, $package_price);
+			foreach ($display as $key => $field_value) {
 				$value[$key] = $field_value;
 			}
 		}
 
 		foreach ($value as &$child) {
 			if (is_array($child)) {
-				$this->appendDisplayData($child, $display);
+				$this->appendDisplayData($child, $records);
 			}
 		}
 		unset($child);

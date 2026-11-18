@@ -143,6 +143,7 @@ class ControllerCheckoutCart extends Controller {
 					'quantity'  => $product['quantity'],
 					'stock'     => $product['stock'] ? true : !(!$this->config->get('config_stock_checkout') || $this->config->get('config_stock_warning')),
 					'reward'    => ($product['reward'] ? sprintf($this->language->get('text_points'), $product['reward']) : ''),
+					'current_package_price' => $price !== false ? $unit_price : null,
 					'price'     => $price,
                     'priceeur'     => $priceeur,
                     'total'     => $total,

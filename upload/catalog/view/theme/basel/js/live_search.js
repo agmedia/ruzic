@@ -51,11 +51,12 @@ $(document).ready(function() {
 								}
 								html += '<a class="product-name main-font">' + product.name + '</a>';
 
-								if(show_price){
+								if (show_price && product.price) {
+									var unitPrice = product.current_unit_price ? ' (' + $('<div>').text(product.current_unit_price).html() + ')' : '';
 									if (product.special) {
-										html += '<div class="price"><span class="price-old">' + product.price + '</span><span class="price">' + product.special + '</span></div>';
+										html += '<div class="price"><span class="price-old">' + product.price + '</span><span class="price">' + product.special + unitPrice + '</span></div>';
 									} else {
-										html += '<div class="price"><span class="price">' + product.price + '</span></div>';
+										html += '<div class="price"><span class="price">' + product.price + unitPrice + '</span></div>';
 									}
 								}
 								if (show_price && product.price && product.anchor_text) {

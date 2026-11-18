@@ -1,9 +1,9 @@
 <?php
 $_['heading_title']      = 'Cjenici';
 $_['text_home']          = 'Početna';
-$_['text_intro']         = 'Dnevni digitalni cjenik web trgovine dostupan je u CSV i XML formatu. Objave prethodnih 30 dana ostaju dostupne u arhivi.';
+$_['text_intro']         = 'Važeći cjenik dostupan je u CSV i XML formatu. Prethodni cjenik dostupan je još 15 dana od zamjene.';
 $_['text_empty']         = 'Trenutačno nema objavljenih cjenika.';
-$_['text_location']      = 'OPG Ružić web trgovina';
+$_['text_location']      = 'Voćarstvo Ružić d.o.o. – web trgovina';
 $_['text_archive_correction'] = 'Ispravak objave #%s; izvorno objavljeno %s';
 $_['text_archive_corrected_at'] = 'Ispravljeno %s';
 $_['column_location']    = 'Cjenik';
