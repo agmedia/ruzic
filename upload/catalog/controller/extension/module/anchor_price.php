@@ -158,6 +158,9 @@ class ControllerExtensionModuleAnchorPrice extends Controller {
 			$record = $records[$product_id];
 			if (isset($value['special']) && !$value['special']) { $record['special'] = null; }
 			$display = $this->model_extension_module_anchor_price->getDisplayData($record, $package_price);
+			if (!empty($value['sale_badge']) && isset($record['special'])) {
+				$value['sale_badge'] = strpos((string)$this->config->get('config_language'), 'en') === 0 ? 'Sale' : 'Akcija';
+			}
 			foreach ($display as $key => $field_value) {
 				$value[$key] = $field_value;
 			}

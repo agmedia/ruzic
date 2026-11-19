@@ -1,4 +1,5 @@
 <?php
+require_once DIR_SYSTEM . 'library/special_price_history.php';
 /**
   * Copyright (c) Facebook, Inc. and its affiliates.
   * All rights reserved.
@@ -33,7 +34,7 @@ class ModelExtensionModuleFacebookBusiness extends Model {
         $sql = "SELECT p.*, pd.*, m.name AS manufacturer_name, ptc.category_name FROM " . DB_PREFIX . "product p " .
           "LEFT JOIN " . DB_PREFIX . "product_description pd ON (p.product_id = pd.product_id) " .
           "LEFT JOIN " . DB_PREFIX . "manufacturer m ON (p.manufacturer_id = m.manufacturer_id) " .
-          "LEFT JOIN " . DB_PREFIX . "product_special ps ON (p.product_id = ps.product_id) " .
+          "LEFT JOIN " . \SpecialPriceHistory::table($this->config) . " ps ON (p.product_id = ps.product_id) " .
           "LEFT JOIN " .
             "(SELECT ptc.product_id, ptc.category_id, cd.name AS category_name " .
               "FROM (SELECT product_id, MAX(category_id) AS category_id " .
@@ -114,7 +115,7 @@ class ModelExtensionModuleFacebookBusiness extends Model {
     }
 
     public function getProductSpecials($product_id) {
-        $query = $this->db->query("SELECT price AS special, date_start AS special_date_start, date_end AS special_date_end FROM " . DB_PREFIX . "product_special WHERE product_id = '" . (int)$product_id . "' AND customer_group_id = '" . (int)$this->config->get('config_customer_group_id') . "' AND ((date_start = '0000-00-00' OR date_start < NOW()) AND (date_end = '0000-00-00' OR date_end > NOW())) ORDER BY priority ASC, price ASC LIMIT 1");
+        $query = $this->db->query("SELECT price AS special, date_start AS special_date_start, date_end AS special_date_end FROM " . \SpecialPriceHistory::table($this->config) . " active_special WHERE product_id = '" . (int)$product_id . "' AND customer_group_id = '" . (int)$this->config->get('config_customer_group_id') . "' AND ((date_start = '0000-00-00' OR date_start < NOW()) AND (date_end = '0000-00-00' OR date_end > NOW())) ORDER BY priority ASC, price ASC LIMIT 1");
 
         return $query->row;
     }

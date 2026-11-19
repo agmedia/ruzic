@@ -54,10 +54,13 @@ $(document).ready(function() {
 								if (show_price && product.price) {
 									var unitPrice = product.current_unit_price ? ' (' + $('<div>').text(product.current_unit_price).html() + ')' : '';
 									if (product.special) {
-										html += '<div class="price"><span class="price-old">' + product.price + '</span><span class="price">' + product.special + unitPrice + '</span></div>';
+										html += '<div class="price"><span class="price">' + product.special + unitPrice + '</span></div>';
 									} else {
 										html += '<div class="price"><span class="price">' + product.price + unitPrice + '</span></div>';
 									}
+								}
+								if (show_price && product.price && product.special && product.lowest_text) {
+									html += '<div class="anchor-price">' + $('<div>').text(product.lowest_text).html() + '</div>';
 								}
 								if (show_price && product.price && product.anchor_text) {
 									html += '<div class="anchor-price">' + $('<div>').text(product.anchor_text).html() + '</div>';

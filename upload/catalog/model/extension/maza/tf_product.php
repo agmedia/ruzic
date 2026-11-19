@@ -1,4 +1,5 @@
 <?php
+require_once DIR_SYSTEM . 'library/special_price_history.php';
 class ModelExtensionMazaTfProduct extends Model {
 	public function getProducts($data = array()) {
                 // Get sort order list
@@ -69,7 +70,7 @@ class ModelExtensionMazaTfProduct extends Model {
                         // Estimate special and discounted lowest price based on priority per product
                         if(in_array('p.price', $sort)){
                             $sql .= ", (SELECT price FROM " . DB_PREFIX . "product_discount WHERE product_id = p.product_id AND customer_group_id = '" . (int)$this->config->get('config_customer_group_id') . "' AND quantity = '1' AND ((date_start = '0000-00-00' OR date_start < NOW()) AND (date_end = '0000-00-00' OR date_end > NOW())) ORDER BY priority ASC, price ASC LIMIT 1) AS discount";
-                            $sql .= ", (SELECT price FROM " . DB_PREFIX . "product_special WHERE product_id = p.product_id AND customer_group_id = '" . (int)$this->config->get('config_customer_group_id') . "' AND ((date_start = '0000-00-00' OR date_start < NOW()) AND (date_end = '0000-00-00' OR date_end > NOW())) ORDER BY priority ASC, price ASC LIMIT 1) AS special";
+                            $sql .= ", (SELECT price FROM " . \SpecialPriceHistory::table($this->config) . " active_special WHERE product_id = p.product_id AND customer_group_id = '" . (int)$this->config->get('config_customer_group_id') . "' AND ((date_start = '0000-00-00' OR date_start < NOW()) AND (date_end = '0000-00-00' OR date_end > NOW())) ORDER BY priority ASC, price ASC LIMIT 1) AS special";
                         }
 
                         if (!empty($data['filter_category_id'])) {
@@ -572,17 +573,17 @@ class ModelExtensionMazaTfProduct extends Model {
                         if($this->config->get('config_tax')){
                             $sql .= ", (p.price + IFNULL(ftax.total,0) + ((IFNULL(ptax.total,0) * p.price) / 100)) price";
                             $sql .= ", (SELECT price + IFNULL(ftax.total,0) + ((IFNULL(ptax.total,0) * price) / 100) FROM " . DB_PREFIX . "product_discount WHERE product_id = p.product_id AND customer_group_id = '" . (int)$this->config->get('config_customer_group_id') . "' AND quantity = '1' AND ((date_start = '0000-00-00' OR date_start < NOW()) AND (date_end = '0000-00-00' OR date_end > NOW())) ORDER BY priority ASC, price ASC LIMIT 1) AS discount";
-                            $sql .= ", (SELECT price + IFNULL(ftax.total,0) + ((IFNULL(ptax.total,0) * price) / 100) FROM " . DB_PREFIX . "product_special WHERE product_id = p.product_id AND customer_group_id = '" . (int)$this->config->get('config_customer_group_id') . "' AND ((date_start = '0000-00-00' OR date_start < NOW()) AND (date_end = '0000-00-00' OR date_end > NOW())) ORDER BY priority ASC, price ASC LIMIT 1) AS special";
+                            $sql .= ", (SELECT price + IFNULL(ftax.total,0) + ((IFNULL(ptax.total,0) * price) / 100) FROM " . \SpecialPriceHistory::table($this->config) . " active_special WHERE product_id = p.product_id AND customer_group_id = '" . (int)$this->config->get('config_customer_group_id') . "' AND ((date_start = '0000-00-00' OR date_start < NOW()) AND (date_end = '0000-00-00' OR date_end > NOW())) ORDER BY priority ASC, price ASC LIMIT 1) AS special";
                         } else {
                             $sql .= ", p.price";
                             $sql .= ", (SELECT price FROM " . DB_PREFIX . "product_discount WHERE product_id = p.product_id AND customer_group_id = '" . (int)$this->config->get('config_customer_group_id') . "' AND quantity = '1' AND ((date_start = '0000-00-00' OR date_start < NOW()) AND (date_end = '0000-00-00' OR date_end > NOW())) ORDER BY priority ASC, price ASC LIMIT 1) AS discount";
-                            $sql .= ", (SELECT price FROM " . DB_PREFIX . "product_special WHERE product_id = p.product_id AND customer_group_id = '" . (int)$this->config->get('config_customer_group_id') . "' AND ((date_start = '0000-00-00' OR date_start < NOW()) AND (date_end = '0000-00-00' OR date_end > NOW())) ORDER BY priority ASC, price ASC LIMIT 1) AS special";
+                            $sql .= ", (SELECT price FROM " . \SpecialPriceHistory::table($this->config) . " active_special WHERE product_id = p.product_id AND customer_group_id = '" . (int)$this->config->get('config_customer_group_id') . "' AND ((date_start = '0000-00-00' OR date_start < NOW()) AND (date_end = '0000-00-00' OR date_end > NOW())) ORDER BY priority ASC, price ASC LIMIT 1) AS special";
                         }
                     }
                     
                     // Add special discount percentage
                     if(in_array('special_perc', $additional_field) || !empty($data['filter_min_special_perc'])){
-                        $sql .= ", (SELECT 100 - ((price * 100) / p.price) FROM " . DB_PREFIX . "product_special WHERE product_id = p.product_id AND customer_group_id = '" . (int)$this->config->get('config_customer_group_id') . "' AND ((date_start = '0000-00-00' OR date_start < NOW()) AND (date_end = '0000-00-00' OR date_end > NOW())) ORDER BY priority ASC, price ASC LIMIT 1) AS special_perc";
+                        $sql .= ", (SELECT 100 - ((price * 100) / p.price) FROM " . \SpecialPriceHistory::table($this->config) . " active_special WHERE product_id = p.product_id AND customer_group_id = '" . (int)$this->config->get('config_customer_group_id') . "' AND ((date_start = '0000-00-00' OR date_start < NOW()) AND (date_end = '0000-00-00' OR date_end > NOW())) ORDER BY priority ASC, price ASC LIMIT 1) AS special_perc";
                     }
                 }
                 

@@ -33,6 +33,7 @@ register_shutdown_function(function () use ($temporary_directory) {
 		}
 		rmdir($publication_directory);
 	}
+	foreach (glob(DIR_DOWNLOAD . 'sale-history-*') as $path) { unlink($path); }
 	foreach (glob(DIR_LOGS . 'price_list_*.log') as $path) { unlink($path); }
 	rmdir($temporary_directory);
 });
@@ -75,6 +76,7 @@ class AnchorUnitTestDb {
 			CREATE TABLE test_product_discount (product_id INTEGER, customer_group_id INTEGER, quantity INTEGER, price NUMERIC, date_start, date_end, priority INTEGER);
 			CREATE TABLE test_product_special (product_id INTEGER, customer_group_id INTEGER, price NUMERIC, date_start, date_end, priority INTEGER);
 			CREATE TABLE test_anchor_price (anchor_price_id INTEGER, product_id INTEGER, store_id INTEGER, verification_status, gross_price NUMERIC, unit, package_quantity NUMERIC, reference_date DEFAULT '2025-05-02', rule_code DEFAULT 'baseline_configured');
+			CREATE TABLE test_customer_group (customer_group_id INTEGER);
 			CREATE TABLE test_setting (setting_id INTEGER PRIMARY KEY, store_id INTEGER, key, value);
 			CREATE TABLE test_language (language_id INTEGER, code);
 			INSERT INTO test_setting VALUES (1,0,'config_language','hr-hr'),(2,0,'config_customer_group_id','1');
@@ -196,6 +198,24 @@ function publicationFixture() {
 	return array($model, $registry);
 }
 
+function checkSaleHistoryWindow() {
+	$now = (new DateTime('2026-11-19 10:00:00', new DateTimeZone('Europe/Zagreb')))->getTimestamp();
+	$day = 86400;
+	$ago = (new DateTime('@' . $now))->setTimezone(new DateTimeZone('Europe/Zagreb'))->modify('-30 days')->getTimestamp();
+	$points = array(array($ago - 2 * $day, '4.00'), array($ago - 1, '10.00'), array($now - 5 * $day, '8.50'), array($now - $day, '12.50'));
+	file_put_contents(DIR_DOWNLOAD . 'sale-history-0-23.json', json_encode(array('since' => $ago - 2 * $day, 'last' => $now - 60, 'confirmed' => array(), 'items' => array(778 => array('points' => $points)))));
+	$history = new SpecialPriceHistory(0, 23);
+	$key = SpecialPriceHistory::campaign(7.5, '2026-11-19');
+	$sale = array(778 => array('key' => $key, 'regular' => '12.50', 'price' => '7.50'));
+	$history->observe($sale, $now);
+	near($history->activeReference(778, $key), 8.50, 'minimum includes earlier sales, excludes values outside the window and current special');
+	$history->observe($sale, $now + 35 * $day);
+	near($history->activeReference(778, $key), 8.50, 'reference stays fixed throughout a long running sale');
+	$replacement = SpecialPriceHistory::campaign(9, '2026-12-25');
+	$history->confirm(778, $replacement, 12);
+	$history->observe(array(778 => array('key' => $replacement, 'regular' => '12.50', 'price' => '9.00')), $now + 36 * $day);
+	check($history->activeReference(778, $replacement) === null, 'sale above a known earlier price stays inactive even if a higher value is entered');
+}
 function generatedRows($model, $registry, $mode) {
 	$controller = new ControllerExtensionModuleAnchorPrice($registry);
 	$db = $model->db->pdo;
@@ -227,9 +247,9 @@ function generatedRows($model, $registry, $mode) {
 	}
 	check(count($rows) === 6 && !fgetcsv($csv, 0, ';', '"', ''), 'both files contain all six packages');
 	fclose($csv);
-	check($rows['OPG-775'][5] === '9,50 (akcija)' && $rows['OPG-775'][6] === '1,90' && $rows['OPG-775'][9] === '11,00', 'special, unit and base prices');
+	check($rows['OPG-775'][5] === '9,50 (da)' && $rows['OPG-775'][6] === '1,90' && $rows['OPG-775'][9] === '11,00', 'special, unit and base prices');
 	check($rows['OPG-775'][7] === '001234567890' && $rows['OPG-775'][8] === '4006381333931', 'independent barcode fields retain leading zeros');
-	check($rows['OPG-804'][5] === '4,00 (popust)', 'quantity-one discount');
+	check($rows['OPG-804'][5] === '4,00 (da)', 'quantity-one discount');
 	check($run()['existing'], 'unchanged cron or save is a no-op');
 	if ($mode === 'catalog') {
 		$view = 'product/category';
@@ -239,6 +259,7 @@ function generatedRows($model, $registry, $mode) {
 			array('product_id' => 775, 'price' => false)
 		));
 		$controller->beforeView($view, $data);
+		check($data['products'][0]['lowest_price_text'] === 'Najniža cijena u 30 dana prije akcije: 10,50 EUR', 'confirmed prior price differs from regular and base prices');
 		check($data['products'][0]['current_unit_price'] === '1,90 EUR/kg', 'storefront resolves session price');
 		check($data['products'][1]['current_unit_price'] === '1,60 EUR/kg', 'cart option or tier price overrides the catalogue price');
 		check(!isset($data['products'][2]['current_unit_price']), 'no visible unit price when prices are hidden');
@@ -263,6 +284,8 @@ function generatedRows($model, $registry, $mode) {
 	check(!$replacement['existing'] && $replacement['product_count'] == 5, 'deactivation replaces the list immediately');
 	if ($mode === 'catalog') { check((bool)$model->getPublication($id), 'old list still downloadable immediately after replacement'); }
 	$db->exec("UPDATE test_product SET status=1 WHERE product_id=775");
+	// A reactivated item may start a new offer after losing its earlier reference.
+	(new SpecialPriceHistory(0, 1))->confirm(775, SpecialPriceHistory::campaign(9.5, ''), 10.50);
 	$db->exec("UPDATE test_anchor_price SET verification_status='pending' WHERE product_id=775");
 	try {
 		$run();
@@ -303,18 +326,19 @@ try {
 	require dirname(__DIR__) . '/upload/' . $mode . '/controller/extension/module/anchor_price.php';
 	list($model, $registry) = publicationFixture();
 	if ($mode === 'catalog') {
+		checkSaleHistoryWindow();
 		foreach (productFixtures() as $product) {
 			check(AnchorPriceUnit::isValid($product['unit'], $product['package_quantity']), 'each known package has valid measure');
 			near(AnchorPriceUnit::calculate($product['gross_price'], $product['package_quantity']), $product['expected_unit_price'], 'six expected unit prices');
 			$display = $model->getDisplayData($product);
 			check($display['anchor_price_date'] === '2. 5. 2025.', 'Croatian display reference date');
-			check($display['anchor_unit_price'] === number_format($product['expected_unit_price'], 2, ',', '') . ' EUR/' . $product['unit'], 'storefront displays correct unit price');
+			check($display['anchor_price_text'] === 'Bazna cijena na 2. 5. 2025.: ' . $display['anchor_price'], 'only the package base price and date are shown');
 		}
 		near(AnchorPriceUnit::calculate(3, 0.75), 4, 'fractional 0.75 litre package');
 		$fractional = productFixtures()[1];
 		$fractional['gross_price'] = 3;
 		$fractional['package_quantity'] = 0.75;
-		check($model->getDisplayData($fractional)['anchor_unit_price'] === '4,00 EUR/l', 'storefront formats fractional litre price');
+		check($model->getDisplayData($fractional, 3)['current_unit_price'] === '4,00 EUR/l', 'storefront formats fractional litre price');
 		near(AnchorPriceUnit::calculate(0, 0.5), 0, 'zero product price is valid');
 		check(AnchorPriceUnit::isValid('kg', '0.125'), 'fractional kg measure valid');
 		check(AnchorPriceUnit::isValid('l', '0.000001'), 'smallest representable positive package quantity is valid');
@@ -339,17 +363,19 @@ try {
 		$missing = productFixtures()[0];
 		unset($missing['unit'], $missing['package_quantity']);
 		$display = $model->getDisplayData($missing);
-		check($display['anchor_unit_price'] === '', 'missing measure does not fabricate a unit price');
+		check($display['current_unit_price'] === '', 'missing measure does not fabricate a unit price');
 		check(strpos($display['anchor_price_text'], '()') === false && strpos($display['anchor_price_text'], '/kom') === false, 'missing measure does not append nonsense');
 		check($model->getDisplayData(array()) === array(), 'empty anchor record is safe');
 		$zero = productFixtures()[0];
 		$zero['package_quantity'] = 0;
-		check($model->getDisplayData($zero)['anchor_unit_price'] === '', 'zero measure does not divide in storefront');
+		check($model->getDisplayData($zero)['current_unit_price'] === '', 'zero measure does not divide in storefront');
 		$offer = productFixtures()[0];
 		check($model->getDisplayData($offer, 9.50)['current_unit_price'] === '1,90 EUR/kg', 'current package price is independent of base price');
 		$offer['verification_status'] = 'pending';
 		check($model->getDisplayData($offer, 9.50) === array('current_unit_price' => '1,90 EUR/kg'), 'known measure still supports current price while base price awaits confirmation');
 	}
+	$history = new SpecialPriceHistory(0, 1);
+	$history->confirm(775, SpecialPriceHistory::campaign(9.5, ''), 10.50);
 	$data = generatedRows($model, $registry, $mode);
 	if ($mode === 'admin') {
 		echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL;

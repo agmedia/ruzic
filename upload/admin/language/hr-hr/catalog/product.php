@@ -109,3 +109,6 @@ $_['error_name']             = 'Naziv artikla može sadržavati između 3 i 255 
 $_['error_meta_title']       = 'Meta tag (oznaka) - naziv mora sadržavati više od 3 i manje od 255 karaktera!';
 $_['error_model']            = 'Naziv proizvođača može sadržavati između 1 i 64 karaktera!';
 $_['error_keyword']          = 'SEO URL već se koristi!';
+$_['entry_special_prior'] = 'Najniža cijena prije akcije (EUR s PDV-om)';
+$_['help_special_prior'] = 'Za redovnu akciju sustav izračunava najnižu maloprodajnu cijenu tijekom 30 dana prije početka. Ako evidencija nije potpuna, unesite provjereni iznos s PDV-om. Akcija se prikazuje kad je snižena cijena niža od potvrđene najniže cijene.';
+$_['error_special_prior'] = 'Provjerite najnižu cijenu u kartici Akcija. Unesite pozitivan iznos s najviše dvije decimale.';

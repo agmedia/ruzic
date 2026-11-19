@@ -44,9 +44,9 @@
             <td>{% if product.price %}
               {% if not product.special %}
               {{ product.price }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %}
-              {% else %} <strike>{{ product.price }}</strike> {{ product.special }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %}
+              {% else %}  {{ product.special }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %}
               {% endif %}
-              {% if product.anchor_price_text %}<div class="anchor-price">{{ product.anchor_price_text|escape }}</div>{% endif %}
+              {% if product.lowest_price_text %}<div class="anchor-price">{{ product.lowest_price_text|escape }}</div>{% endif %}{% if product.anchor_price_text %}<div class="anchor-price">{{ product.anchor_price_text|escape }}</div>{% endif %}
               {% endif %}</td>
             {% endfor %} </tr>
           <tr>

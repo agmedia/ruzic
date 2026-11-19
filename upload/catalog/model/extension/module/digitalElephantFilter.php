@@ -1,4 +1,5 @@
 <?php
+require_once DIR_SYSTEM . 'library/special_price_history.php';
 
 class ModelExtensionModuleDigitalElephantFilter extends Model
 {
@@ -50,7 +51,7 @@ class ModelExtensionModuleDigitalElephantFilter extends Model
                         AND (pd2.date_start = '0000-00-00' OR pd2.date_start < NOW())
                         AND (pd2.date_end = '0000-00-00' OR pd2.date_end > NOW())
                         AND pd2.customer_group_id = '" . (int)$customer_group_id . "')
-                   LEFT JOIN `" . DB_PREFIX . "product_special` AS ps ON (ps.product_id = p.product_id
+                   LEFT JOIN " . \SpecialPriceHistory::table($this->config) . " AS ps ON (ps.product_id = p.product_id
                         AND (ps.date_end = '0000-00-00' OR ps.date_end > NOW())
                         AND (ps.date_start = '0000-00-00' OR ps.date_start < NOW())
                         AND ps.customer_group_id = '" . (int)$customer_group_id . "')
@@ -117,7 +118,7 @@ class ModelExtensionModuleDigitalElephantFilter extends Model
             $sql .= " LEFT JOIN " . DB_PREFIX . "product_to_category p2c ON(p.product_id=p2c.product_id) ";
         }
         if (isset($data['special']) && $data['special']) {
-            $sql .= " LEFT JOIN " . DB_PREFIX . "product_special ps ON ( ps.product_id = p.product_id )";
+            $sql .= " LEFT JOIN " . \SpecialPriceHistory::table($this->config) . " ps ON ( ps.product_id = p.product_id )";
         }
 
         $sql .= " LEFT JOIN " . DB_PREFIX . "product_to_store p2s ON(p.product_id=p2s.product_id) ";
@@ -200,7 +201,7 @@ class ModelExtensionModuleDigitalElephantFilter extends Model
             $sql .= " LEFT JOIN " . DB_PREFIX . "product_to_category p2c ON(p.product_id=p2c.product_id) ";
         }
         if (isset($data['special']) && $data['special']) {
-            $sql .= " LEFT JOIN " . DB_PREFIX . "product_special ps ON ( ps.product_id = p.product_id )";
+            $sql .= " LEFT JOIN " . \SpecialPriceHistory::table($this->config) . " ps ON ( ps.product_id = p.product_id )";
         }
         $sql .= " LEFT JOIN " . DB_PREFIX . "product_to_store p2s ON(p.product_id=p2s.product_id) " .
             " WHERE p.status = '1' AND p.date_available <= NOW() AND p2s.store_id = " . (int)$this->config->get('config_store_id');
@@ -274,7 +275,7 @@ class ModelExtensionModuleDigitalElephantFilter extends Model
             $sql .= "LEFT JOIN " . DB_PREFIX . "product_to_category p2c ON(p.product_id = p2c.product_id) ";
         }
         if (isset($data['special']) && $data['special']) {
-            $sql .= " LEFT JOIN " . DB_PREFIX . "product_special ps ON ( ps.product_id = p.product_id )";
+            $sql .= " LEFT JOIN " . \SpecialPriceHistory::table($this->config) . " ps ON ( ps.product_id = p.product_id )";
         }
         $sql .= "LEFT JOIN " . DB_PREFIX . "product_to_store p2s ON(p.product_id=p2s.product_id)
 	WHERE ovd.language_id = '" . (int)$this->config->get('config_language_id') . "' AND od.language_id = '" . (int)$this->config->get('config_language_id') . "'  AND p.status = '1' AND p.date_available <= NOW() AND p2s.store_id =" . (int)$this->config->get('config_store_id');
@@ -423,7 +424,7 @@ class ModelExtensionModuleDigitalElephantFilter extends Model
                                ORDER BY pd2.priority ASC, pd2.price ASC
                                LIMIT 1) AS discount,
                                (SELECT price
-                                   FROM " . DB_PREFIX . "product_special ps
+                                   FROM " . \SpecialPriceHistory::table($this->config) . " ps
                                    WHERE ps.product_id = pa.product_id
                                      AND ps.customer_group_id = '1'
                                      AND ((ps.date_start = '0000-00-00'
@@ -449,7 +450,7 @@ class ModelExtensionModuleDigitalElephantFilter extends Model
                     }
 
                     $sql .= " LEFT JOIN (SELECT price, product_id FROM " . DB_PREFIX . "product_discount) AS pd2 ON (pd2.product_id = pa.product_id)
-                    LEFT JOIN (SELECT price, product_id FROM " . DB_PREFIX . "product_special) AS ps ON (ps.product_id = pa.product_id)
+                    LEFT JOIN (SELECT price, product_id FROM " . \SpecialPriceHistory::table($this->config) . " active_special) AS ps ON (ps.product_id = pa.product_id)
                     LEFT JOIN (SELECT price, sort_order, model, product_id FROM " . DB_PREFIX . "product) AS p ON (p.product_id = pa.product_id)
                     LEFT JOIN (SELECT name, product_id FROM " . DB_PREFIX . "product_description) AS pd ON (pd.product_id = pa.product_id)";
 
@@ -491,7 +492,7 @@ class ModelExtensionModuleDigitalElephantFilter extends Model
             . "OR pd2.date_start < NOW()) "
             . "AND (pd2.date_end = '0000-00-00' OR pd2.date_end > NOW())) "
             . "ORDER BY pd2.priority ASC, pd2.price ASC LIMIT 1) AS discount, "
-            . "(SELECT price FROM " . DB_PREFIX . "product_special ps "
+            . "(SELECT price FROM " . \SpecialPriceHistory::table($this->config) . " ps "
             . "WHERE ps.product_id = p.product_id "
             . "AND ps.customer_group_id = '" . (int)$this->config->get('config_customer_group_id') . "' "
             . "AND ((ps.date_start = '0000-00-00' "
@@ -553,7 +554,7 @@ class ModelExtensionModuleDigitalElephantFilter extends Model
 
             $sql .= ") AS t GROUP BY t.tax_class_id) AS tr2 ON (tr2.tax_class_id = p.tax_class_id)";
 
-            $sql .= " LEFT JOIN " . DB_PREFIX . "product_discount AS pd2 ON (pd2.product_id = p.product_id) LEFT JOIN " . DB_PREFIX . "product_special AS ps ON (ps.product_id = p.product_id)";
+            $sql .= " LEFT JOIN " . DB_PREFIX . "product_discount AS pd2 ON (pd2.product_id = p.product_id) LEFT JOIN " . \SpecialPriceHistory::table($this->config) . " AS ps ON (ps.product_id = p.product_id)";
         }
         //PRICE JOIN END
 

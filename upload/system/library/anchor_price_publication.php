@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/price_list_format.php';
+require_once __DIR__ . '/special_price_history.php';
 
 // Both the admin events and the catalog cron publish the same public store prices.
 trait AnchorPricePublication {
@@ -15,7 +16,16 @@ trait AnchorPricePublication {
 			$this->syncPublicationProducts($created_by);
 			$tax = $this->getPublicTax();
 			$rows = array();
-			foreach ($this->getPublicationProducts($store_id) as $product) {
+			$products = $this->getPublicationProducts($store_id);
+			$pending = array();
+			$group = $this->getDefaultCustomerGroupId();
+			$this->observeOffers($products, $store_id, $group, $tax, $pending);
+			foreach ($this->db->query("SELECT customer_group_id FROM `" . DB_PREFIX . "customer_group` WHERE customer_group_id <> " . (int)$group)->rows as $other) {
+				$other_group = (int)$other['customer_group_id'];
+				$other_products = $this->getPublicationProducts($store_id, $other_group);
+				$this->observeOffers($other_products, $store_id, $other_group, $this->getPublicTax($other_group), $pending);
+			}
+			foreach ($products as $product) {
 				$rows[] = PriceListFormat::productRow($product, $tax);
 			}
 			$csv = PriceListFormat::csv($rows);
@@ -39,7 +49,7 @@ trait AnchorPricePublication {
 				}
 			}
 			$this->expireReplacedPublications($store_id, $now);
-			$this->setPublicationError('');
+			$this->setPublicationError(implode("\n", $pending));
 			return $result;
 		} catch (Exception $exception) {
 			$this->setPublicationError($exception->getMessage());
@@ -220,15 +230,37 @@ trait AnchorPricePublication {
 		$this->db->query("UPDATE `" . DB_PREFIX . "anchor_price_publication` SET status = 'failed', error_message = '" . $this->db->escape(substr($reason, 0, 2000)) . "', published_at = NULL WHERE publication_id = '" . (int)$publication_id . "'");
 	}
 
-	private function sellingPriceColumns($customer_group_id) {
-		$customer_group_id = (int)$customer_group_id;
-		return "(SELECT pdsc.price FROM `" . DB_PREFIX . "product_discount` pdsc WHERE pdsc.product_id = p.product_id AND pdsc.customer_group_id = '" . $customer_group_id . "' AND pdsc.quantity = '1' AND ((pdsc.date_start = '0000-00-00' OR pdsc.date_start < NOW()) AND (pdsc.date_end = '0000-00-00' OR pdsc.date_end > NOW())) ORDER BY pdsc.priority ASC, pdsc.price ASC LIMIT 1) AS discount,
-			(SELECT ps.price FROM `" . DB_PREFIX . "product_special` ps WHERE ps.product_id = p.product_id AND ps.customer_group_id = '" . $customer_group_id . "' AND ((ps.date_start = '0000-00-00' OR ps.date_start < NOW()) AND (ps.date_end = '0000-00-00' OR ps.date_end > NOW())) ORDER BY ps.priority ASC, ps.price ASC LIMIT 1) AS special";
+	private function observeOffers(array &$products, $store, $group, $tax, array &$pending) {
+		$history = new SpecialPriceHistory($store, $group);
+		$offers = array();
+		foreach ($products as $p) {
+			$regular = $p['discount'] !== null ? $p['discount'] : $p['price'];
+			$key = $p['special'] === null ? null : SpecialPriceHistory::campaign($p['special'], $p['special_start']);
+			$offers[$p['product_id']] = array('key' => $key,
+				'regular' => number_format($tax->calculate($regular, $p['tax_class_id'], true), 2, '.', ''),
+				'price' => number_format($tax->calculate($key === null ? $regular : $p['special'], $p['tax_class_id'], true), 2, '.', ''));
+		}
+		if ($history->observe($offers, time()) && $this->cache) { $this->cache->delete('product'); }
+		foreach ($products as &$p) {
+			$key = $offers[$p['product_id']]['key'];
+			if ($key !== null && $history->activeReference($p['product_id'], $key) === null) {
+				$pending[] = $p['model'] . ' (#' . $p['product_id'] . ') — akcija čeka ispravnu najnižu cijenu za 30 dana prije početka. Provjerite karticu Akcija u uređivanju artikla.';
+				$p['special'] = null;
+			}
+		}
 	}
 
-	private function getPublicationProducts($store_id) {
+	private function sellingPriceColumns($customer_group_id, $public_only = false) {
+		$customer_group_id = (int)$customer_group_id;
+		$table = $public_only ? SpecialPriceHistory::table($this->config) : DB_PREFIX . 'product_special';
+		$special = " FROM " . $table . " ps WHERE ps.product_id = p.product_id AND ps.customer_group_id = '" . $customer_group_id . "' AND (ps.date_start = '0000-00-00' OR ps.date_start < NOW()) AND (ps.date_end = '0000-00-00' OR ps.date_end > NOW()) ORDER BY ps.priority ASC, ps.price ASC, ps.date_start ASC LIMIT 1";
+		return "(SELECT pdsc.price FROM `" . DB_PREFIX . "product_discount` pdsc WHERE pdsc.product_id = p.product_id AND pdsc.customer_group_id = '" . $customer_group_id . "' AND pdsc.quantity = '1' AND ((pdsc.date_start = '0000-00-00' OR pdsc.date_start < NOW()) AND (pdsc.date_end = '0000-00-00' OR pdsc.date_end > NOW())) ORDER BY pdsc.priority ASC, pdsc.price ASC LIMIT 1) AS discount,
+			(SELECT ps.price" . $special . ") AS special, (SELECT ps.date_start" . $special . ") AS special_start";
+	}
+
+	private function getPublicationProducts($store_id, $customer_group_id = null) {
 		$language_id = $this->getPublicationLanguageId();
-		$customer_group_id = $this->getDefaultCustomerGroupId();
+		if ($customer_group_id === null) { $customer_group_id = $this->getDefaultCustomerGroupId(); }
 		$sql = "SELECT p.product_id, p.model, p.sku, p.upc, p.ean, p.jan, p.isbn, p.price, p.tax_class_id, pd.name, COALESCE(m.name, '') AS manufacturer, ap.unit, ap.package_quantity, ap.verification_status, ap.gross_price AS anchor_gross_price, " . $this->sellingPriceColumns($customer_group_id) . " FROM `" . DB_PREFIX . "product` p INNER JOIN `" . DB_PREFIX . "product_to_store` p2s ON (p2s.product_id = p.product_id AND p2s.store_id = '" . (int)$store_id . "') LEFT JOIN `" . DB_PREFIX . "product_description` pd ON (pd.product_id = p.product_id AND pd.language_id = '" . $language_id . "') LEFT JOIN `" . DB_PREFIX . "anchor_price` ap ON (ap.product_id = p.product_id AND ap.store_id = p2s.store_id) LEFT JOIN `" . DB_PREFIX . "manufacturer` m ON (m.manufacturer_id = p.manufacturer_id) WHERE p.status = '1' AND p.date_available <= NOW() ORDER BY p.product_id ASC";
 
 		return $this->db->query($sql)->rows;
@@ -276,13 +308,13 @@ trait AnchorPricePublication {
 		return $query->num_rows ? $query->row['value'] : '';
 	}
 
-	private function getPublicTax() {
-		if ($this->public_tax !== null) {
+	private function getPublicTax($group = null) {
+		if ($group === null && $this->public_tax !== null) {
 			return $this->public_tax;
 		}
 
 		$session_customer_group_id = $this->config->get('config_customer_group_id');
-		$this->config->set('config_customer_group_id', $this->getDefaultCustomerGroupId());
+		$this->config->set('config_customer_group_id', $group === null ? $this->getDefaultCustomerGroupId() : $group);
 
 		try {
 			$tax = new Cart\Tax($this->registry);
@@ -296,11 +328,11 @@ trait AnchorPricePublication {
 			}
 
 			$tax->setStoreAddress($country_id, $zone_id);
-			$this->public_tax = $tax;
+			if ($group === null) { $this->public_tax = $tax; }
+			return $tax;
 		} finally {
 			$this->config->set('config_customer_group_id', $session_customer_group_id);
 		}
 
-		return $this->public_tax;
 	}
 }

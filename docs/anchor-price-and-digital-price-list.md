@@ -42,7 +42,7 @@ RZ-001;12,90;2025-05-02;kg;5;confirmed;Cijena provjerena prema povijesnom cjenik
 
 Trgovac je **Voćarstvo Ružić d.o.o.**, OIB **96162140350**. Jedan cjenik vrijedi za sva prodajna mjesta. U postavkama modula može se urediti OIB. Za izdanje br. 50 objavljeno 18. 11. 2026. u 07:00 po zagrebačkom vremenu naziv je `96162140350_ZA_SVA_PRODAJNA_MJESTA_ROBA_000050_20261118_0700.csv`. XML nosi isti naziv s nastavkom `.xml`. Redni broj nastavlja postojeći niz.
 
-CSV koristi UTF-8 i točku-zarez. CSV i XML imaju deset polja istim redom: naziv, šifra, marka, neto količina, jedinica mjere, maloprodajna cijena s oznakom posebnog oblika prodaje, cijena po jedinici, barkod, EAN barkod i bazna cijena. Iznosi su u eurima. U CSV-u npr. `9,50 (akcija)` označuje akcijsku cijenu, a `12,00 (ne)` redovnu prodaju. XML nosi brojčanu cijenu i atribut `sale`. Količina pakiranja služi izračunu €/kg ili €/l. Aktualna jedinična cijena prikazuje se uz prodajnu cijenu, a povijesna u retku bazne cijene.
+CSV koristi UTF-8 i točku-zarez. CSV i XML imaju deset polja istim redom: naziv, šifra, marka, neto količina, jedinica mjere, maloprodajna cijena s oznakom posebnog oblika prodaje, cijena po jedinici, barkod, EAN barkod i bazna cijena. Iznosi su u eurima. U CSV-u npr. `9,50 (da)` označuje akcijsku cijenu, a `12,00 (ne)` redovnu prodaju. XML nosi brojčanu cijenu i atribut `sale`. Količina pakiranja služi izračunu €/kg ili €/l. Aktualna jedinična cijena prikazuje se uz prodajnu cijenu, a uz baznu cijenu stoje datum i cijena pakiranja.
 
 Javna stranica je `index.php?route=information/price_list`. Stalne adrese za važeći cjenik su:
 
@@ -50,6 +50,10 @@ Javna stranica je `index.php?route=information/price_list`. Stalne adrese za va�
 - `index.php?route=information/price_list/download&format=xml`
 
 Važeći par dostupan je do zamjene, a prethodni još 15 dana nakon zamjene. Javno preuzimanje starih objava čita povijesne iznose i prikazuje deset javnih polja pod nazivom s OIB-om, izvornim brojem pohrane i vremenom objave. Izvorne datoteke s kontrolnim zbrojevima dostupne su kroz administraciju. Gumb za ispravak starih mjera radi s prethodnim formatom i čuva vezu s izvornom objavom.
+
+## Akcijske cijene
+
+Za redovnu akciju unesite Special u kartici Akcija na artiklu. Sustav bilježi primijenjene maloprodajne cijene s PDV-om za pojedini artikl, trgovinu i grupu kupaca. Uz akcijsku cijenu prikazuje najnižu cijenu iz 30 dana prije početka te akcije. Usporedni iznos vrijedi do kraja iste akcije. Kada nema potpune evidencije, u istoj kartici upišite najnižu cijenu koju ste potvrdili iz poslovnih evidencija. Kupci do potvrde ili do ispravka previsoke akcijske cijene vide redovnu ponudu. Modul Bazne cijene prikazuje šifru artikla koji čeka provjeru. Snižena maloprodajna cijena i njezina jedinična cijena ulaze u javni cjenik s oznakom `da`.
 
 ## Nadogradnja postojeće instalacije
 

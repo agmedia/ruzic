@@ -132,13 +132,15 @@
         {% if not special %}
         <li><span class="live-price">{{ price }}</span>{% if current_unit_price %} <span class="live-unit-price" data-product-id="{{ product_id }}">({{ current_unit_price|escape }})</span>{% endif %}</li>
         {% else %}
-        <li><span class="price-old">{{ price }} </span><span class="live-price-new">{{ special }}</span>{% if current_unit_price %} <span class="live-unit-price" data-product-id="{{ product_id }}">({{ current_unit_price|escape }})</span>{% endif %} </li>
+        <li><span class="live-price-new">{{ special }}</span>{% if current_unit_price %} <span class="live-unit-price" data-product-id="{{ product_id }}">({{ current_unit_price|escape }})</span>{% endif %} </li>
 
         <span id="special_countdown"></span>
         {% endif %}
       </ul>
 
-      {% if anchor_price_text %}
+      {% if lowest_price_text %}
+      <div class="anchor-price anchor-price-detail">{{ lowest_price_text|escape }}</div>
+      {% endif %}{% if anchor_price_text %}
       <div class="anchor-price anchor-price-detail">{{ anchor_price_text|escape }}</div>
       {% endif %}
 

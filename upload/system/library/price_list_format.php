@@ -78,7 +78,7 @@ class PriceListFormat {
 			'netQuantity' => rtrim(rtrim(number_format($p['package_quantity'], 6, '.', ''), '0'), '.'),
 			'unit' => $p['unit'],
 			'retailPrice' => number_format($retail, 2, '.', ''),
-			'sale' => $has_special ? 'akcija' : ($has_discount ? 'popust' : 'ne'),
+			'sale' => ($has_special || $has_discount) ? 'da' : 'ne',
 			'unitPrice' => number_format(AnchorPriceUnit::calculate($retail, $p['package_quantity']), 2, '.', ''),
 			'barcode' => $barcode,
 			'ean' => $ean,
@@ -167,7 +167,7 @@ class PriceListFormat {
 				'name' => $p['Naziv proizvoda'], 'code' => $p['Šifra/model'], 'brand' => $p['Marka/proizvođač'],
 				'netQuantity' => isset($p['Količina pakiranja']) ? str_replace(',', '.', $p['Količina pakiranja']) : '',
 				'unit' => $p['Jedinica mjere'], 'retailPrice' => str_replace(',', '.', $p['Aktualna maloprodajna cijena (EUR)']),
-				'sale' => strtolower($sale), 'unitPrice' => str_replace(',', '.', $p['Cijena po jedinici (EUR)']),
+				'sale' => in_array(strtolower(trim($sale)), array('', 'ne', 'no', '0'), true) ? 'ne' : 'da', 'unitPrice' => str_replace(',', '.', $p['Cijena po jedinici (EUR)']),
 				'barcode' => $barcode, 'ean' => self::validEan($barcode) ? $barcode : '',
 				'basePrice' => str_replace(',', '.', $p['Sidrena cijena (EUR)'])
 			);

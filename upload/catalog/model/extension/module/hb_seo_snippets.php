@@ -1,4 +1,5 @@
 <?php
+require_once DIR_SYSTEM . 'library/special_price_history.php';
 class ModelExtensionModuleHbSeoSnippets extends Model {	
 	public function get_stock_status_id($product_id) {
 		$query = $this->db->query("SELECT stock_status_id FROM ".DB_PREFIX."product WHERE product_id = '".(int)$product_id."'");
@@ -90,7 +91,7 @@ class ModelExtensionModuleHbSeoSnippets extends Model {
 				$price_date = $this->config->get('hb_snippets_pricevaliddate');
 
 				if ($this->config->get('hb_snippets_pricevalid')) {
-					$pricedate_query = $this->db->query("SELECT date_end FROM `".DB_PREFIX."product_special` WHERE product_id = '".(int)$product_id."' AND customer_group_id = '".(int)$this->config->get('config_customer_group_id')."' AND date_end > now() ORDER BY priority ASC LIMIT 1");
+					$pricedate_query = $this->db->query("SELECT date_end FROM " . \SpecialPriceHistory::table($this->config) . " active_special WHERE product_id = '".(int)$product_id."' AND customer_group_id = '".(int)$this->config->get('config_customer_group_id')."' AND date_end > now() ORDER BY priority ASC LIMIT 1");
 					
 					if ($pricedate_query->row) {
 						$price_date = date('Y-m-d',strtotime($pricedate_query->row['date_end']));

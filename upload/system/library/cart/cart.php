@@ -1,5 +1,6 @@
 <?php
 namespace Cart;
+require_once DIR_SYSTEM . 'library/special_price_history.php';
 use Agmedia\Features\CartHelper;
 use Agmedia\Helpers\Log;
 
@@ -184,7 +185,7 @@ class Cart {
 				}
 
 				// Product Specials
-				$product_special_query = $this->db->query("SELECT price FROM " . DB_PREFIX . "product_special WHERE product_id = '" . (int)$cart['product_id'] . "' AND customer_group_id = '" . (int)$this->config->get('config_customer_group_id') . "' AND ((date_start = '0000-00-00' OR date_start < NOW()) AND (date_end = '0000-00-00' OR date_end > NOW())) ORDER BY priority ASC, price ASC LIMIT 1");
+				$product_special_query = $this->db->query("SELECT price FROM " . \SpecialPriceHistory::table($this->config) . " active_special WHERE product_id = '" . (int)$cart['product_id'] . "' AND customer_group_id = '" . (int)$this->config->get('config_customer_group_id') . "' AND ((date_start = '0000-00-00' OR date_start < NOW()) AND (date_end = '0000-00-00' OR date_end > NOW())) ORDER BY priority ASC, price ASC LIMIT 1");
 
 				if ($product_special_query->num_rows) {
 					$price = $product_special_query->row['price'];

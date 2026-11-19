@@ -134,8 +134,7 @@ background-position:{{ row.position }};
 {% if submenu.product.price %}
 <div class="price">
 {% if submenu.product.special %}
-<span class="price-old">
-{{ submenu.product.price }}</span><span class="price-new">{{ submenu.product.special }}{% if submenu.product.current_unit_price %} <span class="current-unit-price">({{ submenu.product.current_unit_price|escape }})</span>{% endif %}
+<span class="price-new">{{ submenu.product.special }}{% if submenu.product.current_unit_price %} <span class="current-unit-price">({{ submenu.product.current_unit_price|escape }})</span>{% endif %}
 </span>
 {% else %}
 {{ submenu.product.price }}{% if submenu.product.current_unit_price %} <span class="current-unit-price">({{ submenu.product.current_unit_price|escape }})</span>{% endif %}
@@ -144,7 +143,9 @@ background-position:{{ row.position }};
 {% endif %}
 <a class="btn btn-outline btn-tiny catalog_hide" onclick="cart.add('{{ submenu.product.id }}', '{{ submenu.product.minimum }}');"><span class="global-cart"></span>{{ button_cart }}</a>
 </div>
-{% if submenu.product.price and submenu.product.anchor_price_text %}
+{% if submenu.product.price and submenu.product.lowest_price_text %}
+<div class="anchor-price anchor-price-card">{{ submenu.product.lowest_price_text|escape }}</div>
+{% endif %}{% if submenu.product.price and submenu.product.anchor_price_text %}
 <div class="anchor-price anchor-price-card">{{ submenu.product.anchor_price_text|escape }}</div>
 {% endif %}
 </div>

@@ -108,3 +108,6 @@ $_['error_meta_title']       = 'Meta Title must be greater than 1 and less than 
 $_['error_model']            = 'Product Model must be greater than 1 and less than 64 characters!';
 $_['error_keyword']          = 'SEO URL already in use!';
 $_['error_unique']           = 'SEO URL must be unique!';
+$_['entry_special_prior'] = 'Lowest price before sale (EUR including tax)';
+$_['help_special_prior'] = 'The lowest retail price in the 30 days before a sale is calculated from the shop’s records. If the record is incomplete, enter the verified amount including tax. The sale is shown when its price is lower than the verified minimum.';
+$_['error_special_prior'] = 'Enter a positive verified lowest price with at most two decimal places on the Special tab.';

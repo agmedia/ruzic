@@ -27,7 +27,7 @@ Disallow: /login
 Disallow: /index.php?route=product/manufacturer
 Disallow: /index.php?route=product/compare
 Disallow: /index.php?route=product/category
-Sitemap: https://www.videonadzor.hr/sitemap-index.xml
+Sitemap: https://www.opg-ruzic.com/sitemap-index.xml
 
 User-agent: Yandex
 Disallow: /*route=account/
@@ -53,7 +53,7 @@ Disallow: /login
 Disallow: /index.php?route=product/manufacturer
 Disallow: /index.php?route=product/compare
 Disallow: /index.php?route=product/category
-Sitemap: https://www.videonadzor.hr/sitemap-index.xml
+Sitemap: https://www.opg-ruzic.com/sitemap-index.xml
 
 
 

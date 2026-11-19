@@ -1,4 +1,5 @@
 <?php
+require_once DIR_SYSTEM . 'library/special_price_history.php';
 class ControllerCatalogProduct extends Controller {
 	private $error = array();
 
@@ -1024,9 +1025,16 @@ class ControllerCatalogProduct extends Controller {
 		}
 
 		$data['product_specials'] = array();
+		$data['sale_history_enabled'] = (bool)$this->config->get('module_anchor_price_status');
 
 		foreach ($product_specials as $product_special) {
+			$confirmed = isset($product_special['prior_gross']) ? $product_special['prior_gross'] : '';
+			if ($data['sale_history_enabled'] && !isset($product_special['prior_gross']) && !empty($this->request->get['product_id'])) {
+				$history = new SpecialPriceHistory(0, $product_special['customer_group_id']);
+				$confirmed = $history->confirmation($this->request->get['product_id'], SpecialPriceHistory::campaign($product_special['price'], $product_special['date_start']));
+			}
 			$data['product_specials'][] = array(
+				'prior_gross' => $confirmed,
 				'customer_group_id' => $product_special['customer_group_id'],
 				'priority'          => $product_special['priority'],
 				'price'             => $product_special['price'],
@@ -1214,6 +1222,21 @@ class ControllerCatalogProduct extends Controller {
 			}
 		}
 
+		if ($this->config->get('module_anchor_price_status') && !empty($this->request->post['product_special'])) {
+			foreach ($this->request->post['product_special'] as &$special) {
+				if (!isset($special['prior_gross']) || trim($special['prior_gross']) === '') { continue; }
+				$special['prior_gross'] = str_replace(',', '.', trim($special['prior_gross']));
+				if (!preg_match('/^\d{1,12}(?:\.\d{1,2})?$/D', $special['prior_gross']) || (float)$special['prior_gross'] <= 0) {
+					$this->error['warning'] = $this->language->get('error_special_prior');
+					break;
+				}
+				if (empty($special['date_start']) || $special['date_start'] === '0000-00-00') {
+					$today = new DateTime('now', new DateTimeZone('Europe/Zagreb'));
+					$special['date_start'] = $today->format('Y-m-d');
+				}
+			}
+			unset($special);
+		}
 		if ($this->error && !isset($this->error['warning'])) {
 			$this->error['warning'] = $this->language->get('error_warning');
 		}

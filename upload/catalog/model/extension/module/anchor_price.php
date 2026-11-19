@@ -45,7 +45,7 @@ class ModelExtensionModuleAnchorPrice extends Model {
 			$store_id = (int)$this->config->get('config_store_id');
 		}
 
-		$query = $this->db->query("SELECT ap.*, p.price AS selling_price, p.tax_class_id AS selling_tax_class, " . $this->sellingPriceColumns($this->config->get('config_customer_group_id')) . " FROM `" . DB_PREFIX . "anchor_price` ap JOIN `" . DB_PREFIX . "product` p ON p.product_id = ap.product_id WHERE ap.store_id = '" . (int)$store_id . "' AND ap.product_id IN (" . implode(',', $ids) . ")");
+		$query = $this->db->query("SELECT ap.*, p.price AS selling_price, p.tax_class_id AS selling_tax_class, " . $this->sellingPriceColumns($this->config->get('config_customer_group_id'), true) . " FROM `" . DB_PREFIX . "anchor_price` ap JOIN `" . DB_PREFIX . "product` p ON p.product_id = ap.product_id WHERE ap.store_id = '" . (int)$store_id . "' AND ap.product_id IN (" . implode(',', $ids) . ")");
 
 		foreach ($query->rows as $row) {
 			$records[(int)$row['product_id']] = $row;
@@ -69,7 +69,17 @@ class ModelExtensionModuleAnchorPrice extends Model {
 		if ($package_price !== null && $has_measure) {
 			$current_unit_price = $this->currency->format(AnchorPriceUnit::calculate($package_price, $record['package_quantity']), $currency_code) . '/' . $record['unit'];
 		}
-		if ($record['verification_status'] !== 'confirmed') { return array('current_unit_price' => $current_unit_price); }
+		$display = array('current_unit_price' => $current_unit_price);
+		if (isset($record['special'], $record['special_start'], $record['product_id'])) {
+			$history = new SpecialPriceHistory($this->config->get('config_store_id'), $this->config->get('config_customer_group_id'));
+			$key = SpecialPriceHistory::campaign($record['special'], $record['special_start']);
+			$prior = $history->activeReference($record['product_id'], $key);
+			if ($prior !== null) {
+				$label = strpos((string)$this->config->get('config_language'), 'en') === 0 ? 'Lowest price in the 30 days before the sale' : 'Najniža cijena u 30 dana prije akcije';
+				$display['lowest_price_text'] = $label . ': ' . $this->currency->format($prior, $currency_code);
+			}
+		}
+		if ($record['verification_status'] !== 'confirmed') { return $display; }
 		$price = $this->currency->format((float)$record['gross_price'], $currency_code);
 		$timestamp = strtotime($record['reference_date']);
 		$language_code = (string)$this->config->get('config_language');
@@ -81,19 +91,11 @@ class ModelExtensionModuleAnchorPrice extends Model {
 			$date = date('j M Y', $timestamp);
 			$text = 'Base price on ' . $date . ': ' . $price;
 		}
-		$unit_price = '';
-		if ($has_measure) {
-			$unit_price = $this->currency->format(AnchorPriceUnit::calculate($record['gross_price'], $record['package_quantity']), $currency_code) . '/' . $record['unit'];
-			$text .= ' (' . $unit_price . ')';
-		}
-
-		return array(
-			'current_unit_price' => $current_unit_price,
+		return $display + array(
 			'anchor_price'       => $price,
 			'anchor_price_value' => $price,
 			'anchor_price_date'  => $date,
 			'anchor_price_text'  => $text,
-			'anchor_unit_price'  => $unit_price,
 			'anchor_price_rule'  => $record['rule_code'],
 			'anchor_price_status'=> $record['verification_status']
 		);

@@ -49,10 +49,12 @@
                 {% if not product.special %}
                   {{ product.price }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %}
                   {% else %}
-                  <span class="price">{{ product.special }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %} </span><span class="price-old">{{ product.price }}</span>
+                  <span class="price">{{ product.special }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %} </span>
                   {% endif %}
                   </span>
-                  {% if product.price and product.anchor_price_text %}
+                  {% if product.price and product.lowest_price_text %}
+                  <span class="anchor-price">{{ product.lowest_price_text|escape }}</span>
+                  {% endif %}{% if product.price and product.anchor_price_text %}
                   <span class="anchor-price">{{ product.anchor_price_text|escape }}</span>
                   {% endif %}
                   <span class="display-block hidden-md hidden-lg">{{ product.stock }}</span>
@@ -65,10 +67,12 @@
                   {% if not product.special %}
                   {{ product.price }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %}
                   {% else %}
-                  <span class="price">{{ product.special }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %}</span><span class="price-old">{{ product.price }}</span>
+                  <span class="price">{{ product.special }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %}</span>
                   {% endif %}
               {% endif %}
-              {% if product.price and product.anchor_price_text %}
+              {% if product.price and product.lowest_price_text %}
+              <span class="anchor-price">{{ product.lowest_price_text|escape }}</span>
+              {% endif %}{% if product.price and product.anchor_price_text %}
               <span class="anchor-price">{{ product.anchor_price_text|escape }}</span>
               {% endif %}</td>
               <td class="text-right"><button type="button" onclick="cart.add('{{ product.product_id }}');" class="btn btn-sm btn-primary">{{ button_cart }}</button>

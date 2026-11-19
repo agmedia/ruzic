@@ -75,7 +75,7 @@
                 {% if not product.special %}
                 <span>{{ product.price }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %}</span>
                 {% else %}
-                <span class="price-old">{{ product.price }}</span><span class="price-new">{{ product.special }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %}</span>
+                <span class="price-new">{{ product.special }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %}</span>
                 {% endif %}
                 {% if product.tax %}
                 <span class="price-tax">{{ text_tax }} {{ product.tax }}</span>
@@ -85,7 +85,9 @@
             <p class="description">{% if product.description %}{{ product.description }}{% endif %}</p>
             <a class="btn catalog_hide {% if basel_list_style == '6' %}btn-contrast{% else %}btn-outline{% endif %}" onclick="cart.add('{{ product.product_id }}', '{{ product.minimum }}');"><span class="global-cart"></span>{{ button_cart }}</a>
             </div><!-- .price-wrapper -->
-            {% if product.price and product.anchor_price_text %}
+            {% if product.price and product.lowest_price_text %}
+            <div class="anchor-price anchor-price-card">{{ product.lowest_price_text|escape }}</div>
+            {% endif %}{% if product.price and product.anchor_price_text %}
             <div class="anchor-price anchor-price-card">{{ product.anchor_price_text|escape }}</div>
             {% endif %}
             <div class="plain-links">

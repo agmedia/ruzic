@@ -92,6 +92,7 @@ class ControllerExtensionBaselLiveSearch extends Controller {
 						'price'       => $price,
 						'special'     => $special,
 						'current_unit_price' => isset($anchor_display['current_unit_price']) ? $anchor_display['current_unit_price'] : '',
+						'lowest_text' => isset($anchor_display['lowest_price_text']) ? $anchor_display['lowest_price_text'] : '',
 						'anchor_text' => isset($anchor_display['anchor_price_text']) ? $anchor_display['anchor_price_text'] : '',
 						'url'         => $this->url->link('product/product', 'product_id=' . $result['product_id'])
 					);
