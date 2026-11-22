@@ -160,33 +160,6 @@ class ControllerProductProduct extends Controller {
 
 		$product_info = $this->model_catalog_product->getProduct($product_id);
 
-        // fj.agmedia.hr
-        $session = isset($this->session->data['delivery_region']) ? $this->session->data['delivery_region'] : null;
-        $target = \Agmedia\Features\Helper::resolveSession($data['cat_id'], $session);
-
-        /*  if ($this->cart->hasProducts() && $session != $target) {
-              $data['changed_region_warning'] = true;
-          } else {
-              $data['changed_region_warning'] = false;
-          }*/
-
-        $region = \Agmedia\Features\CartHelper::checkRegion($this->customer, $this->session);
-
-        if ($region && ($region != $target)) {
-            $data['btnCartEnable'] = false;
-            $data['changed_region_warning'] = true;
-        } else {
-            $data['btnCartEnable'] = true;
-            $data['changed_region_warning'] = false;
-        }
-
-        if ($this->session->data['delivery_region'] != $target && ! $this->cart->hasProducts()) {
-            $this->session->data['delivery_region'] = $target;
-        }
-
-
-
-
         //check product page open from cateory page
 		if (isset($this->request->get['path'])) {
 			$parts = explode('_', (string)$this->request->get['path']);
@@ -204,6 +177,18 @@ class ControllerProductProduct extends Controller {
 		}
 
 		if ($product_info) {
+			$session_region = isset($this->session->data['delivery_region']) ? $this->session->data['delivery_region'] : null;
+			$cart_region = \Agmedia\Features\CartHelper::checkRegion($this->customer, $this->session);
+			if (!isset($data['cat_id'])) {
+				$data['cat_id'] = $this->deliveryCategory($product_id, $cart_region ?: $session_region);
+			}
+			$target = \Agmedia\Features\Helper::resolveSession($data['cat_id'], $cart_region ?: $session_region);
+			$data['changed_region_warning'] = $cart_region && $cart_region !== $target;
+			$data['btnCartEnable'] = !$data['changed_region_warning'];
+			if ($session_region !== $target && !$this->cart->hasProducts()) {
+				$this->session->data['delivery_region'] = $target;
+			}
+
 			$url = '';
 
 			if (isset($this->request->get['path'])) {
@@ -605,6 +590,21 @@ class ControllerProductProduct extends Controller {
 
 			$this->response->setOutput($this->load->view('error/not_found', $data));
 		}
+	}
+
+	// A search or canonical product URL has no category path.
+	private function deliveryCategory($product_id, $region) {
+		$assigned = array_column($this->model_catalog_product->getCategories($product_id), 'category_id');
+		$preferred = \Agmedia\Features\Helper::resolveSession(0, $region);
+		$fallback = 0;
+		foreach (agconf('delivery_region') as $option) {
+			$id = (int)$option['id'];
+			if (in_array($id, $assigned) && $this->model_catalog_category->getCategory($id)) {
+				if ($option['label'] === $preferred) { return $id; }
+				if (!$fallback) { $fallback = $id; }
+			}
+		}
+		return $fallback;
 	}
 
 	public function review() {

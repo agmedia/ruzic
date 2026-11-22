@@ -15,12 +15,11 @@ class ControllerExtensionBaselLiveOptions extends Controller {
 		$this->options_container       = '.product-info';
 		$this->special_price_container = '.live-price-new';
 		$this->price_container         = '.live-price';
-		$this->tax_price_container     = '.live-price-tax';
 	}
 	public function index() { 
  
 		$json           = array();
-		$options_makeup = $options_makeup_notax = 0;
+		$options_makeup = 0;
 		$currency_code = $this->session->data['currency'];
 
 		if (isset($this->request->get['product_id'])) {
@@ -80,13 +79,11 @@ class ControllerExtensionBaselLiveOptions extends Controller {
 									foreach ($this->request->post['option'][$option['product_option_id']] as $product_option_id) {
 										if($product_option_id == $option_value['product_option_value_id']){
 											$options_makeup += $this->get_options_makeup($option_value, $product_info['tax_class_id'], $option_tax);
-											$options_makeup_notax += $this->get_options_makeup($option_value, 0, $option_tax);
 										}
 									}
 								}
 								elseif($this->request->post['option'][$option['product_option_id']] == $option_value['product_option_value_id']){
 									$options_makeup += $this->get_options_makeup($option_value, $product_info['tax_class_id'], $option_tax);
-									$options_makeup_notax += $this->get_options_makeup($option_value, 0, $option_tax);
 								}
 							}
 						}
@@ -105,11 +102,6 @@ class ControllerExtensionBaselLiveOptions extends Controller {
 					$json['new_price']['special'] = false;
 				}
 
-				if ($this->config->get('config_tax')) {
-					$json['new_price']['tax'] = $this->currency->format(((float)$product_info['special'] ? ($product_info['special'] + $options_makeup) : ($product_info['price'] + $options_makeup_notax)) * $quantity, $currency_code );
-				} else {
-					$json['new_price']['tax'] = false;
-				}
 				
 				if ($this->data['price'] !== false && $this->config->get('module_anchor_price_status')) {
 					$this->load->model('extension/module/anchor_price');
@@ -174,9 +166,6 @@ class ControllerExtensionBaselLiveOptions extends Controller {
 							var unit = json.new_price.unit;
 							$('{$this->options_container} .live-unit-price[data-product-id="$product_id"]').text(unit ? ' (' + unit + ')' : '');
 							
-							if ($('{$this->options_container} {$this->tax_price_container}').length > 0 && json.new_price.tax) {
-								animation_on_change_price_with_options('{$this->options_container} {$this->tax_price_container}', json.new_price.tax);
-							}
 							if ($('{$this->options_container} {$this->special_price_container}').length > 0 && json.new_price.special) {
 								animation_on_change_price_with_options('{$this->options_container} {$this->special_price_container}', json.new_price.special);
 							}

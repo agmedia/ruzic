@@ -264,9 +264,6 @@
     
     <div class="info-holder">
     
-      <?php if ($price && $tax) { ?>
-      <p class="info p-tax"><b><?php echo $text_tax; ?></b> <span class="live-price-tax"><?php echo $tax; ?></span></p>
-      <?php } ?>
       
       <?php if ($price && $points) { ?>
       <p class="info"><b><?php echo $text_points; ?></b> <?php echo $points; ?></p>

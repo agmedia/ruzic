@@ -15,7 +15,7 @@
         <p class="price"> {% if not product.special %}
           {{ product.price }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %}
           {% else %} <span class="price-new">{{ product.special }}{% if product.current_unit_price %} <span class="current-unit-price">({{ product.current_unit_price|escape }})</span>{% endif %}</span>  {% endif %}
-          {% if product.tax %} <span class="price-tax">{{ text_tax }} {{ product.tax }}</span> {% endif %} </p>
+           </p>
         {% endif %}
         {% if product.price and product.lowest_price_text %}
         <div class="anchor-price anchor-price-card">{{ product.lowest_price_text|escape }}</div>
